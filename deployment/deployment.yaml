@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kubescape
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubecop
+  namespace: kubescape
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kubecop-cluster-role-binding
+subjects:
+- kind: ServiceAccount
+  name: kubecop
+  namespace: kubescape
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kubecop
+  namespace: kubescape
+  labels:
+    k8s-app: kubecop
+spec:
+  selector:
+    matchLabels:
+      k8s-app: kubecop
+  template:
+    metadata:
+      labels:
+        k8s-app: kubecop
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - arm64
+                - amd64
+      serviceAccount: kubecop
+      hostPID: true
+      hostNetwork: false
+      containers:
+      - name: kubecop
+        terminationMessagePolicy: FallbackToLogsOnError
+        image: quay.io/benarmosec/kubecop:latest
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: HOST_ROOT
+            value: "/host"
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_ADMIN
+              - NET_ADMIN
+        volumeMounts:
+        - name: host
+          mountPath: /host
+        - name: run
+          mountPath: /run
+        - name: modules
+          mountPath: /lib/modules
+        - name: debugfs
+          mountPath: /sys/kernel/debug
+        - name: cgroup
+          mountPath: /sys/fs/cgroup
+        - name: bpffs
+          mountPath: /sys/fs/bpf
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+      volumes:
+      - name: host
+        hostPath:
+          path: /
+      - name: run
+        hostPath:
+          path: /run
+      - name: cgroup
+        hostPath:
+          path: /sys/fs/cgroup
+      - name: modules
+        hostPath:
+          path: /lib/modules
+      - name: bpffs
+        hostPath:
+          path: /sys/fs/bpf
+      - name: debugfs
+        hostPath:
+          path: /sys/kernel/debug
