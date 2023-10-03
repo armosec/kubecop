@@ -207,15 +207,26 @@ func (cm *CollectorManager) CollectContainerEvents(id *ContainerId) {
 		appProfile, ok := cm.applicationProfiles[appProfileName]
 
 		if !ok {
-			// it does not exist, create it
+			// it does not exist, create it.
 			cm.applicationProfiles[appProfileName] = ApplicationProfile{
 				Name:       appProfileName,
 				Containers: []ContainerProfile{containerProfile},
 			}
 		} else {
-			// it exists, add container profile to the list of containers
-			appProfile.Containers = append(appProfile.Containers, containerProfile)
-			cm.applicationProfiles[appProfileName] = appProfile
+			// it exists, add container profile diff to the existing container.
+			containerExists := false
+			for existingContainerIndex, existingContainerProfile := range appProfile.Containers {
+				if existingContainerProfile.Name == id.Container {
+					containerExists = true
+					cm.applicationProfiles[appProfileName].Containers[existingContainerIndex] = containerProfile
+					break
+				}
+			}
+
+			if !containerExists {
+				appProfile.Containers = append(appProfile.Containers, containerProfile)
+				cm.applicationProfiles[appProfileName] = appProfile
+			}
 		}
 	}
 
