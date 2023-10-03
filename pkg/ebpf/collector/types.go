@@ -24,19 +24,14 @@ type ContainerState struct {
 type CollectorManager struct {
 	// Map of container ID to container state
 	containers map[ContainerId]*ContainerState
-
 	// Kubernetes connection clien
 	k8sClient *kubernetes.Clientset
-
 	// Event sink
 	eventSink *eventsink.EventSink
-
 	// Tracer
 	tracer tracing.ITracer
-
 	// config
 	config CollectorManagerConfig
-
 	// Application profiles
 	applicationProfiles ApplicationProfiles
 }
