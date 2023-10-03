@@ -11,10 +11,10 @@ type Engine struct {
 	existingApplicationProfiles collector.ApplicationProfiles
 }
 
-func NewEngine() *Engine {
+func NewEngine(dynamicApplicationProfiles collector.ApplicationProfiles) *Engine {
 	return &Engine{
-		dynamicApplicationProfiles:  make(collector.ApplicationProfiles),
-		existingApplicationProfiles: make(collector.ApplicationProfiles),
+		dynamicApplicationProfiles:  dynamicApplicationProfiles,
+		existingApplicationProfiles: make(collector.ApplicationProfiles), // TODO: get existing profiles from DB
 	}
 }
 

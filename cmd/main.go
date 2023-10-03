@@ -15,7 +15,7 @@ func main() {
 	ebpfManager := ebpf.NewEbpfManager(60)
 	ebpfManager.StartEventCollection()
 
-	engine := engine.NewEngine()
+	engine := engine.NewEngine(ebpfManager.ApplicationProfiles) // The profiles will be updated dynamically by the ebpf collector.
 	go engine.Start()
 
 	// Wait for shutdown signal
