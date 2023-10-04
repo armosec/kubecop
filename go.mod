@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/cilium/ebpf v0.11.0
 	github.com/kubescape/kapprofiler v0.0.11
+	github.com/looplab/fsm v1.0.1
 	k8s.io/apimachinery v0.28.2
 	k8s.io/client-go v0.28.2
 )

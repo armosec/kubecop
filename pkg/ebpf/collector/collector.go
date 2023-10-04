@@ -58,6 +58,7 @@ func (cm *CollectorManager) ContainerStopped(id *ContainerId) {
 	go cm.CollectContainerEvents(id)
 }
 
+// TODO: Replace the current implementation with channels instead of slices.
 func (cm *CollectorManager) CollectContainerEvents(id *ContainerId) {
 	// Check if container is still running (is it in the map?)
 	if _, ok := cm.containers[*id]; ok {

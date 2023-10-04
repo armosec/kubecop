@@ -1,10 +1,12 @@
 package engine
 
 import (
+	"context"
 	"log"
 	"time"
 
 	"github.com/armosec/kubecop/pkg/ebpf/collector"
+	"github.com/armosec/kubecop/pkg/engine/rule"
 )
 
 type Engine struct {
@@ -21,14 +23,15 @@ func NewEngine(dynamicApplicationProfiles collector.ApplicationProfiles) *Engine
 
 // TODO: implement the engine logic.
 func (engine *Engine) Start() {
+	exec := rule.NewNonWhitelistedExecRule()
+	err := exec.GetFSM().Event(context.Background(), "exec", "bla")
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+	}
 	for {
 		for appProfileName, profile := range engine.dynamicApplicationProfiles {
 			log.Printf("Application profile %v is: \n", appProfileName)
 			for _, containerProfile := range profile.Containers {
-				log.Printf("%v syscalls are: %v\n", containerProfile.Name, containerProfile.SysCalls)
-				log.Printf("%v files are: %v\n", containerProfile.Name, containerProfile.Opens)
-				log.Printf("%v network is: %v\n", containerProfile.Name, containerProfile.NetworkActivity)
-				log.Printf("%v capabilities are: %v\n", containerProfile.Name, containerProfile.Capabilities)
 				log.Printf("%v execs are: %v\n", containerProfile.Name, containerProfile.Execs)
 			}
 		}
