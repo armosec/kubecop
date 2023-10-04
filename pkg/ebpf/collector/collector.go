@@ -7,7 +7,6 @@ import (
 
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 
-	"golang.org/x/exp/slices"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -111,66 +110,23 @@ func (cm *CollectorManager) CollectContainerEvents(id *ContainerId) {
 
 		// Add execve events to container profile
 		for _, event := range execveEvents {
-			// TODO: check if event is already in containerProfile.Execs
-			containerProfile.Execs = append(containerProfile.Execs, ExecCalls{
-				Path: event.PathName,
-				Args: event.Args,
-				Envs: event.Env,
-			})
+			containerProfile.Execs = append(containerProfile.Execs, *event)
 		}
 
 		// Add dns events to container profile
 		for _, event := range dnsEvents {
-			if !dnsEventExists(event, containerProfile.Dns) {
-				containerProfile.Dns = append(containerProfile.Dns, DnsCalls{
-					DnsName:   event.DnsName,
-					Addresses: event.Addresses,
-				})
-			}
+			containerProfile.Dns = append(containerProfile.Dns, *event)
 		}
 
-		//interstingCapabilities := []string{"setpcap", "sysmodule", "net_raw", "net_admin", "sys_admin", "sys_rawio", "sys_ptrace", "sys_boot", "mac_override", "mac_admin", "perfmon", "all", "bpf"}
 		// Add capabilities events to container profile
 		for _, event := range capabilitiesEvents {
-			// TODO: check if event is already in containerProfile.Capabilities
-			//if slices.Contains(interstingCapabilities, event.CapabilityName) {
-			if len(containerProfile.Capabilities) == 0 {
-				containerProfile.Capabilities = append(containerProfile.Capabilities, CapabilitiesCalls{
-					Capabilities: []string{event.CapabilityName},
-					Syscall:      event.Syscall,
-				})
-			} else {
-				for _, capability := range containerProfile.Capabilities {
-					if capability.Syscall == event.Syscall {
-						if !slices.Contains(capability.Capabilities, event.CapabilityName) {
-							capability.Capabilities = append(capability.Capabilities, event.CapabilityName)
-						}
-					} else {
-						var syscalls []string
-						for _, cap := range containerProfile.Capabilities {
-							syscalls = append(syscalls, cap.Syscall)
-						}
-						if !slices.Contains(syscalls, event.Syscall) {
-							containerProfile.Capabilities = append(containerProfile.Capabilities, CapabilitiesCalls{
-								Capabilities: []string{event.CapabilityName},
-								Syscall:      event.Syscall,
-							})
-						}
-					}
-				}
-			}
+			containerProfile.Capabilities = append(containerProfile.Capabilities, *event)
 		}
 
 		// Add open events to container profile
 		for _, event := range openEvents {
-			hasSameFile, hasSameFlags := openEventExists(event, containerProfile.Opens)
-			// TODO: check if event is already in containerProfile.Opens & remove the 10000 limit.
-			if len(containerProfile.Opens) < 10000 && !(hasSameFile && hasSameFlags) {
-				openEvent := OpenCalls{
-					Path:  event.PathName,
-					Flags: event.Flags,
-				}
-				containerProfile.Opens = append(containerProfile.Opens, openEvent)
+			if len(containerProfile.Opens) < 10000 {
+				containerProfile.Opens = append(containerProfile.Opens, *event)
 			}
 		}
 
@@ -179,21 +135,19 @@ func (cm *CollectorManager) CollectContainerEvents(id *ContainerId) {
 		var incomingConnections []NetworkCalls
 		for _, networkEvent := range networkEvents {
 			if networkEvent.PacketType == "OUTGOING" {
-				if !networkEventExists(networkEvent, outgoingConnections) {
-					outgoingConnections = append(outgoingConnections, NetworkCalls{
-						Protocol:    networkEvent.Protocol,
-						Port:        networkEvent.Port,
-						DstEndpoint: networkEvent.DstEndpoint,
-					})
-				}
+				outgoingConnections = append(outgoingConnections, NetworkCalls{
+					Protocol:    networkEvent.Protocol,
+					Port:        networkEvent.Port,
+					DstEndpoint: networkEvent.DstEndpoint,
+					Timestamp:   networkEvent.Timestamp,
+				})
 			} else if networkEvent.PacketType == "HOST" {
-				if !networkEventExists(networkEvent, incomingConnections) {
-					incomingConnections = append(incomingConnections, NetworkCalls{
-						Protocol:    networkEvent.Protocol,
-						Port:        networkEvent.Port,
-						DstEndpoint: networkEvent.DstEndpoint,
-					})
-				}
+				incomingConnections = append(incomingConnections, NetworkCalls{
+					Protocol:    networkEvent.Protocol,
+					Port:        networkEvent.Port,
+					DstEndpoint: networkEvent.DstEndpoint,
+					Timestamp:   networkEvent.Timestamp,
+				})
 			}
 		}
 
@@ -265,65 +219,4 @@ func (cm *CollectorManager) OnContainerActivityEvent(event *tracing.ContainerAct
 			ContainerID: event.ContainerID,
 		})
 	}
-}
-
-func networkEventExists(networkEvent *tracing.NetworkEvent, networkCalls []NetworkCalls) bool {
-	for _, call := range networkCalls {
-		if networkEvent.DstEndpoint == call.DstEndpoint && networkEvent.Port == call.Port && networkEvent.Protocol == call.Protocol {
-			return true
-		}
-	}
-
-	return false
-}
-
-func dnsEventExists(dnsEvent *tracing.DnsEvent, dnsCalls []DnsCalls) bool {
-	for _, call := range dnsCalls {
-		if dnsEvent.DnsName == call.DnsName {
-			for _, address := range dnsEvent.Addresses {
-				if !slices.Contains(call.Addresses, address) {
-					call.Addresses = append(call.Addresses, address)
-					log.Print("Event exists, appending missing address")
-				}
-			}
-
-			return true
-		}
-	}
-
-	return false
-}
-
-func openEventExists(openEvent *tracing.OpenEvent, openEvents []OpenCalls) (bool, bool) {
-	hasSamePath := false
-	hasSameFlags := false
-	for _, element := range openEvents {
-		if element.Path == openEvent.PathName {
-			hasSamePath = true
-			hasAllFlags := true
-			for _, flag := range openEvent.Flags {
-				// Check if flag is in the flags of the openEvent
-				hasFlag := false
-				for _, flag2 := range element.Flags {
-					if flag == flag2 {
-						hasFlag = true
-						break
-					}
-				}
-				if !hasFlag {
-					hasAllFlags = false
-					break
-				}
-			}
-			if hasAllFlags {
-				hasSameFlags = true
-				break
-			}
-		}
-		if hasSamePath && hasSameFlags {
-			break
-		}
-	}
-
-	return hasSamePath, hasSameFlags
 }

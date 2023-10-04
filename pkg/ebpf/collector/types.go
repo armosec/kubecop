@@ -49,16 +49,11 @@ type CollectorManagerConfig struct {
 	ApplicationProfiles ApplicationProfiles
 }
 
-type ExecCalls struct {
-	Path string   `json:"path" yaml:"path"`
-	Args []string `json:"args" yaml:"args"`
-	Envs []string `json:"envs" yaml:"envs"`
-}
-
 type NetworkCalls struct {
 	Protocol    string `json:"protocol" yaml:"protocol"`
 	Port        uint16 `json:"port" yaml:"port"`
 	DstEndpoint string `json:"dstEndpoint" yaml:"dstEndpoint"`
+	Timestamp   int64  `json:"timestamp" yaml:"timestamp"`
 }
 
 type NetworkActivity struct {
@@ -66,29 +61,14 @@ type NetworkActivity struct {
 	Outgoing []NetworkCalls `json:"outgoing" yaml:"outgoing"`
 }
 
-type OpenCalls struct {
-	Path  string   `json:"path" yaml:"path"`
-	Flags []string `json:"flags" yaml:"flags"`
-}
-
-type CapabilitiesCalls struct {
-	Capabilities []string `json:"caps" yaml:"caps"`
-	Syscall      string   `json:"syscall" yaml:"syscall"`
-}
-
-type DnsCalls struct {
-	DnsName   string   `json:"dnsName" yaml:"dnsName"`
-	Addresses []string `json:"addresses" yaml:"addresses"`
-}
-
 type ContainerProfile struct {
-	Name            string              `json:"name" yaml:"name"`
-	Execs           []ExecCalls         `json:"execs" yaml:"execs"`
-	Opens           []OpenCalls         `json:"opens" yaml:"opens"`
-	NetworkActivity NetworkActivity     `json:"networkActivity" yaml:"networkActivity"`
-	Capabilities    []CapabilitiesCalls `json:"capabilities" yaml:"capabilities"`
-	Dns             []DnsCalls          `json:"dns" yaml:"dns"`
-	SysCalls        []string            `json:"syscalls" yaml:"syscalls"`
+	Name            string                      `json:"name" yaml:"name"`
+	Execs           []tracing.ExecveEvent       `json:"execs" yaml:"execs"`
+	Opens           []tracing.OpenEvent         `json:"opens" yaml:"opens"`
+	NetworkActivity NetworkActivity             `json:"networkActivity" yaml:"networkActivity"`
+	Capabilities    []tracing.CapabilitiesEvent `json:"capabilities" yaml:"capabilities"`
+	Dns             []tracing.DnsEvent          `json:"dns" yaml:"dns"`
+	SysCalls        []string                    `json:"syscalls" yaml:"syscalls"`
 }
 
 type ApplicationProfile struct {
@@ -96,4 +76,5 @@ type ApplicationProfile struct {
 	Containers []ContainerProfile `json:"containers" yaml:"containers"`
 }
 
+// ApplicationProfiles is a map of application profiles name to application profiles
 type ApplicationProfiles map[string]ApplicationProfile
