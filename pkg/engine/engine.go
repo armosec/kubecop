@@ -27,6 +27,10 @@ func (engine *Engine) Start() {
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 	}
+	err = exec.GetFSM().Event(context.Background(), "exec", "bla")
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+	}
 
 	reverseShell := rule.NewReverseShellRule()
 	err = reverseShell.GetFSM().Event(context.Background(), "syscall", "dup")

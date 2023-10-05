@@ -25,11 +25,11 @@ func NewNonWhitelistedExecRule() *NonWhitelistedExecRule {
 		"start",
 		fsm.Events{
 			{Name: "exec", Src: []string{"start"}, Dst: "exec"},
-			{Name: "whitelisted", Src: []string{"exec"}, Dst: "done"},
-			{Name: "non-whitelisted", Src: []string{"exec"}, Dst: "done"},
+			{Name: "whitelisted", Src: []string{"exec"}, Dst: "start"},
+			{Name: "non-whitelisted", Src: []string{"exec"}, Dst: "start"},
 		},
 		fsm.Callbacks{
-			"enter_exec":            rule.handleExec,
+			"after_exec":            rule.handleExec,
 			"after_whitelisted":     rule.handleWhitelisted,
 			"after_non-whitelisted": rule.handleNonWhitelisted,
 		},
