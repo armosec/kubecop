@@ -3,7 +3,6 @@ package engine
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/armosec/kubecop/pkg/ebpf/collector"
 	"github.com/armosec/kubecop/pkg/engine/rule"
@@ -28,14 +27,51 @@ func (engine *Engine) Start() {
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 	}
-	for {
-		for appProfileName, profile := range engine.dynamicApplicationProfiles {
-			log.Printf("Application profile %v is: \n", appProfileName)
-			for _, containerProfile := range profile.Containers {
-				log.Printf("%v execs are: %v\n", containerProfile.Name, containerProfile.Execs)
-			}
-		}
 
-		time.Sleep(5 * time.Second)
+	reverseShell := rule.NewReverseShellRule()
+	err = reverseShell.GetFSM().Event(context.Background(), "syscall", "dup")
+	if err != nil {
+		reverseShell.GetFSM().Current()
+		log.Printf("Error: %v\n State1: %v", err, reverseShell.GetFSM().Current())
 	}
+	err = reverseShell.GetFSM().Event(context.Background(), "syscall", "dup")
+	if err != nil {
+		log.Printf("Error: %v\n State2: %v", err, reverseShell.GetFSM().Current())
+	}
+	err = reverseShell.GetFSM().Event(context.Background(), "syscall", "bla")
+	if err != nil {
+		log.Printf("Error: %v\n State3: %v", err, reverseShell.GetFSM().Current())
+	}
+	err = reverseShell.GetFSM().Event(context.Background(), "syscall", "execve")
+	if err != nil {
+		log.Printf("Error: %v\n State: %v", err, reverseShell.GetFSM().Current())
+	}
+	err = reverseShell.GetFSM().Event(context.Background(), "syscall", "dup")
+	if err != nil {
+		reverseShell.GetFSM().Current()
+		log.Printf("Error: %v\n State1: %v", err, reverseShell.GetFSM().Current())
+	}
+	err = reverseShell.GetFSM().Event(context.Background(), "syscall", "dup")
+	if err != nil {
+		log.Printf("Error: %v\n State2: %v", err, reverseShell.GetFSM().Current())
+	}
+	err = reverseShell.GetFSM().Event(context.Background(), "syscall", "dup")
+	if err != nil {
+		log.Printf("Error: %v\n State3: %v", err, reverseShell.GetFSM().Current())
+	}
+	err = reverseShell.GetFSM().Event(context.Background(), "syscall", "execve")
+	if err != nil {
+		log.Printf("Error: %v\n State: %v", err, reverseShell.GetFSM().Current())
+	}
+
+	// for {
+	// 	for appProfileName, profile := range engine.dynamicApplicationProfiles {
+	// 		log.Printf("Application profile %v is: \n", appProfileName)
+	// 		for _, containerProfile := range profile.Containers {
+	// 			log.Printf("%v execs are: %v\n", containerProfile.Name, containerProfile.Execs)
+	// 		}
+	// 	}
+
+	// 	time.Sleep(5 * time.Second)
+	// }
 }
