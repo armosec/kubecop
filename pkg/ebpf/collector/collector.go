@@ -61,7 +61,7 @@ func (cm *CollectorManager) ContainerStopped(id *ContainerId) {
 // TODO: Replace the current implementation with channels instead of slices.
 func (cm *CollectorManager) CollectContainerEvents(id *ContainerId) {
 	// Check if container is still running (is it in the map?)
-	if _, ok := cm.containers[*id]; ok {
+	if _, ok := cm.containers[*id]; ok && cm.containers[*id].running {
 		// Collect data from container events
 		execveEvents, err := cm.eventSink.GetExecveEvents(id.Namespace, id.PodName, id.Container)
 		if err != nil {
@@ -181,6 +181,17 @@ func (cm *CollectorManager) CollectContainerEvents(id *ContainerId) {
 			if !containerExists {
 				appProfile.Containers = append(appProfile.Containers, containerProfile)
 				cm.applicationProfiles[appProfileName] = appProfile
+			}
+		}
+	} else {
+		// Remove container from container profiles list because it is not running anymore.
+		for index, profile := range cm.applicationProfiles[fmt.Sprintf("pod-%s", id.PodName)].Containers {
+			if profile.Name == id.Container {
+				newSlice := append(cm.applicationProfiles[fmt.Sprintf("pod-%s", id.PodName)].Containers[:index], cm.applicationProfiles[fmt.Sprintf("pod-%s", id.PodName)].Containers[index+1:]...)
+				appProfile := cm.applicationProfiles[fmt.Sprintf("pod-%s", id.PodName)]
+				appProfile.Containers = newSlice
+				cm.applicationProfiles[fmt.Sprintf("pod-%s", id.PodName)] = appProfile
+				break
 			}
 		}
 	}

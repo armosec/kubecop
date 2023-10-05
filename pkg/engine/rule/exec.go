@@ -4,8 +4,16 @@ import (
 	"context"
 	"log"
 
+	"github.com/armosec/kubecop/pkg/ebpf"
 	"github.com/looplab/fsm"
 )
+
+const (
+	NonWhitelistedExecRuleName = "NonWhitelistedExecRule"
+)
+
+// Global variable for the needed events for the rule.
+var execNeededEvents = []ebpf.Event{ebpf.Exec}
 
 type NonWhitelistedExecRule struct {
 	fsm              *fsm.FSM
@@ -15,7 +23,7 @@ type NonWhitelistedExecRule struct {
 
 func NewNonWhitelistedExecRule() *NonWhitelistedExecRule {
 	rule := &NonWhitelistedExecRule{
-		name:             "NonWhitelistedExecRule",
+		name:             NonWhitelistedExecRuleName,
 		whitelistedExecs: []string{"ls", "cat", "echo"}, // TODO: get whitelisted execs from DB/CRD.
 	}
 
@@ -74,4 +82,8 @@ func (rule *NonWhitelistedExecRule) Name() string {
 
 func (rule *NonWhitelistedExecRule) GetFSM() *fsm.FSM {
 	return rule.fsm
+}
+
+func (rule *NonWhitelistedExecRule) Events() []ebpf.Event {
+	return execNeededEvents
 }

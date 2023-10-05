@@ -1,4 +1,4 @@
-FROM golang:1.20.6-alpine3.18 as builder
+FROM golang:1.21.1-alpine3.18 as builder
 WORKDIR /go/src/app
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o kubecop ./cmd/main.go

@@ -4,12 +4,16 @@ import (
 	"context"
 	"log"
 
+	"github.com/armosec/kubecop/pkg/ebpf"
 	"github.com/looplab/fsm"
 )
 
 const (
 	ReverseShellRuleName = "ReverseShellRule"
 )
+
+// Global variable for the needed events for the rule.
+var reverseShellNeededEvents = []ebpf.Event{ebpf.Syscall}
 
 type ReverseShellRule struct {
 	fsm      *fsm.FSM
@@ -72,4 +76,8 @@ func (rule *ReverseShellRule) Name() string {
 
 func (rule *ReverseShellRule) GetFSM() *fsm.FSM {
 	return rule.fsm
+}
+
+func (rule *ReverseShellRule) Events() []ebpf.Event {
+	return reverseShellNeededEvents
 }
