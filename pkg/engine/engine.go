@@ -1,8 +1,6 @@
 package engine
 
 import (
-	// "context"
-
 	"log"
 	"time"
 
@@ -12,18 +10,16 @@ import (
 )
 
 type Engine struct {
-	dynamicApplicationProfiles  collector.ApplicationProfiles
-	existingApplicationProfiles collector.ApplicationProfiles
-	containerProfileToRulesMap  map[string][]rule.IRule // String is the container profile name.
-	shouldStop                  bool
+	dynamicApplicationProfiles collector.ApplicationProfiles
+	containerProfileToRulesMap map[string][]rule.IRule // String is the container profile name.
+	shouldStop                 bool
 }
 
 func NewEngine(dynamicApplicationProfiles collector.ApplicationProfiles) *Engine {
 	return &Engine{
-		dynamicApplicationProfiles:  dynamicApplicationProfiles,
-		existingApplicationProfiles: make(collector.ApplicationProfiles), // TODO: get existing profiles from DB.
-		containerProfileToRulesMap:  make(map[string][]rule.IRule),
-		shouldStop:                  false,
+		dynamicApplicationProfiles: dynamicApplicationProfiles,
+		containerProfileToRulesMap: make(map[string][]rule.IRule),
+		shouldStop:                 false,
 	}
 }
 
