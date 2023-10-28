@@ -1,4 +1,4 @@
-package appprofilecache
+package approfilecache
 
 import (
 	"context"

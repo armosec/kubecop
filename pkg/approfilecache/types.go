@@ -1,4 +1,4 @@
-package appprofilecache
+package approfilecache
 
 import (
 	"github.com/kubescape/kapprofiler/pkg/collector"
