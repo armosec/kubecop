@@ -4,20 +4,21 @@ import (
 	"log"
 	"time"
 
+	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/ebpf/collector"
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"golang.org/x/exp/slices"
 )
 
 type Engine struct {
-	dynamicApplicationProfiles collector.ApplicationProfiles
+	applicationProfileCache    approfilecache.ApplicationProfileCache
 	containerProfileToRulesMap map[string][]rule.IRule // String is the container profile name.
 	shouldStop                 bool
 }
 
-func NewEngine(dynamicApplicationProfiles collector.ApplicationProfiles) *Engine {
+func NewEngine(appProfileCache approfilecache.ApplicationProfileCache) *Engine {
 	return &Engine{
-		dynamicApplicationProfiles: dynamicApplicationProfiles,
+		applicationProfileCache:    appProfileCache,
 		containerProfileToRulesMap: make(map[string][]rule.IRule),
 		shouldStop:                 false,
 	}
