@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/armosec/kubecop/pkg/appprofilecache"
+	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine"
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -82,16 +82,25 @@ func main() {
 	tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
 
 	// Create application profile cache
-	appProfileCache, err := appprofilecache.NewApplicationProfileK8sCache(k8sConfig)
+	appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(k8sConfig)
 	if err != nil {
 		log.Fatalf("Failed to create application profile cache: %v\n", err)
 	}
 
 	// TODO: here will be the initialization of the recording subsystem
+	// MISSING RECORDING SUBSYSTEM!! Need profiles ahead of time
 
 	// Create the "Rule Engine" and start it
-	engine := engine.NewEngine(ebpfManager.ApplicationProfiles) // The profiles will be updated dynamically by the ebpf collector.
+	engine := engine.NewEngine(appProfileCache)
 	go engine.Start()
+
+	// Add the engine to the tracer
+	tracer.AddEventSink(engine)
+
+	// Start the tracer
+	if err := tracer.Start(); err != nil {
+		log.Fatalf("Failed to start tracer: %v\n", err)
+	}
 
 	// Wait for shutdown signal
 	shutdown := make(chan os.Signal, 1)
@@ -99,7 +108,11 @@ func main() {
 	<-shutdown
 	log.Println("Shutting down...")
 
-	ebpfManager.StopEventCollection()
+	// Stop the tracer
+	tracer.Stop()
+
+	// Stop the engine
+	engine.Stop()
 
 	// Exit with success
 	os.Exit(0)

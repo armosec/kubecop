@@ -21,7 +21,7 @@ type ApplicationProfileCache interface {
 	GetApplicationProfileOpenCalls(namespace, kind, workloadName, containerName string) (*[]collector.OpenCalls, error)
 
 	// Get network profile for the given container in Kubernetes workload (identified by namespace, kind, workload name and container name)
-	GetApplicationProfileNetworkCalls(namespace, kind, workloadName, containerName string) (*collector.NetworkCalls, error)
+	GetApplicationProfileNetworkCalls(namespace, kind, workloadName, containerName string) (*collector.NetworkActivity, error)
 
 	// Get system calls profile for the given container in Kubernetes workload (identified by namespace, kind, workload name and container name)
 	GetApplicationProfileSystemCalls(namespace, kind, workloadName, containerName string) ([]string, error)
