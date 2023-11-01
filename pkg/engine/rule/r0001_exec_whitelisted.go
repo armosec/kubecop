@@ -53,6 +53,14 @@ func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, even
 		return nil
 	}
 
+	if appProfileAccess == nil {
+		return &R0001ExecWhitelistedFailure{
+			RuleName:     rule.Name(),
+			Err:          "Application profile is missing",
+			FailureEvent: execEvent,
+		}
+	}
+
 	appProfileExecList, err := appProfileAccess.GetExecList()
 	if err != nil || appProfileExecList == nil {
 		return &R0001ExecWhitelistedFailure{
