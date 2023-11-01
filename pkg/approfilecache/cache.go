@@ -20,6 +20,10 @@ type ApplicationProfileK8sCache struct {
 	cache map[string]*collector.ApplicationProfile
 }
 
+type ApplicationProfileAccessImpl struct {
+	containerProfile *collector.ContainerProfile
+}
+
 func generateApplicationProfileName(kind, workloadName string) string {
 	return strings.ToLower(kind) + "-" + workloadName
 }
@@ -152,4 +156,41 @@ func (cache *ApplicationProfileK8sCache) GetApplicationProfileDNS(namespace, kin
 		}
 	}
 	return nil, fmt.Errorf("container profile %v not found in application profile for workload %v of kind %v in namespace %v", containerName, workloadName, kind, namespace)
+}
+
+func (cache *ApplicationProfileK8sCache) GetApplicationProfileAccess(namespace, kind, workloadName, containerName string) (SingleApplicationProfileAccess, error) {
+	applicationProfile, ok := cache.cache[generateCachedApplicationProfileKey(namespace, kind, workloadName)]
+	if !ok {
+		return nil, fmt.Errorf("application profile for workload %v of kind %v in namespace %v not found", workloadName, kind, namespace)
+	}
+	for _, containerProfile := range applicationProfile.Spec.Containers {
+		if containerProfile.Name == containerName {
+			return &ApplicationProfileAccessImpl{containerProfile: &containerProfile}, nil
+		}
+	}
+	return nil, fmt.Errorf("container profile %v not found in application profile for workload %v of kind %v in namespace %v", containerName, workloadName, kind, namespace)
+}
+
+func (access *ApplicationProfileAccessImpl) GetExecList() (*[]collector.ExecCalls, error) {
+	return &access.containerProfile.Execs, nil
+}
+
+func (access *ApplicationProfileAccessImpl) GetOpenList() (*[]collector.OpenCalls, error) {
+	return &access.containerProfile.Opens, nil
+}
+
+func (access *ApplicationProfileAccessImpl) GetNetworkActivity() (*collector.NetworkActivity, error) {
+	return &access.containerProfile.NetworkActivity, nil
+}
+
+func (access *ApplicationProfileAccessImpl) GetSystemCalls() ([]string, error) {
+	return access.containerProfile.SysCalls, nil
+}
+
+func (access *ApplicationProfileAccessImpl) GetCapabilities() ([]collector.CapabilitiesCalls, error) {
+	return access.containerProfile.Capabilities, nil
+}
+
+func (access *ApplicationProfileAccessImpl) GetDNS() ([]collector.DnsCalls, error) {
+	return access.containerProfile.Dns, nil
 }

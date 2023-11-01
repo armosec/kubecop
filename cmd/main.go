@@ -12,6 +12,7 @@ import (
 	"github.com/armosec/kubecop/pkg/engine"
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -90,12 +91,21 @@ func main() {
 	// TODO: here will be the initialization of the recording subsystem
 	// MISSING RECORDING SUBSYSTEM!! Need profiles ahead of time
 
+	// Create Kubernetes clientset from the configuration
+	clientset, err := kubernetes.NewForConfig(k8sConfig)
+	if err != nil {
+		log.Fatalf("Failed to create Kubernetes client: %v\n", err)
+	}
+
 	// Create the "Rule Engine" and start it
-	engine := engine.NewEngine(appProfileCache)
-	go engine.Start()
+	engine := engine.NewEngine(clientset, appProfileCache, 4)
 
 	// Add the engine to the tracer
+	tracer.AddContainerActivityListener(engine)
+	defer tracer.RemoveContainerActivityListener(engine)
+
 	tracer.AddEventSink(engine)
+	defer tracer.RemoveEventSink(engine)
 
 	// Start the tracer
 	if err := tracer.Start(); err != nil {
@@ -110,9 +120,6 @@ func main() {
 
 	// Stop the tracer
 	tracer.Stop()
-
-	// Stop the engine
-	engine.Stop()
 
 	// Exit with success
 	os.Exit(0)
