@@ -19,16 +19,16 @@ type SingleApplicationProfileAccess interface {
 
 type ApplicationProfileCache interface {
 	// Load an application profile to the cache
-	LoadApplicationProfile(namespace, kind, workloadName, containerName string) error
+	LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error
 
 	// Delete an application profile from the cache
-	DeleteApplicationProfile(namespace, kind, workloadName, containerName string) error
+	DeleteApplicationProfile(containerID string) error
 
 	// Has application profile for the given container in Kubernetes workload (identified by namespace, kind, workload name and container name)
 	HasApplicationProfile(namespace, kind, workloadName, containerName string) bool
 
-	// Get application profile access for the given container in Kubernetes workload (identified by namespace, kind, workload name and container name)
-	GetApplicationProfileAccess(namespace, kind, workloadName, containerName string) (SingleApplicationProfileAccess, error)
+	// Get application profile access for the given container in Kubernetes workload (identified by container name and ID in the cache)
+	GetApplicationProfileAccess(containerName, containerID string) (SingleApplicationProfileAccess, error)
 
 	// Get exec profile for the given container in Kubernetes workload (identified by namespace, kind, workload name and container name)
 	GetApplicationProfileExecCalls(namespace, kind, workloadName, containerName string) (*[]collector.ExecCalls, error)

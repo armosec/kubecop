@@ -65,7 +65,7 @@ func TestEngine_ContainerStartStop(t *testing.T) {
 	// Sleep for 1 second
 	time.Sleep(1 * time.Second)
 
-	kind, owner, err := e.GetWorkloadOwnerKindAndName(tracing.GeneralEvent{
+	kind, owner, err := e.GetWorkloadOwnerKindAndName(&tracing.GeneralEvent{
 		ContainerID: "test",
 	})
 	if err != nil {

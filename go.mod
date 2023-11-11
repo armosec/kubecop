@@ -5,7 +5,8 @@ go 1.21
 require (
 	github.com/cilium/ebpf v0.11.0
 	github.com/gammazero/workerpool v1.1.3
-	github.com/kubescape/kapprofiler v0.0.14
+	github.com/kubescape/kapprofiler v0.0.15
+	k8s.io/api v0.28.2
 	k8s.io/apimachinery v0.28.2
 	k8s.io/client-go v0.28.2
 )
@@ -96,7 +97,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.28.2 // indirect
 	k8s.io/cri-api v0.28.2 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230928205116-a78145627833 // indirect

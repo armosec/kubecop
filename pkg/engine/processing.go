@@ -11,10 +11,9 @@ import (
 
 func (engine *Engine) ProcessEvent(eventType tracing.EventType, event interface{}, appProfile approfilecache.SingleApplicationProfileAccess, boundRules []rule.Rule) {
 	// Convert the event to a generic event
-	e, ok := event.(tracing.GeneralEvent)
-	if !ok {
+	e, err := convertEventInterfaceToGenericEvent(eventType, event)
+	if err != nil {
 		log.Printf("Failed to convert event to a generic event: %v\n", event)
-		return
 	}
 
 	// Loop over the boundRules

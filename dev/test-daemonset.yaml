@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: test-nginx
+  namespace: kapprofiler-dev-env
+  labels:
+    k8s-app: test-nginx
+spec:
+  selector:
+    matchLabels:
+      k8s-app: test-nginx
+  template:
+    metadata:
+      labels:
+        k8s-app: test-nginx
+        kapprofiler/enabled: "true"
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        imagePullPolicy: Always

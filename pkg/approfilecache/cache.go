@@ -62,7 +62,7 @@ func (cache *ApplicationProfileK8sCache) HasApplicationProfile(namespace, kind, 
 	return ok
 }
 
-func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind, workloadName, containerName string) error {
+func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error {
 	appProfile, err := cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(namespace).Get(context.TODO(), generateApplicationProfileName(kind, workloadName), metav1.GetOptions{})
 	if err != nil {
 		return err
@@ -71,12 +71,12 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 	if err != nil {
 		return err
 	}
-	cache.cache[generateCachedApplicationProfileKey(namespace, kind, workloadName)] = applicationProfile
+	cache.cache[containerID] = applicationProfile
 	return nil
 }
 
-func (cache *ApplicationProfileK8sCache) DeleteApplicationProfile(namespace, kind, workloadName, containerName string) error {
-	delete(cache.cache, generateCachedApplicationProfileKey(namespace, kind, workloadName))
+func (cache *ApplicationProfileK8sCache) DeleteApplicationProfile(containerID string) error {
+	delete(cache.cache, containerID)
 	return nil
 }
 
@@ -158,17 +158,19 @@ func (cache *ApplicationProfileK8sCache) GetApplicationProfileDNS(namespace, kin
 	return nil, fmt.Errorf("container profile %v not found in application profile for workload %v of kind %v in namespace %v", containerName, workloadName, kind, namespace)
 }
 
-func (cache *ApplicationProfileK8sCache) GetApplicationProfileAccess(namespace, kind, workloadName, containerName string) (SingleApplicationProfileAccess, error) {
-	applicationProfile, ok := cache.cache[generateCachedApplicationProfileKey(namespace, kind, workloadName)]
+func (cache *ApplicationProfileK8sCache) GetApplicationProfileAccess(containerName, containerID string) (SingleApplicationProfileAccess, error) {
+	applicationProfile, ok := cache.cache[containerID]
 	if !ok {
-		return nil, fmt.Errorf("application profile for workload %v of kind %v in namespace %v not found", workloadName, kind, namespace)
+		return nil, fmt.Errorf("application profile for container %s", containerID)
 	}
 	for _, containerProfile := range applicationProfile.Spec.Containers {
 		if containerProfile.Name == containerName {
 			return &ApplicationProfileAccessImpl{containerProfile: &containerProfile}, nil
+		} else {
+			return nil, fmt.Errorf("container profile %v not found in application profile for container %v", containerName, containerID)
 		}
 	}
-	return nil, fmt.Errorf("container profile %v not found in application profile for workload %v of kind %v in namespace %v", containerName, workloadName, kind, namespace)
+	return nil, fmt.Errorf("container profile %v not found in application profile for container %v", containerName, containerID)
 }
 
 func (access *ApplicationProfileAccessImpl) GetExecList() (*[]collector.ExecCalls, error) {

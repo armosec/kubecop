@@ -28,28 +28,38 @@ var containerIdToDetailsCache = make(map[string]containerEntry)
 
 func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityEvent) {
 	if event.Activity == tracing.ContainerActivityEventStart {
-		go func() {
-			ownerRef, err := getHighestOwnerOfPod(engine.k8sClientset, event.PodName, event.Namespace)
+
+		ownerRef, err := getHighestOwnerOfPod(engine.k8sClientset, event.PodName, event.Namespace)
+		if err != nil {
+			log.Printf("Failed to get highest owner of pod %s/%s: %v\n", event.Namespace, event.PodName, err)
+			return
+		}
+
+		// Load application profile if it exists
+		err = engine.applicationProfileCache.LoadApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID)
+		if err != nil {
+			// Fall back to the pod level application profile
+			err = engine.applicationProfileCache.LoadApplicationProfile(event.Namespace, "Pod", event.PodName, event.ContainerName, event.ContainerID)
 			if err != nil {
-				log.Printf("Failed to get highest owner of pod %s/%s: %v\n", event.Namespace, event.PodName, err)
-				return
+				log.Printf("Failed to load application profile for %s/%s/%s/%s: %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
 			}
+		}
 
-			// Get the rules that are bound to the container
-			// TODO do real binding implementation, right now we just get a single rule
-			boundRules := rule.CreateRulesByNames([]string{rule.R0001ExecWhitelistedRuleDescriptor.Name})
+		// Get the rules that are bound to the container
+		// TODO do real binding implementation, right now we just get a single rule
+		boundRules := rule.CreateRulesByNames([]string{rule.R0001ExecWhitelistedRuleDescriptor.Name})
 
-			// Add the container to the cache
-			containerIdToDetailsCache[event.ContainerID] = containerEntry{
-				ContainerName: event.ContainerName,
-				PodName:       event.PodName,
-				Namespace:     event.Namespace,
-				OwnerKind:     ownerRef.Kind,
-				OwnerName:     ownerRef.Name,
-				NsMntId:       event.NsMntId,
-				BoundRules:    boundRules,
-			}
-		}()
+		// Add the container to the cache
+		containerIdToDetailsCache[event.ContainerID] = containerEntry{
+			ContainerName: event.ContainerName,
+			PodName:       event.PodName,
+			Namespace:     event.Namespace,
+			OwnerKind:     ownerRef.Kind,
+			OwnerName:     ownerRef.Name,
+			NsMntId:       event.NsMntId,
+			BoundRules:    boundRules,
+		}
+
 	} else if event.Activity == tracing.ContainerActivityEventStop {
 		go func() {
 			// Remove the container from the cache
@@ -58,7 +68,7 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 	}
 }
 
-func (engine *Engine) GetWorkloadOwnerKindAndName(event tracing.GeneralEvent) (string, string, error) {
+func (engine *Engine) GetWorkloadOwnerKindAndName(event *tracing.GeneralEvent) (string, string, error) {
 	eventContainerId := event.ContainerID
 	if eventContainerId == "" {
 		return "", "", fmt.Errorf("eventContainerId is empty")
@@ -71,7 +81,7 @@ func (engine *Engine) GetWorkloadOwnerKindAndName(event tracing.GeneralEvent) (s
 	return containerDetails.OwnerKind, containerDetails.OwnerName, nil
 }
 
-func (engine *Engine) GetRulesForEvent(event tracing.GeneralEvent) []rule.Rule {
+func (engine *Engine) GetRulesForEvent(event *tracing.GeneralEvent) []rule.Rule {
 	eventContainerId := event.ContainerID
 	if eventContainerId == "" {
 		return []rule.Rule{}

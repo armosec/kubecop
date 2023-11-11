@@ -14,7 +14,7 @@ IMAGE_NAME ?= kubecop:latest
 
 
 $(BINARY_NAME): $(GOFILES) go.mod go.sum Makefile
-	CGO_ENABLED=1 go build -o $(BINARY_NAME) -v
+	CGO_ENABLED=0 go build -o $(BINARY_NAME) cmd/main.go
 
 test:
 	$(GOTEST_SUDO_PREFIX) $(GOTEST) -v ./...

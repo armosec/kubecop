@@ -24,30 +24,70 @@ func (engine *Engine) submitEventForProcessing(eventType tracing.EventType, even
 	// Add the event to a working group
 	engine.eventProcessingPool.Submit(func() {
 		// Convert the event to a generic event
-		e, ok := event.(tracing.GeneralEvent)
-		if !ok {
+		e, err := convertEventInterfaceToGenericEvent(eventType, event)
+		if err != nil {
 			log.Printf("Failed to convert event to a generic event: %v\n", event)
-			return
 		}
 
 		// Get the rules that are bound to this event
 		rules := engine.GetRulesForEvent(e)
 
-		// Get the full workload kind and name
-		workloadKind, workloadName, err := engine.GetWorkloadOwnerKindAndName(e)
-		if err != nil {
-			workloadKind = "Pod"
-			workloadName = e.PodName
-		}
-
 		// Fetch the application profile (it should be faster than checking each rule if needed and then fetching it)
-		appProfile, err := engine.applicationProfileCache.GetApplicationProfileAccess(e.Namespace, workloadKind, workloadName, e.ContainerID)
+		appProfile, err := engine.applicationProfileCache.GetApplicationProfileAccess(e.ContainerName, e.ContainerID)
 		if err != nil {
 			fmt.Printf("%v - error getting app profile: %v\n", e, err)
 		}
 
 		engine.ProcessEvent(eventType, event, appProfile, rules)
 	})
+}
+
+func convertEventInterfaceToGenericEvent(eventType tracing.EventType, event interface{}) (*tracing.GeneralEvent, error) {
+	// Switch on the event type
+	switch eventType {
+	case tracing.ExecveEventType:
+		// Convert the event to an execve event
+		execveEvent, ok := event.(*tracing.ExecveEvent)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert event to an execve event: %v", event)
+		} else {
+			return &execveEvent.GeneralEvent, nil
+		}
+	case tracing.OpenEventType:
+		// Convert the event to an open event
+		openEvent, ok := event.(*tracing.OpenEvent)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert event to an open event: %v", event)
+		} else {
+			return &openEvent.GeneralEvent, nil
+		}
+	case tracing.NetworkEventType:
+		// Convert the event to a network event
+		networkEvent, ok := event.(*tracing.NetworkEvent)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert event to a network event: %v", event)
+		} else {
+			return &networkEvent.GeneralEvent, nil
+		}
+	case tracing.CapabilitiesEventType:
+		// Convert the event to a capabilities event
+		capabilitiesEvent, ok := event.(*tracing.CapabilitiesEvent)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert event to a capabilities event: %v", event)
+		} else {
+			return &capabilitiesEvent.GeneralEvent, nil
+		}
+	case tracing.DnsEventType:
+		// Convert the event to a dns event
+		dnsEvent, ok := event.(*tracing.DnsEvent)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert event to a dns event: %v", event)
+		} else {
+			return &dnsEvent.GeneralEvent, nil
+		}
+	default:
+		return nil, fmt.Errorf("unknown event type: %v", eventType)
+	}
 }
 
 // implement EventSink interface for the engine
