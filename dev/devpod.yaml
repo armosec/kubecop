@@ -1,0 +1,106 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kapprofiler-dev-env
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kapprofiler-dev-env
+  namespace: kapprofiler-dev-env
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kapprofiler-dev-env-cluster-role-binding
+subjects:
+- kind: ServiceAccount
+  name: kapprofiler-dev-env
+  namespace: kapprofiler-dev-env
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kapprofiler-dev-env
+  namespace: kapprofiler-dev-env
+  labels:
+    k8s-app: kapprofiler-dev-env
+spec:
+  selector:
+    matchLabels:
+      k8s-app: kapprofiler-dev-env
+  template:
+    metadata:
+      labels:
+        k8s-app: kapprofiler-dev-env
+    spec:
+      serviceAccount: kapprofiler-dev-env
+      hostPID: true
+      hostNetwork: false
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: dev-env
+        terminationMessagePolicy: FallbackToLogsOnError
+        image: ubuntu:latest
+        command: ["/bin/sleep"]
+        args: ["infinity"]
+        imagePullPolicy: Always
+        env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: HOST_ROOT
+            value: "/host"
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              # fanotify requires CAP_SYS_ADMIN
+              - SYS_ADMIN
+        volumeMounts:
+        - name: host
+          mountPath: /host
+        - name: run
+          mountPath: /run
+        - name: modules
+          mountPath: /lib/modules
+        - name: debugfs
+          mountPath: /sys/kernel/debug
+        - name: cgroup
+          mountPath: /sys/fs/cgroup
+        - name: bpffs
+          mountPath: /sys/fs/bpf
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+      volumes:
+      - name: host
+        hostPath:
+          path: /
+      - name: run
+        hostPath:
+          path: /run
+      - name: cgroup
+        hostPath:
+          path: /sys/fs/cgroup
+      - name: modules
+        hostPath:
+          path: /lib/modules
+      - name: bpffs
+        hostPath:
+          path: /sys/fs/bpf
+      - name: debugfs
+        hostPath:
+          path: /sys/kernel/debug
