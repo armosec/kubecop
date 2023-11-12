@@ -19,4 +19,10 @@ kubectl apply -f dev/nginx/nginx-deployment.yaml
 ```
 
 and now open a shell on the Nginx Pod which will trigger un-whitelisted alert in the KubeCop
+```bash
+kubectl exec -it $(kubectl get pods -l app=nginx -o=jsonpath='{.items[0].metadata.name}') -- sh
+```
 
+you should get this on the KubeCon console:
+```
+&{nginx ad5d83bb20617b086ec8ec384ac76976d2ac4aa39d8380f2ae3b0080d205edc5 nginx-deployment-cbdccf466-jhvb7 default 1699770928201031673 0} - Alert exec call "/bin/sh" is not whitelisted by application profile```
