@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/cilium/ebpf v0.11.0
 	github.com/gammazero/workerpool v1.1.3
-	github.com/kubescape/kapprofiler v0.0.15
+	github.com/kubescape/kapprofiler v0.0.18
 	k8s.io/api v0.28.2
 	k8s.io/apimachinery v0.28.2
 	k8s.io/client-go v0.28.2

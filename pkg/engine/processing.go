@@ -19,9 +19,9 @@ func (engine *Engine) ProcessEvent(eventType tracing.EventType, event interface{
 	// Loop over the boundRules
 	for _, rule := range boundRules {
 		// TODO if no app profile and one of the rules must have it then fire alert!
-		if appProfile == nil && rule.Requirements().NeedApplicationProfile {
-			fmt.Printf("%v - warning missing app profile", e)
-		}
+		//if appProfile == nil && rule.Requirements().NeedApplicationProfile {
+		//fmt.Printf("%v - warning missing app profile", e)
+		//}
 
 		ruleFailure := rule.ProcessEvent(eventType, event, appProfile)
 		if ruleFailure != nil {
