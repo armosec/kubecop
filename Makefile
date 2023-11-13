@@ -25,6 +25,9 @@ install: $(BINARY_NAME)
 open-shell:
 	./scripts/open-shell-in-pod.sh
 
+close-shell:
+	cat cop_pids.txt | xargs kill -9
+
 deploy-dev-pod:
 	kubectl apply -f etc/app-profile.crd.yaml
 	kubectl apply -f dev/devpod.yaml

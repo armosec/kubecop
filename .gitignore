@@ -56,3 +56,4 @@ go.work
 .ionide
 
 kubecop
+cop_pids.txt

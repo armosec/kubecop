@@ -41,8 +41,6 @@ spec:
       serviceAccount: kapprofiler-dev-env
       hostPID: true
       hostNetwork: false
-      imagePullSecrets:
-      - name: regcred
       containers:
       - name: dev-env
         terminationMessagePolicy: FallbackToLogsOnError
