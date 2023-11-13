@@ -33,10 +33,7 @@ func (engine *Engine) submitEventForProcessing(eventType tracing.EventType, even
 		rules := engine.GetRulesForEvent(e)
 
 		// Fetch the application profile (it should be faster than checking each rule if needed and then fetching it)
-		appProfile, err := engine.applicationProfileCache.GetApplicationProfileAccess(e.ContainerName, e.ContainerID)
-		if err != nil {
-			fmt.Printf("%v - error getting app profile: %v\n", e, err)
-		}
+		appProfile, _ := engine.applicationProfileCache.GetApplicationProfileAccess(e.ContainerName, e.ContainerID)
 
 		engine.ProcessEvent(eventType, event, appProfile, rules)
 	})

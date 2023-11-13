@@ -4,20 +4,31 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/kubescape/kapprofiler/pkg/collector"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/dynamic/dynamicinformer"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 )
+
+type ApplicationProfileChacheEntry struct {
+	ApplicationProfile *collector.ApplicationProfile
+	WorkloadName       string
+	WorkloadKind       string
+	Namespace          string
+}
 
 type ApplicationProfileK8sCache struct {
 	k8sConfig     *rest.Config
 	dynamicClient *dynamic.DynamicClient
 
-	cache map[string]*collector.ApplicationProfile
+	cache                  map[string]*ApplicationProfileChacheEntry
+	informerControlChannel chan struct{}
 }
 
 type ApplicationProfileAccessImpl struct {
@@ -53,13 +64,20 @@ func NewApplicationProfileK8sCache(k8sConfig *rest.Config) (*ApplicationProfileK
 	if err != nil {
 		return nil, err
 	}
-	cache := make(map[string]*collector.ApplicationProfile)
-	return &ApplicationProfileK8sCache{k8sConfig: k8sConfig, dynamicClient: dynamicClient, cache: cache}, nil
+	cache := make(map[string]*ApplicationProfileChacheEntry)
+	controlChannel := make(chan struct{})
+	newApplicationCache := ApplicationProfileK8sCache{k8sConfig: k8sConfig, dynamicClient: dynamicClient, cache: cache, informerControlChannel: controlChannel}
+	newApplicationCache.StartController()
+	return &newApplicationCache, nil
+}
+
+func (cache *ApplicationProfileK8sCache) Destroy() {
+	close(cache.informerControlChannel)
 }
 
 func (cache *ApplicationProfileK8sCache) HasApplicationProfile(namespace, kind, workloadName, containerName string) bool {
-	_, ok := cache.cache[generateCachedApplicationProfileKey(namespace, kind, workloadName)]
-	return ok
+	// Not implemented yet
+	return false
 }
 
 func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error {
@@ -71,7 +89,22 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 	if err != nil {
 		return err
 	}
-	cache.cache[containerID] = applicationProfile
+	cache.cache[containerID] = &ApplicationProfileChacheEntry{
+		ApplicationProfile: applicationProfile,
+		WorkloadName:       workloadName,
+		WorkloadKind:       kind,
+		Namespace:          namespace,
+	}
+	return nil
+}
+
+func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error {
+	cache.cache[containerID] = &ApplicationProfileChacheEntry{
+		ApplicationProfile: nil,
+		WorkloadName:       workloadName,
+		WorkloadKind:       kind,
+		Namespace:          namespace,
+	}
 	return nil
 }
 
@@ -80,90 +113,18 @@ func (cache *ApplicationProfileK8sCache) DeleteApplicationProfile(containerID st
 	return nil
 }
 
-func (cache *ApplicationProfileK8sCache) GetApplicationProfileExecCalls(namespace, kind, workloadName, containerName string) (*[]collector.ExecCalls, error) {
-	applicationProfile, ok := cache.cache[generateCachedApplicationProfileKey(namespace, kind, workloadName)]
-	if !ok {
-		return nil, fmt.Errorf("application profile for workload %v of kind %v in namespace %v not found", workloadName, kind, namespace)
-	}
-	for _, containerProfile := range applicationProfile.Spec.Containers {
-		if containerProfile.Name == containerName {
-			return &containerProfile.Execs, nil
-		}
-	}
-	return nil, fmt.Errorf("container profile %v not found in application profile for workload %v of kind %v in namespace %v", containerName, workloadName, kind, namespace)
-}
-
-func (cache *ApplicationProfileK8sCache) GetApplicationProfileOpenCalls(namespace, kind, workloadName, containerName string) (*[]collector.OpenCalls, error) {
-	applicationProfile, ok := cache.cache[generateCachedApplicationProfileKey(namespace, kind, workloadName)]
-	if !ok {
-		return nil, fmt.Errorf("application profile for workload %v of kind %v in namespace %v not found", workloadName, kind, namespace)
-	}
-	for _, containerProfile := range applicationProfile.Spec.Containers {
-		if containerProfile.Name == containerName {
-			return &containerProfile.Opens, nil
-		}
-	}
-	return nil, fmt.Errorf("container profile %v not found in application profile for workload %v of kind %v in namespace %v", containerName, workloadName, kind, namespace)
-}
-
-func (cache *ApplicationProfileK8sCache) GetApplicationProfileNetworkCalls(namespace, kind, workloadName, containerName string) (*collector.NetworkActivity, error) {
-	applicationProfile, ok := cache.cache[generateCachedApplicationProfileKey(namespace, kind, workloadName)]
-	if !ok {
-		return nil, fmt.Errorf("application profile for workload %v of kind %v in namespace %v not found", workloadName, kind, namespace)
-	}
-	for _, containerProfile := range applicationProfile.Spec.Containers {
-		if containerProfile.Name == containerName {
-			return &containerProfile.NetworkActivity, nil
-		}
-	}
-	return nil, fmt.Errorf("container profile %v not found in application profile for workload %v of kind %v in namespace %v", containerName, workloadName, kind, namespace)
-}
-
-func (cache *ApplicationProfileK8sCache) GetApplicationProfileSystemCalls(namespace, kind, workloadName, containerName string) ([]string, error) {
-	applicationProfile, ok := cache.cache[generateCachedApplicationProfileKey(namespace, kind, workloadName)]
-	if !ok {
-		return nil, fmt.Errorf("application profile for workload %v of kind %v in namespace %v not found", workloadName, kind, namespace)
-	}
-	for _, containerProfile := range applicationProfile.Spec.Containers {
-		if containerProfile.Name == containerName {
-			return containerProfile.SysCalls, nil
-		}
-	}
-	return nil, fmt.Errorf("container profile %v not found in application profile for workload %v of kind %v in namespace %v", containerName, workloadName, kind, namespace)
-}
-
-func (cache *ApplicationProfileK8sCache) GetApplicationProfileCapabilities(namespace, kind, workloadName, containerName string) ([]collector.CapabilitiesCalls, error) {
-	applicationProfile, ok := cache.cache[generateCachedApplicationProfileKey(namespace, kind, workloadName)]
-	if !ok {
-		return nil, fmt.Errorf("application profile for workload %v of kind %v in namespace %v not found", workloadName, kind, namespace)
-	}
-	for _, containerProfile := range applicationProfile.Spec.Containers {
-		if containerProfile.Name == containerName {
-			return containerProfile.Capabilities, nil
-		}
-	}
-	return nil, fmt.Errorf("container profile %v not found in application profile for workload %v of kind %v in namespace %v", containerName, workloadName, kind, namespace)
-}
-
-func (cache *ApplicationProfileK8sCache) GetApplicationProfileDNS(namespace, kind, workloadName, containerName string) ([]collector.DnsCalls, error) {
-	applicationProfile, ok := cache.cache[generateCachedApplicationProfileKey(namespace, kind, workloadName)]
-	if !ok {
-		return nil, fmt.Errorf("application profile for workload %v of kind %v in namespace %v not found", workloadName, kind, namespace)
-	}
-	for _, containerProfile := range applicationProfile.Spec.Containers {
-		if containerProfile.Name == containerName {
-			return containerProfile.Dns, nil
-		}
-	}
-	return nil, fmt.Errorf("container profile %v not found in application profile for workload %v of kind %v in namespace %v", containerName, workloadName, kind, namespace)
-}
-
 func (cache *ApplicationProfileK8sCache) GetApplicationProfileAccess(containerName, containerID string) (SingleApplicationProfileAccess, error) {
 	applicationProfile, ok := cache.cache[containerID]
 	if !ok {
 		return nil, fmt.Errorf("application profile for container %s", containerID)
 	}
-	for _, containerProfile := range applicationProfile.Spec.Containers {
+
+	// Check that the application profile is not nil
+	if applicationProfile.ApplicationProfile == nil {
+		return nil, fmt.Errorf("application profile for container %s is nil (does not exist yet)", containerID)
+	}
+
+	for _, containerProfile := range applicationProfile.ApplicationProfile.Spec.Containers {
 		if containerProfile.Name == containerName {
 			return &ApplicationProfileAccessImpl{containerProfile: &containerProfile}, nil
 		} else {
@@ -195,4 +156,69 @@ func (access *ApplicationProfileAccessImpl) GetCapabilities() ([]collector.Capab
 
 func (access *ApplicationProfileAccessImpl) GetDNS() ([]collector.DnsCalls, error) {
 	return access.containerProfile.Dns, nil
+}
+
+func (c *ApplicationProfileK8sCache) StartController() {
+
+	// Initialize factory and informer
+	informer := dynamicinformer.NewFilteredDynamicSharedInformerFactory(c.dynamicClient, 0, metav1.NamespaceAll, nil).ForResource(collector.AppProfileGvr).Informer()
+
+	// Add event handlers to informer
+	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) { // Called when an ApplicationProfile is added
+			c.handleApplicationProfile(obj)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) { // Called when an ApplicationProfile is updated
+			c.handleApplicationProfile(newObj)
+		},
+		DeleteFunc: func(obj interface{}) { // Called when an ApplicationProfile is deleted
+			c.handleDeleteApplicationProfile(obj)
+		},
+	})
+
+	// Run the informer
+	go informer.Run(c.informerControlChannel)
+}
+
+func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj interface{}) {
+	appProfile, err := getApplicationProfileFromObj(obj)
+	if err != nil {
+		log.Printf("Failed to get application profile from object: %v\n", err)
+		return
+	}
+	// Check if the application profile is final
+	if appProfile.GetAnnotations()["kapprofiler.kubescape.com/final"] != "true" {
+		return
+	}
+
+	// Convert the application profile name to kind and workload name
+	kind, workloadName := strings.Split(appProfile.GetName(), "-")[0], strings.SplitN(appProfile.GetName(), "-", 2)[1]
+
+	// Add the application profile to the cache
+
+	// Loop over the application profile cache entries and check if there is an entry for the same workload
+	for _, cacheEntry := range c.cache {
+		if cacheEntry.WorkloadName == workloadName && strings.ToLower(cacheEntry.WorkloadKind) == kind && cacheEntry.Namespace == appProfile.GetNamespace() {
+			// Update the cache entry
+			cacheEntry.ApplicationProfile = appProfile
+		}
+	}
+}
+
+func (c *ApplicationProfileK8sCache) handleDeleteApplicationProfile(obj interface{}) {
+	appProfile, err := getApplicationProfileFromObj(obj)
+	if err != nil {
+		log.Printf("Failed to get application profile from object: %v\n", err)
+		return
+	}
+	// Convert the application profile name to kind and workload name
+	kind, workloadName := strings.Split(appProfile.GetName(), "-")[0], strings.Split(appProfile.GetName(), "-")[1]
+
+	// Delete the application profile from the cache
+	for key, cacheEntry := range c.cache {
+		if cacheEntry.WorkloadName == workloadName && cacheEntry.WorkloadKind == kind && cacheEntry.Namespace == appProfile.GetNamespace() {
+			// Delete the cache entry
+			delete(c.cache, key)
+		}
+	}
 }

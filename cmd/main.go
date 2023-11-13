@@ -11,6 +11,9 @@ import (
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine"
 	"github.com/cilium/ebpf/rlimit"
+	"github.com/kubescape/kapprofiler/pkg/collector"
+	reconcilercontroller "github.com/kubescape/kapprofiler/pkg/controller"
+	"github.com/kubescape/kapprofiler/pkg/eventsink"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -87,9 +90,43 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create application profile cache: %v\n", err)
 	}
+	defer appProfileCache.Destroy()
 
-	// TODO: here will be the initialization of the recording subsystem
-	// MISSING RECORDING SUBSYSTEM!! Need profiles ahead of time
+	//////////////////////////////////////////////////////////////////////////////
+	// Fire up the recording subsystem
+
+	eventSink, err := eventsink.NewEventSink("", true)
+	if err != nil {
+		log.Fatalf("Failed to create event sink: %v\n", err)
+	}
+
+	// Start the event sink
+	if err := eventSink.Start(); err != nil {
+		log.Fatalf("Failed to start event sink: %v\n", err)
+	}
+	defer eventSink.Stop()
+
+	// Start the collector manager
+	collectorManagerConfig := &collector.CollectorManagerConfig{
+		EventSink:    eventSink,
+		Tracer:       tracer,
+		Interval:     60,  // 60 seconds for now, TODO: make it configurable
+		FinalizeTime: 120, // 120 seconds for now, TODO: make it configurable
+		K8sConfig:    k8sConfig,
+	}
+	cm, err := collector.StartCollectorManager(collectorManagerConfig)
+	if err != nil {
+		log.Fatalf("Failed to start collector manager: %v\n", err)
+	}
+	defer cm.StopCollectorManager()
+
+	// Last but not least, start the reconciler controller
+	appProfileReconcilerController := reconcilercontroller.NewController(k8sConfig)
+	appProfileReconcilerController.StartController()
+	defer appProfileReconcilerController.StopController()
+
+	//////////////////////////////////////////////////////////////////////////////
+	// Recording subsystem is ready, start the rule engine
 
 	// Create Kubernetes clientset from the configuration
 	clientset, err := kubernetes.NewForConfig(k8sConfig)
@@ -106,6 +143,8 @@ func main() {
 
 	tracer.AddEventSink(engine)
 	defer tracer.RemoveEventSink(engine)
+	tracer.AddEventSink(eventSink)
+	defer tracer.RemoveEventSink(eventSink)
 
 	// Start the tracer
 	if err := tracer.Start(); err != nil {
