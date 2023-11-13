@@ -13,8 +13,7 @@ make open-shell     # Open a shell on the development Pods
 
 To test it, in a different shell install the application profile for Nginx and deploy Nginx
 ```bash
-kubectl apply -f dev/nginx/nginx-app-profile.yaml
-kubectl apply -f dev/nginx/nginx-deployment.yaml
+kubectl apply -f dev/nginx/nginx-app-profile.yaml -f dev/nginx/nginx-deployment.yaml
 ```
 
 and now open a shell on the Nginx Pod which will trigger un-whitelisted alert in the KubeCop

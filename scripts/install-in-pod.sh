@@ -11,6 +11,7 @@ export NAMESPACE=kapprofiler-dev-env
 # for each pod in the namespace, copy the file to the pod
 POD_LIST=$(kubectl -n $NAMESPACE get pods -l k8s-app=kapprofiler-dev-env -o jsonpath="{.items[*].metadata.name}")
 for POD in $POD_LIST; do
+    echo "Copying $1 to $POD"
     kubectl cp $1 $NAMESPACE/$POD:/bin/$1
 done
 # export POD=$(kubectl -n $NAMESPACE get pods -l k8s-app=kapprofiler-dev-env -o jsonpath="{.items[0].metadata.name}")
