@@ -3,6 +3,7 @@ package rule
 // List of all rules descriptions.
 var ruleDescriptions []RuleDesciptor = []RuleDesciptor{
 	R0001ExecWhitelistedRuleDescriptor,
+	R1000ExecFromMaliciousSourceDescriptor,
 }
 
 func CreateRulesByTags(tags []string) []Rule {
