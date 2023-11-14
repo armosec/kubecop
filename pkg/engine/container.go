@@ -38,10 +38,10 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 		// Load application profile if it exists
 		err = engine.applicationProfileCache.LoadApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID)
 		if err != nil {
-			// Fall back to the pod level application profile
-			err = engine.applicationProfileCache.LoadApplicationProfile(event.Namespace, "Pod", event.PodName, event.ContainerName, event.ContainerID)
+			// Ask cache to load the application profile when/if it becomes available
+			err = engine.applicationProfileCache.AnticipateApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID)
 			if err != nil {
-				log.Printf("Failed to load application profile for %s/%s/%s/%s: %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
+				log.Printf("Failed to anticipate application profile for container %s/%s/%s/%s: %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
 			}
 		}
 
