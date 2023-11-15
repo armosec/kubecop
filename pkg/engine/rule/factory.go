@@ -3,6 +3,7 @@ package rule
 // List of all rules descriptions.
 var ruleDescriptions []RuleDesciptor = []RuleDesciptor{
 	R0001ExecWhitelistedRuleDescriptor,
+	R0003UnexpectedSystemCallRuleDescriptor,
 	R1000ExecFromMaliciousSourceDescriptor,
 }
 

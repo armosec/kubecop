@@ -8,6 +8,8 @@ import (
 type RuleDesciptor struct {
 	// Rule Name.
 	Name string
+	// Priority.
+	Priority int
 	// Tags
 	Tags []string
 	// Rule requirements.
@@ -19,6 +21,8 @@ type RuleDesciptor struct {
 type RuleFailure interface {
 	// Rule Name.
 	Name() string
+	// Priority.
+	Priority() int
 	// Error interface.
 	Error() string
 	// Generic event

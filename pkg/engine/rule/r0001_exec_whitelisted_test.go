@@ -8,7 +8,8 @@ import (
 )
 
 type MockAppProfileAccess struct {
-	Execs []collector.ExecCalls
+	Execs    []collector.ExecCalls
+	Syscalls []string
 }
 
 func (m *MockAppProfileAccess) GetExecList() (*[]collector.ExecCalls, error) {
@@ -24,7 +25,7 @@ func (m *MockAppProfileAccess) GetNetworkActivity() (*collector.NetworkActivity,
 }
 
 func (m *MockAppProfileAccess) GetSystemCalls() ([]string, error) {
-	return nil, nil
+	return m.Syscalls, nil
 }
 
 func (m *MockAppProfileAccess) GetCapabilities() ([]collector.CapabilitiesCalls, error) {

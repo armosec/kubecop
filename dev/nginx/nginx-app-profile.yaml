@@ -1,6 +1,8 @@
 apiVersion: kubescape.io/v1
 kind: ApplicationProfile
 metadata:
+  annotations:
+    kapprofiler.kubescape.io/final: "true"
   name: deployment-nginx-deployment
   namespace: default
 spec:

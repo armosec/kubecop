@@ -187,7 +187,7 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj interface{}) {
 		return
 	}
 	// Check if the application profile is final
-	if appProfile.GetAnnotations()["kapprofiler.kubescape.com/final"] != "true" {
+	if appProfile.GetAnnotations()["kapprofiler.kubescape.io/final"] != "true" {
 		return
 	}
 

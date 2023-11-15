@@ -13,8 +13,9 @@ const (
 )
 
 var R1000ExecFromMaliciousSourceDescriptor = RuleDesciptor{
-	Name: R1000ExecFromMaliciousSourceRuleName,
-	Tags: []string{"exec", "signature"},
+	Name:     R1000ExecFromMaliciousSourceRuleName,
+	Priority: 9,
+	Tags:     []string{"exec", "signature"},
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: false,
@@ -98,4 +99,8 @@ func (rule *R0001ExecFromMaliciousSourceFailure) Error() string {
 
 func (rule *R0001ExecFromMaliciousSourceFailure) Event() tracing.GeneralEvent {
 	return rule.FailureEvent.GeneralEvent
+}
+
+func (rule *R0001ExecFromMaliciousSourceFailure) Priority() int {
+	return R1000ExecFromMaliciousSourceDescriptor.Priority
 }

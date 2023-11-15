@@ -12,8 +12,9 @@ const (
 )
 
 var R0001ExecWhitelistedRuleDescriptor = RuleDesciptor{
-	Name: R0001ExecWhitelistedRuleName,
-	Tags: []string{"exec", "whitelisted"},
+	Name:     R0001ExecWhitelistedRuleName,
+	Tags:     []string{"exec", "whitelisted"},
+	Priority: 7,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: true,
@@ -100,4 +101,8 @@ func (rule *R0001ExecWhitelistedFailure) Error() string {
 
 func (rule *R0001ExecWhitelistedFailure) Event() tracing.GeneralEvent {
 	return rule.FailureEvent.GeneralEvent
+}
+
+func (rule *R0001ExecWhitelistedFailure) Priority() int {
+	return R0001ExecWhitelistedRuleDescriptor.Priority
 }
