@@ -30,6 +30,7 @@ type R1000ExecFromMaliciousSource struct {
 
 type R0001ExecFromMaliciousSourceFailure struct {
 	RuleName     string
+	RulePriority int
 	Err          string
 	FailureEvent *tracing.ExecveEvent
 }
@@ -75,6 +76,7 @@ func (rule *R1000ExecFromMaliciousSource) ProcessEvent(eventType tracing.EventTy
 				RuleName:     rule.Name(),
 				Err:          fmt.Sprintf("exec call \"%s\" is from a malicious source \"%s\"", execEvent.PathName, maliciousExecPathPrefix),
 				FailureEvent: execEvent,
+				RulePriority: R1000ExecFromMaliciousSourceDescriptor.Priority,
 			}
 		}
 	}
@@ -102,5 +104,5 @@ func (rule *R0001ExecFromMaliciousSourceFailure) Event() tracing.GeneralEvent {
 }
 
 func (rule *R0001ExecFromMaliciousSourceFailure) Priority() int {
-	return R1000ExecFromMaliciousSourceDescriptor.Priority
+	return rule.RulePriority
 }

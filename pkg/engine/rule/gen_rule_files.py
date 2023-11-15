@@ -45,6 +45,7 @@ type {rule_id}{rule_abbrev} struct {
 
 type {rule_id}{rule_abbrev}Failure struct {
 	RuleName     string
+    RulePriority int
 	Err          string
 	FailureEvent *replaceme
 }
@@ -75,6 +76,7 @@ func (rule *{rule_id}{rule_abbrev}) ProcessEvent(eventType tracing.EventType, ev
 			RuleName:     rule.Name(),
 			Err:          "Application profile is missing",
 			FailureEvent: execEvent,
+			RulePriority: RulePrioritySystemIssue,
 		}
 	}
 
@@ -84,6 +86,7 @@ func (rule *{rule_id}{rule_abbrev}) ProcessEvent(eventType tracing.EventType, ev
 			RuleName:     rule.Name(),
 			Err:          "Application profile is missing",
 			FailureEvent: execEvent,
+			RulePriority: RulePrioritySystemIssue,
 		}
 	}
 
@@ -109,7 +112,7 @@ func (rule *{rule_id}{rule_abbrev}Failure) Event() tracing.GeneralEvent {
 }
 
 func (rule *{rule_id}{rule_abbrev}Failure) Priority() int {
-	return {rule_id}{rule_abbrev}RuleDescriptor.Priority
+	return rule.RulePriority
 }
 '''
 

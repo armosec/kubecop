@@ -30,6 +30,7 @@ type R0001ExecWhitelisted struct {
 type R0001ExecWhitelistedFailure struct {
 	RuleName     string
 	Err          string
+	RulePriority int
 	FailureEvent *tracing.ExecveEvent
 }
 
@@ -59,6 +60,7 @@ func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, even
 			RuleName:     rule.Name(),
 			Err:          "Application profile is missing",
 			FailureEvent: execEvent,
+			RulePriority: RulePrioritySystemIssue,
 		}
 	}
 
@@ -68,6 +70,7 @@ func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, even
 			RuleName:     rule.Name(),
 			Err:          "Application profile is missing",
 			FailureEvent: execEvent,
+			RulePriority: RulePrioritySystemIssue,
 		}
 	}
 
@@ -81,6 +84,7 @@ func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, even
 		RuleName:     rule.Name(),
 		Err:          fmt.Sprintf("exec call \"%s\" is not whitelisted by application profile", execEvent.PathName),
 		FailureEvent: execEvent,
+		RulePriority: R0001ExecWhitelistedRuleDescriptor.Priority,
 	}
 }
 
@@ -104,5 +108,5 @@ func (rule *R0001ExecWhitelistedFailure) Event() tracing.GeneralEvent {
 }
 
 func (rule *R0001ExecWhitelistedFailure) Priority() int {
-	return R0001ExecWhitelistedRuleDescriptor.Priority
+	return rule.RulePriority
 }

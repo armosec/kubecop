@@ -32,6 +32,7 @@ type R0003UnexpectedSystemCall struct {
 
 type R0003UnexpectedSystemCallFailure struct {
 	RuleName     string
+	RulePriority int
 	Err          string
 	FailureEvent *tracing.SyscallEvent
 }
@@ -62,6 +63,7 @@ func (rule *R0003UnexpectedSystemCall) ProcessEvent(eventType tracing.EventType,
 			RuleName:     rule.Name(),
 			Err:          "Application profile is missing",
 			FailureEvent: syscallEvent,
+			RulePriority: RulePrioritySystemIssue,
 		}
 	}
 
@@ -71,6 +73,7 @@ func (rule *R0003UnexpectedSystemCall) ProcessEvent(eventType tracing.EventType,
 			RuleName:     rule.Name(),
 			Err:          "Application profile is missing (missing syscall list))",
 			FailureEvent: syscallEvent,
+			RulePriority: RulePrioritySystemIssue,
 		}
 	}
 
@@ -105,6 +108,7 @@ func (rule *R0003UnexpectedSystemCall) ProcessEvent(eventType tracing.EventType,
 			RuleName:     rule.Name(),
 			Err:          "Unexpected system calls: " + strings.Join(unexpectedSyscalls, ", "),
 			FailureEvent: syscallEvent,
+			RulePriority: R0003UnexpectedSystemCallRuleDescriptor.Priority,
 		}
 	}
 
@@ -131,5 +135,5 @@ func (rule *R0003UnexpectedSystemCallFailure) Event() tracing.GeneralEvent {
 }
 
 func (rule *R0003UnexpectedSystemCallFailure) Priority() int {
-	return R0003UnexpectedSystemCallRuleDescriptor.Priority
+	return rule.RulePriority
 }

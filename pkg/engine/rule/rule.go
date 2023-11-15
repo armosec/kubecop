@@ -5,6 +5,15 @@ import (
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
 
+const (
+	RulePriorityNone        = 0
+	RulePriorityLow         = 1
+	RulePriorityMed         = 5
+	RulePriorityHigh        = 8
+	RulePriorityCrical      = 10
+	RulePrioritySystemIssue = 1000
+)
+
 type RuleDesciptor struct {
 	// Rule Name.
 	Name string
