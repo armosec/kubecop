@@ -1,0 +1,122 @@
+package rule
+
+import (
+	"fmt"
+
+	"github.com/armosec/kubecop/pkg/approfilecache"
+	"github.com/kubescape/kapprofiler/pkg/tracing"
+)
+
+const (
+	R0004UnexpectedCapabilityUsedRuleName = "R0004 unexpected capability used"
+)
+
+var R0004UnexpectedCapabilityUsedRuleDescriptor = RuleDesciptor{
+	Name:     R0004UnexpectedCapabilityUsedRuleName,
+	Tags:     []string{"capabilities", "whitelisted"},
+	Priority: 8,
+	Requirements: RuleRequirements{
+		EventTypes:             []tracing.EventType{tracing.CapabilitiesEventType},
+		NeedApplicationProfile: true,
+	},
+	RuleCreationFunc: func() Rule {
+		return CreateRuleR0004UnexpectedCapabilityUsed()
+	},
+}
+
+type R0004UnexpectedCapabilityUsed struct {
+}
+
+type R0004UnexpectedCapabilityUsedFailure struct {
+	RuleName     string
+	RulePriority int
+	Err          string
+	FailureEvent *tracing.CapabilitiesEvent
+}
+
+func (rule *R0004UnexpectedCapabilityUsed) Name() string {
+	return R0004UnexpectedCapabilityUsedRuleName
+}
+
+func CreateRuleR0004UnexpectedCapabilityUsed() *R0004UnexpectedCapabilityUsed {
+	return &R0004UnexpectedCapabilityUsed{}
+}
+
+func (rule *R0004UnexpectedCapabilityUsed) DeleteRule() {
+}
+
+func (rule *R0004UnexpectedCapabilityUsed) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess) RuleFailure {
+	if eventType != tracing.CapabilitiesEventType {
+		return nil
+	}
+
+	capEvent, ok := event.(*tracing.CapabilitiesEvent)
+	if !ok {
+		return nil
+	}
+
+	if appProfileAccess == nil {
+		return &R0004UnexpectedCapabilityUsedFailure{
+			RuleName:     rule.Name(),
+			Err:          "Application profile is missing",
+			FailureEvent: capEvent,
+			RulePriority: RulePrioritySystemIssue,
+		}
+	}
+
+	appProfileCapabilitiesList, err := appProfileAccess.GetCapabilities()
+	if err != nil || appProfileCapabilitiesList == nil {
+		return &R0004UnexpectedCapabilityUsedFailure{
+			RuleName:     rule.Name(),
+			Err:          "Application profile is missing",
+			FailureEvent: capEvent,
+			RulePriority: RulePrioritySystemIssue,
+		}
+	}
+
+	found := false
+	for _, cap := range appProfileCapabilitiesList {
+		if capEvent.Syscall == cap.Syscall {
+			// Check that the capability is in cap.Capabilities
+			for _, baselineCapability := range cap.Capabilities {
+				if capEvent.CapabilityName == baselineCapability {
+					found = true
+				}
+			}
+		}
+	}
+
+	if !found {
+		return &R0004UnexpectedCapabilityUsedFailure{
+			RuleName:     rule.Name(),
+			Err:          fmt.Sprintf("Unexpected capability used (capability %s used in syscall %s)", capEvent.CapabilityName, capEvent.Syscall),
+			FailureEvent: capEvent,
+			RulePriority: RulePrioritySystemIssue,
+		}
+	}
+
+	return nil
+}
+
+func (rule *R0004UnexpectedCapabilityUsed) Requirements() RuleRequirements {
+	return RuleRequirements{
+		EventTypes:             []tracing.EventType{tracing.CapabilitiesEventType},
+		NeedApplicationProfile: true,
+	}
+}
+
+func (rule *R0004UnexpectedCapabilityUsedFailure) Name() string {
+	return rule.RuleName
+}
+
+func (rule *R0004UnexpectedCapabilityUsedFailure) Error() string {
+	return rule.Err
+}
+
+func (rule *R0004UnexpectedCapabilityUsedFailure) Event() tracing.GeneralEvent {
+	return rule.FailureEvent.GeneralEvent
+}
+
+func (rule *R0004UnexpectedCapabilityUsedFailure) Priority() int {
+	return rule.RulePriority
+}
