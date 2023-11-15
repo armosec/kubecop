@@ -8,13 +8,16 @@ import (
 )
 
 const (
-	R0004UnexpectedCapabilityUsedRuleName = "R0004 unexpected capability used"
+	R0004ID                               = "R0004"
+	R0004UnexpectedCapabilityUsedRuleName = "Unexpected capability used"
 )
 
 var R0004UnexpectedCapabilityUsedRuleDescriptor = RuleDesciptor{
-	Name:     R0004UnexpectedCapabilityUsedRuleName,
-	Tags:     []string{"capabilities", "whitelisted"},
-	Priority: 8,
+	ID:          R0004ID,
+	Name:        R0004UnexpectedCapabilityUsedRuleName,
+	Description: "Detecting unexpected capabilities that are not whitelisted by application profile. Every unexpected capability is identified in context of a syscall and will be alerted only once per container.",
+	Tags:        []string{"capabilities", "whitelisted"},
+	Priority:    8,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.CapabilitiesEventType},
 		NeedApplicationProfile: true,

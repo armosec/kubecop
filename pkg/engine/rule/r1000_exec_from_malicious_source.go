@@ -9,13 +9,16 @@ import (
 )
 
 const (
-	R1000ExecFromMaliciousSourceRuleName = "R-1000 Exec from malicious source"
+	R1000ID                              = "R1000"
+	R1000ExecFromMaliciousSourceRuleName = "Exec from malicious source"
 )
 
 var R1000ExecFromMaliciousSourceDescriptor = RuleDesciptor{
-	Name:     R1000ExecFromMaliciousSourceRuleName,
-	Priority: 9,
-	Tags:     []string{"exec", "signature"},
+	ID:          R1000ID,
+	Name:        R1000ExecFromMaliciousSourceRuleName,
+	Description: "Detecting exec calls that are from malicious source like: /dev/shm, /run, /var/run, /proc/self",
+	Priority:    9,
+	Tags:        []string{"exec", "signature"},
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: false,

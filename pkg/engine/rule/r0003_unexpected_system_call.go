@@ -8,13 +8,16 @@ import (
 )
 
 const (
-	R0003UnexpectedSystemCallRuleName = "R0003 Unexpected system call"
+	R0003ID                           = "R0003"
+	R0003UnexpectedSystemCallRuleName = "Unexpected system call"
 )
 
 var R0003UnexpectedSystemCallRuleDescriptor = RuleDesciptor{
-	Name:     R0003UnexpectedSystemCallRuleName,
-	Tags:     []string{"syscall", "whitelisted"},
-	Priority: 7,
+	ID:          R0003ID,
+	Name:        R0003UnexpectedSystemCallRuleName,
+	Description: "Detecting unexpected system calls that are not whitelisted by application profile. Every unexpected system call will be alerted only once.",
+	Tags:        []string{"syscall", "whitelisted"},
+	Priority:    7,
 	Requirements: RuleRequirements{
 		EventTypes: []tracing.EventType{
 			tracing.SyscallEventType,

@@ -15,8 +15,12 @@ const (
 )
 
 type RuleDesciptor struct {
+	// Rule ID
+	ID string
 	// Rule Name.
 	Name string
+	// Rule Description.
+	Description string
 	// Priority.
 	Priority int
 	// Tags

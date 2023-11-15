@@ -8,13 +8,16 @@ import (
 )
 
 const (
-	R0002UnexpectedFileAccessRuleName = "R0002 unexpected file access"
+	R0002ID                           = "R0002"
+	R0002UnexpectedFileAccessRuleName = "Unexpected file access"
 )
 
 var R0002UnexpectedFileAccessRuleDescriptor = RuleDesciptor{
-	Name:     R0002UnexpectedFileAccessRuleName,
-	Tags:     []string{"open", "whitelisted"},
-	Priority: 5,
+	ID:          R0002ID,
+	Name:        R0002UnexpectedFileAccessRuleName,
+	Description: "Detecting file access that are not whitelisted by application profile. File access is defined by the combination of path and flags",
+	Tags:        []string{"open", "whitelisted"},
+	Priority:    5,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.OpenEventType},
 		NeedApplicationProfile: true,

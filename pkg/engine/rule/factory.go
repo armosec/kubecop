@@ -10,6 +10,10 @@ var ruleDescriptions []RuleDesciptor = []RuleDesciptor{
 	R1000ExecFromMaliciousSourceDescriptor,
 }
 
+func GetAllRuleDescriptors() []RuleDesciptor {
+	return ruleDescriptions
+}
+
 func CreateRulesByTags(tags []string) []Rule {
 	var rules []Rule
 	for _, rule := range ruleDescriptions {

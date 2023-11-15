@@ -8,13 +8,16 @@ import (
 )
 
 const (
-	R0005UnexpectedDomainRequestRuleName = "R0005 unexpected domain request"
+	R0005ID                              = "R0005"
+	R0005UnexpectedDomainRequestRuleName = "unexpected domain request"
 )
 
 var R0005UnexpectedDomainRequestRuleDescriptor = RuleDesciptor{
-	Name:     R0005UnexpectedDomainRequestRuleName,
-	Tags:     []string{"dns", "whitelisted"},
-	Priority: 6,
+	ID:          R0005ID,
+	Name:        R0005UnexpectedDomainRequestRuleName,
+	Description: "Detecting unexpected domain requests that are not whitelisted by application profile.",
+	Tags:        []string{"dns", "whitelisted"},
+	Priority:    6,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.DnsEventType},
 		NeedApplicationProfile: true,

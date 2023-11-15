@@ -8,13 +8,16 @@ import (
 )
 
 const (
-	R0001ExecWhitelistedRuleName = "R-0001 Exec Whitelisted"
+	R0001ID                      = "R0001"
+	R0001ExecWhitelistedRuleName = "Exec Whitelisted"
 )
 
 var R0001ExecWhitelistedRuleDescriptor = RuleDesciptor{
-	Name:     R0001ExecWhitelistedRuleName,
-	Tags:     []string{"exec", "whitelisted"},
-	Priority: 7,
+	ID:          R0001ID,
+	Name:        R0001ExecWhitelistedRuleName,
+	Description: "Detecting exec calls that are not whitelisted by application profile",
+	Tags:        []string{"exec", "whitelisted"},
+	Priority:    7,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: true,
