@@ -154,8 +154,8 @@ func (access *ApplicationProfileAccessImpl) GetCapabilities() ([]collector.Capab
 	return access.containerProfile.Capabilities, nil
 }
 
-func (access *ApplicationProfileAccessImpl) GetDNS() ([]collector.DnsCalls, error) {
-	return access.containerProfile.Dns, nil
+func (access *ApplicationProfileAccessImpl) GetDNS() (*[]collector.DnsCalls, error) {
+	return &access.containerProfile.Dns, nil
 }
 
 func (c *ApplicationProfileK8sCache) StartController() {

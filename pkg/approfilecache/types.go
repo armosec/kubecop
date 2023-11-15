@@ -15,6 +15,8 @@ type SingleApplicationProfileAccess interface {
 	GetSystemCalls() ([]string, error)
 	// Get capabilities
 	GetCapabilities() ([]collector.CapabilitiesCalls, error)
+	// Get DNS activity
+	GetDNS() (*[]collector.DnsCalls, error)
 }
 
 type ApplicationProfileCache interface {

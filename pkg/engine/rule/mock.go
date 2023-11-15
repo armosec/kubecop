@@ -8,6 +8,7 @@ type MockAppProfileAccess struct {
 	Execs        []collector.ExecCalls
 	Syscalls     []string
 	Capabilities []collector.CapabilitiesCalls
+	Dns          []collector.DnsCalls
 }
 
 func (m *MockAppProfileAccess) GetExecList() (*[]collector.ExecCalls, error) {
@@ -28,4 +29,8 @@ func (m *MockAppProfileAccess) GetSystemCalls() ([]string, error) {
 
 func (m *MockAppProfileAccess) GetCapabilities() ([]collector.CapabilitiesCalls, error) {
 	return m.Capabilities, nil
+}
+
+func (m *MockAppProfileAccess) GetDNS() (*[]collector.DnsCalls, error) {
+	return &m.Dns, nil
 }
