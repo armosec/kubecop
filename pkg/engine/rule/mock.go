@@ -6,6 +6,7 @@ import (
 
 type MockAppProfileAccess struct {
 	Execs        []collector.ExecCalls
+	OpenCalls    []collector.OpenCalls
 	Syscalls     []string
 	Capabilities []collector.CapabilitiesCalls
 	Dns          []collector.DnsCalls
@@ -16,7 +17,7 @@ func (m *MockAppProfileAccess) GetExecList() (*[]collector.ExecCalls, error) {
 }
 
 func (m *MockAppProfileAccess) GetOpenList() (*[]collector.OpenCalls, error) {
-	return nil, nil
+	return &m.OpenCalls, nil
 }
 
 func (m *MockAppProfileAccess) GetNetworkActivity() (*collector.NetworkActivity, error) {
