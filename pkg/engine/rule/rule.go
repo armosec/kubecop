@@ -5,9 +5,24 @@ import (
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
 
+const (
+	RulePriorityNone        = 0
+	RulePriorityLow         = 1
+	RulePriorityMed         = 5
+	RulePriorityHigh        = 8
+	RulePriorityCrical      = 10
+	RulePrioritySystemIssue = 1000
+)
+
 type RuleDesciptor struct {
+	// Rule ID
+	ID string
 	// Rule Name.
 	Name string
+	// Rule Description.
+	Description string
+	// Priority.
+	Priority int
 	// Tags
 	Tags []string
 	// Rule requirements.
@@ -19,6 +34,8 @@ type RuleDesciptor struct {
 type RuleFailure interface {
 	// Rule Name.
 	Name() string
+	// Priority.
+	Priority() int
 	// Error interface.
 	Error() string
 	// Generic event

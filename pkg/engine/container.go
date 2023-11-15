@@ -47,7 +47,7 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 
 		// Get the rules that are bound to the container
 		// TODO do real binding implementation, right now we just get a single rule
-		boundRules := rule.CreateRulesByNames([]string{rule.R0001ExecWhitelistedRuleDescriptor.Name})
+		boundRules := rule.CreateRulesByTags([]string{"whitelisted"})
 
 		// Add the container to the cache
 		containerIdToDetailsCache[event.ContainerID] = containerEntry{

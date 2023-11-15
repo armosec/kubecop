@@ -8,12 +8,16 @@ import (
 )
 
 const (
-	R0001ExecWhitelistedRuleName = "R-0001 Exec Whitelisted"
+	R0001ID                      = "R0001"
+	R0001ExecWhitelistedRuleName = "Exec Whitelisted"
 )
 
 var R0001ExecWhitelistedRuleDescriptor = RuleDesciptor{
-	Name: R0001ExecWhitelistedRuleName,
-	Tags: []string{"exec", "whitelisted"},
+	ID:          R0001ID,
+	Name:        R0001ExecWhitelistedRuleName,
+	Description: "Detecting exec calls that are not whitelisted by application profile",
+	Tags:        []string{"exec", "whitelisted"},
+	Priority:    7,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: true,
@@ -29,6 +33,7 @@ type R0001ExecWhitelisted struct {
 type R0001ExecWhitelistedFailure struct {
 	RuleName     string
 	Err          string
+	RulePriority int
 	FailureEvent *tracing.ExecveEvent
 }
 
@@ -58,6 +63,7 @@ func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, even
 			RuleName:     rule.Name(),
 			Err:          "Application profile is missing",
 			FailureEvent: execEvent,
+			RulePriority: RulePrioritySystemIssue,
 		}
 	}
 
@@ -67,6 +73,7 @@ func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, even
 			RuleName:     rule.Name(),
 			Err:          "Application profile is missing",
 			FailureEvent: execEvent,
+			RulePriority: RulePrioritySystemIssue,
 		}
 	}
 
@@ -80,6 +87,7 @@ func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, even
 		RuleName:     rule.Name(),
 		Err:          fmt.Sprintf("exec call \"%s\" is not whitelisted by application profile", execEvent.PathName),
 		FailureEvent: execEvent,
+		RulePriority: R0001ExecWhitelistedRuleDescriptor.Priority,
 	}
 }
 
@@ -100,4 +108,8 @@ func (rule *R0001ExecWhitelistedFailure) Error() string {
 
 func (rule *R0001ExecWhitelistedFailure) Event() tracing.GeneralEvent {
 	return rule.FailureEvent.GeneralEvent
+}
+
+func (rule *R0001ExecWhitelistedFailure) Priority() int {
+	return rule.RulePriority
 }

@@ -154,8 +154,8 @@ func (access *ApplicationProfileAccessImpl) GetCapabilities() ([]collector.Capab
 	return access.containerProfile.Capabilities, nil
 }
 
-func (access *ApplicationProfileAccessImpl) GetDNS() ([]collector.DnsCalls, error) {
-	return access.containerProfile.Dns, nil
+func (access *ApplicationProfileAccessImpl) GetDNS() (*[]collector.DnsCalls, error) {
+	return &access.containerProfile.Dns, nil
 }
 
 func (c *ApplicationProfileK8sCache) StartController() {
@@ -187,7 +187,7 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj interface{}) {
 		return
 	}
 	// Check if the application profile is final
-	if appProfile.GetAnnotations()["kapprofiler.kubescape.com/final"] != "true" {
+	if appProfile.GetAnnotations()["kapprofiler.kubescape.io/final"] != "true" {
 		return
 	}
 
