@@ -8,6 +8,13 @@ if [ -z "$1" ]; then
 fi
 
 export NAMESPACE=kapprofiler-dev-env
-export POD=$(kubectl -n $NAMESPACE get pods -l k8s-app=kapprofiler-dev-env -o jsonpath="{.items[0].metadata.name}")
+# for each pod in the namespace, copy the file to the pod
+POD_LIST=$(kubectl -n $NAMESPACE get pods -l k8s-app=kapprofiler-dev-env -o jsonpath="{.items[*].metadata.name}")
+for POD in $POD_LIST; do
+    kubectl exec -it $POD -n $NAMESPACE -- rm -f /bin/$1
+    echo "Copying $1 to $POD"
+    kubectl cp $1 $NAMESPACE/$POD:/bin/$1
+done
+# export POD=$(kubectl -n $NAMESPACE get pods -l k8s-app=kapprofiler-dev-env -o jsonpath="{.items[0].metadata.name}")
 
-kubectl cp $1 $NAMESPACE/$POD:/bin/$1
+# kubectl cp $1 $NAMESPACE/$POD:/bin/$1
