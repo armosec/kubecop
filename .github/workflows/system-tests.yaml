@@ -1,14 +1,13 @@
 name: KubeCop System Test
 
 on:
-  workflow_run:
-    workflows: [KubeCop CI]
-    types:
-      - completed
+  pull_request_target:
+    types: [labeled]
 
 jobs:
   preparing-cluster:
     runs-on: ubuntu-latest
+    if: github.event.label.name == 'requires-system-test'
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
