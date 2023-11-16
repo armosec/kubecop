@@ -17,7 +17,7 @@ $(BINARY_NAME): $(GOFILES) go.mod go.sum Makefile
 	CGO_ENABLED=0 go build -o $(BINARY_NAME) cmd/main.go
 
 test:
-	$(GOTEST_SUDO_PREFIX) $(GOTEST) -v ./...
+	$(GOTEST) -v ./... -coverprofile=coverage.out
 
 install: $(BINARY_NAME)
 	./scripts/install-in-pod.sh $(BINARY_NAME)
