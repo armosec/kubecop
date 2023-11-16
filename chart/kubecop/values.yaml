@@ -2,8 +2,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
-
 image:
   repository: quay.io/armosec/kubecop
   pullPolicy: Always
@@ -12,6 +10,11 @@ image:
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "kubecop"
+
+kubecop:
+  alertmanager:
+    enabled: false
+    endpoint: "localhost:9093"
 
 serviceAccount:
   # Specifies whether a service account should be created
