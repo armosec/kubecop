@@ -29,6 +29,10 @@ func (engine *Engine) submitEventForProcessing(eventType tracing.EventType, even
 		if err != nil {
 			log.Printf("Failed to convert event to a generic event: %v\n", event)
 		}
+		if e == nil {
+			log.Printf("Failed to convert event to a generic event (nil e): %v\n", event)
+			return
+		}
 
 		// Get the rules that are bound to this event
 		rules := engine.GetRulesForEvent(e)
@@ -87,6 +91,14 @@ func convertEventInterfaceToGenericEvent(eventType tracing.EventType, event inte
 			return nil, fmt.Errorf("failed to convert event to a dns event: %v", event)
 		} else {
 			return &dnsEvent.GeneralEvent, nil
+		}
+	case tracing.SyscallEventType:
+		// Convert the event to a syscall event
+		syscallEvent, ok := event.(*tracing.SyscallEvent)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert event to a syscall event: %v", event)
+		} else {
+			return &syscallEvent.GeneralEvent, nil
 		}
 	default:
 		return nil, fmt.Errorf("unknown event type: %v", eventType)

@@ -3,6 +3,7 @@ package engine
 import (
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/gammazero/workerpool"
+	"github.com/kubescape/kapprofiler/pkg/tracing"
 	discovery "k8s.io/client-go/discovery"
 	appsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	batchv1 "k8s.io/client-go/kubernetes/typed/batch/v1"
@@ -18,20 +19,27 @@ type ClientSetInterface interface {
 
 type Engine struct {
 	applicationProfileCache approfilecache.ApplicationProfileCache
+	tracer                  *tracing.Tracer
 	// Event processing worker pool
-	eventProcessingPool *workerpool.WorkerPool
-	k8sClientset        ClientSetInterface
+	eventProcessingPool   *workerpool.WorkerPool
+	k8sClientset          ClientSetInterface
+	pollLoopRunning       bool
+	pollLoopCancelChannel chan struct{}
 }
 
-func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.ApplicationProfileCache, workerPoolWidth int) *Engine {
+func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.ApplicationProfileCache, tracer *tracing.Tracer, workerPoolWidth int) *Engine {
 	workerPool := workerpool.New(workerPoolWidth)
-	return &Engine{
+	engine := Engine{
 		applicationProfileCache: appProfileCache,
 		k8sClientset:            k8sClientset,
 		eventProcessingPool:     workerPool,
+		tracer:                  tracer,
 	}
+	engine.StartPullComponent()
+	return &engine
 }
 
 func (e *Engine) Delete() {
+	e.StopPullComponent()
 	e.eventProcessingPool.StopWait()
 }

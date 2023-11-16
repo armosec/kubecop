@@ -135,7 +135,7 @@ func main() {
 	}
 
 	// Create the "Rule Engine" and start it
-	engine := engine.NewEngine(clientset, appProfileCache, 4)
+	engine := engine.NewEngine(clientset, appProfileCache, tracer, 4)
 
 	// Add the engine to the tracer
 	tracer.AddContainerActivityListener(engine)
