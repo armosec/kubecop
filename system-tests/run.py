@@ -2,8 +2,12 @@ import sys
 import requests
 import subprocess
 import time
+from promtopic import plotprom
 
 alert_manager_url = "http://localhost:9093/"
+prometheus_url = "http://localhost:9090/"
+
+
 
 def filter_alerts_by_label(alerts, label_key, label_value):
     filtered_alerts = [alert for alert in alerts if label_key in alert['labels'] and alert['labels'][label_key] == label_value]
@@ -72,15 +76,32 @@ def basic_alert_test(namespace="kubecop-test"):
         print("Found alerts %s" % alerts)
         return 0
 
+test_cases = [
+    (basic_alert_test, "Basic alert test")
+]
+
 def main():
     global alert_manager_url
+    global prometheus_url
     if len(sys.argv) > 1:
         alert_manager_url = sys.argv[1]
-    result = basic_alert_test()
-    if result == 0:
-        print("Test passed")
-    else:
-        print("Test failed")
+    if len(sys.argv) > 2:
+        prometheus_url = sys.argv[2]
+    print("Running tests")
+    for test_case, test_case_name in test_cases:
+        print("Running test %s" % test_case_name)
+        # Save start time in epoch
+        time_start = time.time()
+        result = test_case()
+        # Save end time in epoch
+        time_end = time.time()
+        if result == 0:
+            print("Test passed")
+        else:
+            print("Test failed")
+        # Plot the prometheus query results
+        steps = int(time_end - time_start) - 1
+        plotprom(test_case_name, time_start, time_end, steps)
     sys.exit(result)
 
 
