@@ -3,8 +3,10 @@ package exporters
 import (
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
+
+	"github.com/armosec/kubecop/pkg/engine/rule"
+	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
 
 func TestSendAlert(t *testing.T) {
@@ -13,18 +15,21 @@ func TestSendAlert(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
-
-	// Set the ALERTMANAGER_URL environment variable to the mock server URL
-	os.Setenv("ALERTMANAGER_URL", server.URL)
-	os.Setenv("ALERTMANAGER_URL", "localhost:9093")
+	// os.Setenv("ALERTMANAGER_URL", "localhost:9093")
 
 	// Create a new Alertmanager exporter
-	exporter, err := InitAlertManagerExporter()
-	if err != nil {
-		t.Fatalf("Failed to create new Alertmanager exporter: %v", err)
+	exporter := InitAlertManagerExporter(server.URL)
+	if exporter == nil {
+		t.Fatalf("Failed to create new Alertmanager exporter")
 	}
 	// Call SendAlert
-	exporter.SendAlert()
+
+	exporter.SendAlert(&rule.R0001ExecWhitelistedFailure{
+		RuleName: "testrule",
+		Err:      "Application profile is missing",
+		FailureEvent: &tracing.ExecveEvent{GeneralEvent: tracing.GeneralEvent{
+			ContainerName: "testcontainer", ContainerID: "testcontainerid", Namespace: "testnamespace", PodName: "testpodname"}},
+	})
 
 	// Assert that the alert was sent successfully
 	// expectedAlert := models.PostableAlert{

@@ -7,6 +7,7 @@ import (
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine/rule"
+	"github.com/armosec/kubecop/pkg/exporters"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
 
@@ -31,8 +32,7 @@ func (engine *Engine) ProcessEvent(eventType tracing.EventType, event interface{
 
 		ruleFailure := rule.ProcessEvent(eventType, event, appProfile)
 		if ruleFailure != nil {
-			// TODO need an alertfiring interface and fire an alert
-			fmt.Printf("%v - Alert %s\n", e, ruleFailure.Error())
+			exporters.SendAlert(ruleFailure)
 		}
 	}
 }

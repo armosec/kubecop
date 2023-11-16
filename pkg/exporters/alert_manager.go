@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/go-openapi/strfmt"
 	"github.com/prometheus/alertmanager/api/v2/client"
 	"github.com/prometheus/alertmanager/api/v2/client/alert"
@@ -16,31 +17,50 @@ import (
 )
 
 type AlertManagerExporter struct {
+	Host   string
 	client *client.AlertmanagerAPI
 }
 
-func InitAlertManagerExporter() (*AlertManagerExporter, error) {
-	alertmanagerURL := os.Getenv("ALERTMANAGER_URL")
+func InitAlertManagerExporter(alertmanagerURL string) *AlertManagerExporter {
 	if alertmanagerURL == "" {
-		return nil, fmt.Errorf("ALERTMANAGER_URL environment variable is not set")
+		alertmanagerURL := os.Getenv("ALERTMANAGER_URL")
+		if alertmanagerURL == "" {
+			return nil
+		}
 	}
 	// Create a new Alertmanager client
 	cfg := client.DefaultTransportConfig().WithHost(alertmanagerURL)
 	amClient := client.NewHTTPClientWithConfig(nil, cfg)
+	hostName, err := os.Hostname()
+	if err != nil {
+		panic(fmt.Sprintf("failed to get hostname: %v", err))
+	}
 	return &AlertManagerExporter{
 		client: amClient,
-	}, nil
+		Host:   hostName,
+	}
 }
 
-func (ame *AlertManagerExporter) SendAlert() {
-	// Define your alert
+func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 	myAlert := models.PostableAlert{
-		StartsAt:    strfmt.DateTime(time.Now()),
-		EndsAt:      strfmt.DateTime(time.Now().Add(time.Hour)),
-		Annotations: map[string]string{"summary": "Description of the alert"},
+		StartsAt: strfmt.DateTime(time.Now()),
+		EndsAt:   strfmt.DateTime(time.Now().Add(time.Hour)),
+		Annotations: map[string]string{
+			"summary": fmt.Sprintf("Rule '%s' in '%s' namespace '%s' failed", failedRule.Name(), failedRule.Event().PodName, failedRule.Event().Namespace),
+			"message": failedRule.Error(),
+		},
 		Alert: models.Alert{
 			GeneratorURL: "http://github.com/armosec/kubecop",
-			Labels:       map[string]string{"alertname": "MyAlertName", "severity": "critical"},
+			Labels: map[string]string{
+				"alertname":      "KubeCopRuleViolated",
+				"rule_name":      failedRule.Name(),
+				"container_id":   failedRule.Event().ContainerID,
+				"container_name": failedRule.Event().ContainerName,
+				"namespace":      failedRule.Event().Namespace,
+				"pod_name":       failedRule.Event().PodName,
+				"host":           ame.Host,
+				"severity":       PriorityToStatus(failedRule.Priority()),
+			},
 		},
 	}
 

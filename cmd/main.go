@@ -10,6 +10,7 @@ import (
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine"
+	"github.com/armosec/kubecop/pkg/exporters"
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/kubescape/kapprofiler/pkg/collector"
 	reconcilercontroller "github.com/kubescape/kapprofiler/pkg/controller"
@@ -84,7 +85,8 @@ func main() {
 
 	// Create tracer (without sink for now)
 	tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
-
+	// TODO: support exporters config from file/crd
+	exporters.InitExporters(exporters.ExportersConfig{})
 	// Create application profile cache
 	appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(k8sConfig)
 	if err != nil {

@@ -4,7 +4,7 @@ config:
     smtp_smarthost: 'smtp.gmail.com:587'
     smtp_from: 'bez@armosec.io'
     smtp_auth_username: 'bbrandwine@armosec.io'
-    smtp_auth_password: ''
+    smtp_auth_password: 'kkjg dtaj zckk qbug'
     smtp_require_tls: true
 
   route:
