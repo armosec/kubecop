@@ -1,0 +1,8 @@
+image:
+  repository: kubecop
+  tag: latest
+  pullPolicy: IfNotPresent
+kubecop:
+  alertmanager:
+    enabled: true
+    endpoint: "alertmanager-operated.monitoring.svc.cluster.local:9093"

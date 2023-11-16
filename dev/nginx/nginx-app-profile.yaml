@@ -4,7 +4,6 @@ metadata:
   annotations:
     kapprofiler.kubescape.io/final: "true"
   name: deployment-nginx-deployment
-  namespace: default
 spec:
   containers:
   - capabilities:
