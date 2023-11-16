@@ -7,7 +7,8 @@ on:
 jobs:
   system-tests:
     runs-on: ubuntu-latest
-    #if: github.event.label.name == 'requires-system-test'
+    # Run on specific label or if running under act
+    if: github.event.label.name == 'requires-system-test' || github.actor == 'nektos/act'
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
