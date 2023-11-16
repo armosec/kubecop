@@ -1,0 +1,52 @@
+name: KubeCop System Test
+
+on:
+  workflow_run:
+    workflows: [KubeCop CI]
+    types:
+      - completed
+
+jobs:
+  preparing-cluster:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build the Image
+      run: make build-image
+
+    - name: Set up Kind
+      run: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-$(uname)-amd64
+        chmod +x ./kind
+        ./kind create cluster
+
+    - name: Load Image to Kind
+      run: ./kind load docker-image kubecop:latest
+
+    - name: Install Helm and Kubectl
+      run: |
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        chmod 700 get_helm.sh
+        sudo ./get_helm.sh
+        curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl
+        chmod +x ./kubectl
+        sudo mv ./kubectl /usr/local/bin/kubectl
+
+    - name: Install Prometheus and Node Exporter
+      run: |
+        kubectl create namespace monitoring
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo update
+        helm install prometheus prometheus-community/kube-prometheus-stack --set grafana.enabled=false --namespace monitoring --wait --timeout 5m
+        # Check that the prometheus pod is running
+        kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=prometheus -n monitoring --timeout=300s
+
+    - name: Install Workload
+      run: |
+        helm install kubecop chart/kubecop --set image.repository=kubecop --set image.tag=latest -n kubescape --create-namespace --set image.pullPolicy=IfNotPresent --wait --timeout 5m
+        #kubectl get pods -n kubescape
+        #kubectl get pods -n monitoring
+        # Check that the kubecop pod is running
+        kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=kubecop -n kubescape --timeout=300s
