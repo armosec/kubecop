@@ -5,12 +5,86 @@ import (
 	"testing"
 	"time"
 
+	"github.com/armosec/kubecop/pkg/approfilecache"
+	"github.com/kubescape/kapprofiler/pkg/collector"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
+
+// Mocks
+
+type MockAppProfileAccess struct {
+	Execs        []collector.ExecCalls
+	OpenCalls    []collector.OpenCalls
+	Syscalls     []string
+	Capabilities []collector.CapabilitiesCalls
+	Dns          []collector.DnsCalls
+}
+
+func (m *MockAppProfileAccess) GetExecList() (*[]collector.ExecCalls, error) {
+	return &m.Execs, nil
+}
+
+func (m *MockAppProfileAccess) GetOpenList() (*[]collector.OpenCalls, error) {
+	return &m.OpenCalls, nil
+}
+
+func (m *MockAppProfileAccess) GetNetworkActivity() (*collector.NetworkActivity, error) {
+	return nil, nil
+}
+
+func (m *MockAppProfileAccess) GetSystemCalls() ([]string, error) {
+	return m.Syscalls, nil
+}
+
+func (m *MockAppProfileAccess) GetCapabilities() ([]collector.CapabilitiesCalls, error) {
+	return m.Capabilities, nil
+}
+
+func (m *MockAppProfileAccess) GetDNS() (*[]collector.DnsCalls, error) {
+	return &m.Dns, nil
+}
+
+// ApplicationProfileCacheMock is a mock implementation of ApplicationProfileCache.
+type ApplicationProfileCacheMock struct{}
+
+// NewApplicationProfileCacheMock creates a new instance of ApplicationProfileCacheMock.
+func NewApplicationProfileCacheMock() *ApplicationProfileCacheMock {
+	return &ApplicationProfileCacheMock{}
+}
+
+// LoadApplicationProfile mocks loading an application profile to the cache.
+func (apc *ApplicationProfileCacheMock) LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error {
+	// Mock implementation, return nil to simulate success
+	return nil
+}
+
+// AnticipateApplicationProfile mocks anticipating an application profile to be loaded to the cache.
+func (apc *ApplicationProfileCacheMock) AnticipateApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error {
+	// Mock implementation, return nil to simulate success
+	return nil
+}
+
+// DeleteApplicationProfile mocks deleting an application profile from the cache.
+func (apc *ApplicationProfileCacheMock) DeleteApplicationProfile(containerID string) error {
+	// Mock implementation, return nil to simulate success
+	return nil
+}
+
+// HasApplicationProfile mocks checking if there is an application profile for the given container.
+func (apc *ApplicationProfileCacheMock) HasApplicationProfile(namespace, kind, workloadName, containerName string) bool {
+	// Mock implementation, return false to indicate the profile is not present
+	return false
+}
+
+// GetApplicationProfileAccess mocks getting application profile access for the given container.
+func (apc *ApplicationProfileCacheMock) GetApplicationProfileAccess(containerName, containerID string) (approfilecache.SingleApplicationProfileAccess, error) {
+	// Mock implementation, return a default SingleApplicationProfileAccess and nil for error
+	return &MockAppProfileAccess{}, nil
+}
 
 func TestNewEngine(t *testing.T) {
 	// Create a new engine
@@ -46,7 +120,7 @@ func TestEngine_ContainerStartStop(t *testing.T) {
 	}, metav1.CreateOptions{})
 
 	// Create a new engine
-	e := NewEngine(fakeclientset, nil, nil, 0)
+	e := NewEngine(fakeclientset, NewApplicationProfileCacheMock(), nil, 0)
 	// Assert e is not nil
 	if e == nil {
 		t.Errorf("Expected e to not be nil")

@@ -1,0 +1,38 @@
+name: KubeCop CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '^1.21'
+
+    - name: Run Unit Tests
+      run: make test
+      env:
+        GO111MODULE: on
+
+    - name: Print Coverage Report
+      run: go tool cover -func=coverage.out
+
+    - name: Build Project
+      run: make build
+      env:
+        GO111MODULE: on
+
+    - name: Build Container Image
+      run: make build-image
+      env:
+        GO111MODULE: on
