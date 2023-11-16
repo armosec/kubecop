@@ -58,3 +58,5 @@ go.work
 kubecop
 cop_pids.txt
 am-values.yaml
+
+*.pyc
