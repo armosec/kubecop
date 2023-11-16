@@ -57,8 +57,32 @@ jobs:
       run: |
         kubectl port-forward svc/alertmanager-operated 9093:9093 -n monitoring &
         PID=$!
+        kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090 &
+        PID2=$!
         python system-tests/run.py
-        kill $PID
+        kill $PID $PID2
+
+    - name: Upload plot images
+      uses: actions/upload-artifact@v2
+      with:
+        name: Performance plots
+        path: "*.png"
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const artifactUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+          const comment = `:sparkles: Artifacts are available [here](${artifactUrl}).`;
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
 
 
 
