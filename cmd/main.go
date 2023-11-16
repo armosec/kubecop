@@ -106,6 +106,7 @@ func main() {
 	if err := eventSink.Start(); err != nil {
 		log.Fatalf("Failed to start event sink: %v\n", err)
 	}
+	fmt.Println("Event sink started")
 	defer eventSink.Stop()
 
 	// Start the collector manager
@@ -152,7 +153,7 @@ func main() {
 	if err := tracer.Start(); err != nil {
 		log.Fatalf("Failed to start tracer: %v\n", err)
 	}
-
+	fmt.Println("Tracer started")
 	// Wait for shutdown signal
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)

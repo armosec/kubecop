@@ -73,8 +73,8 @@ spec:
             value: "/host"
           - name: STDOUT_ENABLED
             value: "true"
-          - name: ALERTMANAGER_URL
-            value: "alertmanager.default.svc.cluster.local:9093"
+          # - name: ALERTMANAGER_URL
+          #   value: "alertmanager.default.svc.cluster.local:9093"
         securityContext:
           privileged: true
           capabilities:

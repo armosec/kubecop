@@ -17,13 +17,14 @@ import (
 )
 
 type AlertManagerExporter struct {
-	Host   string
-	client *client.AlertmanagerAPI
+	Host     string
+	NodeName string
+	client   *client.AlertmanagerAPI
 }
 
 func InitAlertManagerExporter(alertmanagerURL string) *AlertManagerExporter {
 	if alertmanagerURL == "" {
-		alertmanagerURL := os.Getenv("ALERTMANAGER_URL")
+		alertmanagerURL = os.Getenv("ALERTMANAGER_URL")
 		if alertmanagerURL == "" {
 			return nil
 		}
@@ -35,9 +36,11 @@ func InitAlertManagerExporter(alertmanagerURL string) *AlertManagerExporter {
 	if err != nil {
 		panic(fmt.Sprintf("failed to get hostname: %v", err))
 	}
+
 	return &AlertManagerExporter{
-		client: amClient,
-		Host:   hostName,
+		client:   amClient,
+		Host:     hostName,
+		NodeName: os.Getenv("NODE_NAME"),
 	}
 }
 
@@ -58,8 +61,9 @@ func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 				"container_name": failedRule.Event().ContainerName,
 				"namespace":      failedRule.Event().Namespace,
 				"pod_name":       failedRule.Event().PodName,
-				"host":           ame.Host,
 				"severity":       PriorityToStatus(failedRule.Priority()),
+				"host":           ame.Host,
+				"node_name":      ame.NodeName,
 			},
 		},
 	}
