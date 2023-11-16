@@ -41,8 +41,6 @@ spec:
       serviceAccount: kapprofiler-dev-env
       hostPID: true
       hostNetwork: false
-      imagePullSecrets:
-      - name: regcred
       containers:
       - name: dev-env
         terminationMessagePolicy: FallbackToLogsOnError
@@ -51,6 +49,10 @@ spec:
         args: ["infinity"]
         imagePullPolicy: Always
         env:
+          - name: STDOUT_ENABLED
+            value: "true"
+          # - name: ALERTMANAGER_URL
+          #   value: "alertmanager.default.svc.cluster.local:9093"
           - name: NODE_NAME
             valueFrom:
               fieldRef:

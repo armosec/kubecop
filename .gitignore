@@ -55,4 +55,6 @@ go.work
 .history
 .ionide
 
-/kubecop
+kubecop
+cop_pids.txt
+am-values.yaml
