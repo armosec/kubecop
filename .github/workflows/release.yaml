@@ -31,7 +31,7 @@ jobs:
         context: .
         file: ./Containerfile
         push: true
-        tags: quay.io/armosec/kubecon:${{ env.TAG_NAME }}
+        tags: quay.io/armosec/kubecop:${{ env.TAG_NAME }}
 
   create-release:
     needs: build-and-push
