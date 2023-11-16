@@ -32,7 +32,7 @@ deploy-dev-pod:
 build: $(BINARY_NAME)
 
 build-image: $(GOFILES) go.mod go.sum Makefile
-	docker build -t $(IMAGE_NAME) .
+	docker build -t $(IMAGE_NAME) -f ./Containerfile .
 
 clean:
 	rm -f $(BINARY_NAME)
