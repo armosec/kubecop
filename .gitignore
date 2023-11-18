@@ -60,3 +60,4 @@ cop_pids.txt
 am-values.yaml
 
 *.pyc
+/*.png
