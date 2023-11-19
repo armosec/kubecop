@@ -1,7 +1,7 @@
 name: KubeCop System Test
 
 on:
-  pull_request_target:
+  pull_request:
     types: [labeled]
 
 env:
@@ -17,8 +17,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      with:
-        ref: ${{ github.event.pull_request.head.sha }}
+
     - name: Login to Quay.io
       uses: docker/login-action@v3
       with:
