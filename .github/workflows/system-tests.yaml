@@ -4,6 +4,11 @@ on:
   pull_request_target:
     types: [labeled]
 
+env:
+  GKE_TEST_CLUSTER: ${{ vars.GKE_TEST_CLUSTER }}
+  GKE_TEST_ZONE: ${{ vars.GKE_TEST_ZONE }}
+  GKE_TEST_PROJECT: ${{ vars.GKE_TEST_PROJECT }}
+
 jobs:
   system-tests:
     runs-on: ubuntu-latest
@@ -13,26 +18,52 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Build the Image
-      run: make build-image
+    - name: Login to Quay.io
+      uses: docker/login-action@v1
+      with:
+        registry: quay.io/armosec
+        username: ${{ secrets.QUAYIO_REGISTRY_USERNAME }}
+        password: ${{ secrets.QUAYIO_REGISTRY_PASSWORD }}
+
+    - name: Build the Image and Push to Quay.io
+      run: |
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+        export IMAGE_TAG=test-${COMMIT_HASH}
+        export IMAGE_REPO=quay.io/armosec/kubecop
+        echo ${IMAGE_REPO} > test-image-repo.txt
+        export IMAGE_NAME=quay.io/armosec/kubecop:${IMAGE_TAG}
+        echo "${IMAGE_TAG}" > test-image-tag.txt
+        make build-image-and-push
+
+    - name: Set up Google Cloud
+      if: env.ACT == 'false'
+      uses: google-github-actions/setup-gcloud@v0.2.0
+      with:
+        service_account_key: ${{ secrets.GKE_SA_KEY }}
+        project_id: ${{ vars.GKE_TEST_PROJECT }}
+
+    - name: Connect to GKE cluster
+      if: env.ACT == 'false'
+      run: |
+        gcloud components install --quiet kubectl
+        gcloud container clusters get-credentials ${{ vars.GKE_TEST_CLUSTER }} --zone ${{ vars.GKE_TEST_ZONE }} --project ${{ vars.GKE_TEST_PROJECT }} || echo "Failed to connect to GKE cluster"
 
     - name: Set up Kind
+      if: env.ACT != 'false'
+      #if: env.ACT != 'true'
       run: |
         curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-$(uname)-amd64
         chmod +x ./kind
         ./kind create cluster
-
-    - name: Load Image to Kind
-      run: ./kind load docker-image kubecop:latest
+        curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl
+        chmod +x ./kubectl
+        sudo mv ./kubectl /usr/local/bin/kubectl
 
     - name: Install Helm and Kubectl
       run: |
         curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
         chmod 700 get_helm.sh
         sudo ./get_helm.sh
-        curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl
-        chmod +x ./kubectl
-        sudo mv ./kubectl /usr/local/bin/kubectl
 
     - name: Install Prometheus and Node Exporter
       run: |
@@ -41,26 +72,24 @@ jobs:
         helm install prometheus prometheus-community/kube-prometheus-stack --set grafana.enabled=false --namespace monitoring --create-namespace --wait --timeout 5m
         # Check that the prometheus pod is running
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=prometheus -n monitoring --timeout=300s
+        echo "prometheus" >> cleanup.txt
 
     - name: Install KubeCop
       run: |
         kubectl apply -f etc/app-profile.crd.yaml
-        helm install kubecop chart/kubecop -f resources/system-tests/kubecop-values.yaml -n kubescape --create-namespace --wait --timeout 5m
+        echo "crd" >> cleanup.txt
+        helm install kubecop chart/kubecop --set image.tag=$(cat test-image-tag.txt) --set image.repository=$(cat test-image-repo.txt) -f resources/system-tests/kubecop-values.yaml -n kubescape --create-namespace --wait --timeout 5m
         # Check that the kubecop pod is running
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=kubecop -n kubescape --timeout=300s
+        echo "kubecop" >> cleanup.txt
 
     - name: Install python dependencies
       run: |
         pip install -r system-tests/requirements.txt
 
-    - name: Run System Tests basic
+    - name: Run System Tests
       run: |
-        kubectl port-forward svc/alertmanager-operated 9093:9093 -n monitoring &
-        PID=$!
-        kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090 &
-        PID2=$!
-        python system-tests/run.py
-        kill $PID $PID2
+        ./scripts/run-system-tests.sh
 
     - name: Upload plot images
       uses: actions/upload-artifact@v2
@@ -83,6 +112,16 @@ jobs:
             body: comment
           });
 
-
-
-
+    - name: Cleanup
+      if: always()
+      run: |
+        # If it is a kind cluster, delete it
+        if [ -f kind ]; then
+          ./kind delete cluster
+        else
+          helm uninstall kubecop -n kubescape || echo "Failed to uninstall kubecop"
+          kubectl delete ns kubescape || echo "Failed to delete namespace kubescape"
+          kubectl delete -f etc/app-profile.crd.yaml || echo "Failed to delete crd"
+          helm uninstall prometheus -n monitoring || echo "Failed to uninstall prometheus"
+          kubectl delete ns monitoring || echo "Failed to delete namespace monitoring"
+        fi

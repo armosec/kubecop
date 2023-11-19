@@ -51,8 +51,18 @@ def basic_alert_test(namespace="kubecop-test"):
         # Exec into the nginx pod and create a file in the /tmp directory
         subprocess.check_call(["kubectl", "-n", namespace , "exec", nginx_pod_name, "--", "touch", "/tmp/nginx-test"])
 
+        print("Starting load on nginx pod")
+
+        # Create load on the nginx pod
+        subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "system-tests/locust-deployment.yaml"])
+
+        # Wait for the locust pod to be ready
+        subprocess.check_call(["kubectl", "-n", namespace , "wait", "--for=condition=ready", "pod", "-l", "app=http-loader", "--timeout=120s"])
+
+        print("Waiting 300 seconds to create load")
+
         # Wait for the alert to be fired
-        time.sleep(5)
+        time.sleep(300)
     except:
         # Delete the namespace
         subprocess.check_call(["kubectl", "delete", "namespace", namespace])
@@ -99,9 +109,15 @@ def main():
             print("Test passed")
         else:
             print("Test failed")
-        # Plot the prometheus query results
-        steps = int(time_end - time_start) - 1
-        plotprom(test_case_name, time_start, time_end, steps)
+            return result
+        # Give two minutes for prometheus to scrape the data
+        print("Waiting 60 seconds for prometheus to scrape the data")
+        time.sleep(60)
+        result = plotprom(test_case_name, time_start, time_end)
+        if result == 0:
+            print("Ploting succeeded")
+        else:
+            print("Ploting failed")
     sys.exit(result)
 
 

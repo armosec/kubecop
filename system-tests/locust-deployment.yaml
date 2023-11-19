@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-loader
+spec:
+  selector:
+    matchLabels:
+      app: http-loader
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: http-loader
+    spec:
+      containers:
+      - name: locust
+        image: quay.io/armosec/kubecop:test-loader-v1
+        env:
+          - name: TARGET_URL
+            value: "http://nginx-service"
+        args:
+          - -f
+          - /locustfile.py
+          - --headless
+          - -u
+          - "1000"
+          - -r
+          - "100"
+        imagePullPolicy: Always

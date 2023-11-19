@@ -28,6 +28,10 @@ spec:
     networkActivity: {}
     opens:
     - flags:
+      - O_RDONLY
+      - O_CLOEXEC
+      path: /usr/share/nginx/html/index.html
+    - flags:
       - O_WRONLY
       - O_CREAT
       - O_APPEND
