@@ -22,8 +22,8 @@ jobs:
       uses: docker/login-action@v1
       with:
         registry: quay.io/armosec
-        username: ${{ secrets.QUAYIO_REGISTRY_USERNAME }}
-        password: ${{ secrets.QUAYIO_REGISTRY_PASSWORD }}
+        username: ${{ secrets.QUAY_REGISTRY_USERNAME }}
+        password: ${{ secrets.QUAY_REGISTRY_PASSWORD }}
 
     - name: Build the Image and Push to Quay.io
       run: |
