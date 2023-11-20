@@ -4,7 +4,6 @@ metadata:
   annotations:
     kapprofiler.kubescape.io/final: "true"
   name: deployment-nginx-deployment
-  namespace: default
 spec:
   containers:
   - capabilities:
@@ -28,6 +27,10 @@ spec:
     name: nginx
     networkActivity: {}
     opens:
+    - flags:
+      - O_RDONLY
+      - O_CLOEXEC
+      path: /usr/share/nginx/html/index.html
     - flags:
       - O_WRONLY
       - O_CREAT

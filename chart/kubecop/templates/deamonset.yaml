@@ -48,6 +48,10 @@ spec:
                 fieldPath: metadata.name
           - name: HOST_ROOT
             value: "/host"
+          {{- if .Values.kubecop.alertmanager.enabled }}
+          - name: ALERTMANAGER_URL
+            value: {{ .Values.kubecop.alertmanager.endpoint }}
+          {{- end }}
         volumeMounts:
         - name: host
           mountPath: /host

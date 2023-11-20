@@ -94,7 +94,7 @@ func (rule *R0004UnexpectedCapabilityUsed) ProcessEvent(eventType tracing.EventT
 			RuleName:     rule.Name(),
 			Err:          fmt.Sprintf("Unexpected capability used (capability %s used in syscall %s)", capEvent.CapabilityName, capEvent.Syscall),
 			FailureEvent: capEvent,
-			RulePriority: RulePrioritySystemIssue,
+			RulePriority: R0004UnexpectedCapabilityUsedRuleDescriptor.Priority,
 		}
 	}
 
