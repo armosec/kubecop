@@ -77,7 +77,14 @@ func CreatePrometheusMetric() *prometheusMetric {
 }
 
 func (p *prometheusMetric) Destroy() {
-
+	prometheus.Unregister(p.ebpfExecCounter)
+	prometheus.Unregister(p.ebpfOpenCounter)
+	prometheus.Unregister(p.ebpfNetworkCounter)
+	prometheus.Unregister(p.ebpfDNSCounter)
+	prometheus.Unregister(p.ebpfSyscallCounter)
+	prometheus.Unregister(p.ebpfCapabilityCounter)
+	prometheus.Unregister(p.ruleCounter)
+	prometheus.Unregister(p.alertCounter)
 }
 
 func (p *prometheusMetric) ReportEbpfEvent(eventType tracing.EventType) {

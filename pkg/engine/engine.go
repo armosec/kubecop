@@ -47,4 +47,5 @@ func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.A
 func (e *Engine) Delete() {
 	e.StopPullComponent()
 	e.eventProcessingPool.StopWait()
+	e.promCollector.Destroy()
 }
