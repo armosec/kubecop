@@ -11,6 +11,7 @@ import (
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine"
 	"github.com/armosec/kubecop/pkg/exporters"
+	"github.com/armosec/kubecop/pkg/rulebindingstore"
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/kubescape/kapprofiler/pkg/collector"
 	reconcilercontroller "github.com/kubescape/kapprofiler/pkg/controller"
@@ -138,7 +139,17 @@ func main() {
 	}
 
 	// Create the "Rule Engine" and start it
-	engine := engine.NewEngine(clientset, appProfileCache, tracer, 4)
+	engine := engine.NewEngine(clientset, appProfileCache, tracer, 4, NodeName)
+
+	// Create the rule binding store and start it
+	ruleBindingStore, err := rulebindingstore.NewRuleBindingK8sStore(k8sConfig, NodeName)
+	if err != nil {
+		log.Fatalf("Failed to create rule binding store: %v\n", err)
+	}
+	defer ruleBindingStore.Destroy()
+	// set mutual callbacks between engine and rulebindingstore
+	engine.SetGetRulesForPodFunc(ruleBindingStore.GetRulesForPod)
+	ruleBindingStore.SetRuleBindingChangedHandlers([]rulebindingstore.RuleBindingChangedHandler{engine.OnRuleBindingChanged})
 
 	// Add the engine to the tracer
 	tracer.AddContainerActivityListener(engine)

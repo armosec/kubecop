@@ -1,0 +1,24 @@
+apiVersion: kubescape.io/v1
+kind: RuntimeRuleAlertBinding
+metadata:
+  name: example-runtime-rule
+spec:
+  namespaceSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - my-application
+    matchLabels:
+      app: my-application
+  podSelector:
+    matchLabels:
+      app: my-application
+  rules:
+    - ruleName: "MisingAppProfile"
+      severity: "low"
+      parameters:
+        foo: bar
+    - ruleName: "UnauthorizedNetworkAccess"
+      parameters:
+        bar: foo

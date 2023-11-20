@@ -88,7 +88,7 @@ func (apc *ApplicationProfileCacheMock) GetApplicationProfileAccess(containerNam
 
 func TestNewEngine(t *testing.T) {
 	// Create a new engine
-	e := NewEngine(nil, nil, nil, 0)
+	e := NewEngine(nil, nil, nil, 0, "localhost")
 	// Assert e is not nil
 	if e == nil {
 		t.Errorf("Expected e to not be nil")
@@ -120,7 +120,7 @@ func TestEngine_ContainerStartStop(t *testing.T) {
 	}, metav1.CreateOptions{})
 
 	// Create a new engine
-	e := NewEngine(fakeclientset, NewApplicationProfileCacheMock(), nil, 0)
+	e := NewEngine(fakeclientset, NewApplicationProfileCacheMock(), nil, 0, "localhost")
 	// Assert e is not nil
 	if e == nil {
 		t.Errorf("Expected e to not be nil")
