@@ -8,6 +8,9 @@ spec:
   containers:
   - capabilities:
     - caps:
+      - NET_BIND_SERVICE
+      syscall: bind
+    - caps:
       - CHOWN
       syscall: chown
     - caps:
@@ -30,6 +33,7 @@ spec:
     - flags:
       - O_RDONLY
       - O_CLOEXEC
+      - O_NONBLOCK
       path: /usr/share/nginx/html/index.html
     - flags:
       - O_WRONLY
@@ -209,3 +213,23 @@ spec:
     - unlinkat
     - utimensat
     - write
+    - dup
+    - exit_group
+    - fadvise64
+    - getcwd
+    - getegid
+    - getgid
+    - getpgrp
+    - getuid
+    - lstat
+    - pipe
+    - prlimit64
+    - readlink
+    - statfs
+    - accept4
+    - recvfrom
+    - sendfile
+    - writev
+    - wait4
+    - event
+

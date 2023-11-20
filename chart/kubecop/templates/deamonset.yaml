@@ -10,8 +10,14 @@ spec:
       {{- include "..selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        placeholder: "kubecop"
+      {{- if .Values.kubecop.prometheusExporter.enabled }}
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9090"
+        prometheus.io/scrape: "true"
+      {{- end }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -35,6 +41,10 @@ spec:
         terminationMessagePolicy: FallbackToLogsOnError
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 9090
+          name: http-metrics
+          protocol: TCP
         securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}
         env:
@@ -48,7 +58,7 @@ spec:
                 fieldPath: metadata.name
           - name: HOST_ROOT
             value: "/host"
-          {{- if .Values.kubecop.alertmanager.enabled }}
+          {{- if .Values.kubecop.alertmanager.enabled  }}
           - name: ALERTMANAGER_URL
             value: {{ .Values.kubecop.alertmanager.endpoint }}
           {{- end }}

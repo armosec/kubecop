@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"log"
+
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/gammazero/workerpool"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -25,6 +27,7 @@ type Engine struct {
 	k8sClientset          ClientSetInterface
 	pollLoopRunning       bool
 	pollLoopCancelChannel chan struct{}
+	promCollector         *prometheusMetric
 }
 
 func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.ApplicationProfileCache, tracer *tracing.Tracer, workerPoolWidth int) *Engine {
@@ -34,7 +37,9 @@ func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.A
 		k8sClientset:            k8sClientset,
 		eventProcessingPool:     workerPool,
 		tracer:                  tracer,
+		promCollector:           CreatePrometheusMetric(),
 	}
+	log.Print("Engine created")
 	engine.StartPullComponent()
 	return &engine
 }

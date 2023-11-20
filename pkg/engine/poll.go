@@ -66,7 +66,7 @@ func (engine *Engine) Poll() {
 						},
 						Syscalls: syscalls,
 					}
-					engine.submitEventForProcessing(tracing.SyscallEventType, &e)
+					engine.submitEventForProcessing(containerId, tracing.SyscallEventType, &e)
 				}
 			}
 		}
