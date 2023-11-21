@@ -15,10 +15,4 @@ spec:
     matchLabels:
       app: my-application
   rules:
-    - ruleName: "MisingAppProfile"
-      severity: "low"
-      parameters:
-        foo: bar
-    - ruleName: "UnauthorizedNetworkAccess"
-      parameters:
-        bar: foo
+    - ruleName: "Exec Whitelisted"

@@ -9,7 +9,7 @@ import (
 
 const (
 	R0005ID                              = "R0005"
-	R0005UnexpectedDomainRequestRuleName = "unexpected domain request"
+	R0005UnexpectedDomainRequestRuleName = "Unexpected domain request"
 )
 
 var R0005UnexpectedDomainRequestRuleDescriptor = RuleDesciptor{
