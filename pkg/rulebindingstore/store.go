@@ -128,13 +128,17 @@ func (store *RuleBindingK8sStore) GetRulesForPod(podName, namespace string) ([]s
 	if err != nil {
 		return nil, err
 	}
-	var rules []string
+	rules := make(map[string]struct{})
 	for _, ruleBinding := range ruleBindingsForPod {
 		for _, rule := range ruleBinding.Spec.Rules {
-			rules = append(rules, rule.RuleName)
+			rules[rule.RuleName] = struct{}{}
 		}
 	}
-	return rules, nil
+	var rulesSlice []string
+	for rule := range rules {
+		rulesSlice = append(rulesSlice, rule)
+	}
+	return rulesSlice, nil
 }
 
 func (store *RuleBindingK8sStore) Destroy() {
