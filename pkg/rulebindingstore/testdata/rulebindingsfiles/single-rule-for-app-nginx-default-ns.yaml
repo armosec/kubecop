@@ -4,15 +4,13 @@ metadata:
   name: single-rule-for-app-nginx-default-ns
 spec:
   namespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: default
+  podSelector:
     matchExpressions:
       - key: app
         operator: In
         values:
-          - my-application
-    matchLabels:
-      app: my-application
-  podSelector:
-    matchLabels:
-      app: my-application
+          - nginx
   rules:
     - ruleName: "Exec Whitelisted"
