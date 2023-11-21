@@ -1,14 +1,8 @@
 apiVersion: kubescape.io/v1
 kind: RuntimeRuleAlertBinding
 metadata:
-  name: example-runtime-rule
+  name: all-rules-for-app-nginx
 spec:
-  namespaceSelector:
-    matchExpressions:
-      - key: "kubernetes.io/metadata.name"
-        operator: In
-        values:
-          - default
   podSelector:
     matchLabels:
       app: nginx

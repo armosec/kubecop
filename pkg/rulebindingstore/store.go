@@ -12,7 +12,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/dynamic/dynamicinformer"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -29,7 +28,6 @@ type dynClient interface {
 }
 
 type RuleBindingK8sStore struct {
-	k8sConfig           *rest.Config
 	dynamicClient       dynClient
 	coreV1Client        v1.CoreV1Interface
 	informerStopChannel chan struct{}
@@ -83,6 +81,9 @@ func (store *RuleBindingK8sStore) getRuleBindingsForPod(podName, namespace strin
 		nsLabelSelector := ruleBinding.Spec.NamespaceSelector
 		if nsLabelSelector.MatchLabels == nil {
 			nsLabelSelector.MatchLabels = make(map[string]string)
+		} else if ns, ok := nsLabelSelector.MatchLabels["kubernetes.io/metadata.name"]; ok && ns != namespace {
+			// namespace selector doesn't match the pod namespace
+			continue
 		}
 		// according to https://kubernetes.io/docs/concepts/services-networking/network-policies/#targeting-a-namespace-by-its-name this should do the job
 		nsLabelSelector.MatchLabels["kubernetes.io/metadata.name"] = namespace
@@ -96,6 +97,13 @@ func (store *RuleBindingK8sStore) getRuleBindingsForPod(podName, namespace strin
 			continue
 		}
 		selectorString = metav1.FormatLabelSelector(&ruleBinding.Spec.PodSelector)
+		if selectorString == "<none>" {
+			// This rule binding applies to all pods in the namespace
+			ruleBindingsForPod = append(ruleBindingsForPod, ruleBinding)
+			continue
+		} else if selectorString == "<error>" {
+			return nil, fmt.Errorf("failed to parse pod selector %s", selectorString)
+		}
 		pods, err := store.coreV1Client.Pods(namespace).List(context.Background(), metav1.ListOptions{
 			LabelSelector: selectorString,
 			FieldSelector: "spec.nodeName=" + store.nodeName})

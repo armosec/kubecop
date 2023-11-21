@@ -18,18 +18,32 @@ func fullPodName(namespace, podName string) string {
 func (engine *Engine) OnRuleBindingChanged(ruleBinding rulebindingstore.RuntimeAlertRuleBinding) {
 	log.Printf("OnRuleBindingChanged: %s\n", ruleBinding.Name)
 	// list all namespaces which match the rule binding selectors
+	selectorString := metav1.FormatLabelSelector(&ruleBinding.Spec.NamespaceSelector)
+	if selectorString == "<none>" {
+		selectorString = ""
+	} else if selectorString == "<error>" {
+		log.Printf("Failed to parse namespace selector for rule binding %s\n", ruleBinding.Name)
+		return
+	}
 	nsList, err := engine.k8sClientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{
-		LabelSelector: metav1.FormatLabelSelector(&ruleBinding.Spec.NamespaceSelector),
+		LabelSelector: selectorString,
 	})
 	if err != nil {
 		log.Printf("Failed to list namespaces: %v\n", err)
 		return
 	}
 	podsMap := make(map[string]struct{})
+	podSelectorString := metav1.FormatLabelSelector(&ruleBinding.Spec.PodSelector)
+	if podSelectorString == "<none>" {
+		podSelectorString = ""
+	} else if podSelectorString == "<error>" {
+		log.Printf("Failed to parse pod selector for rule binding %s\n", ruleBinding.Name)
+		return
+	}
 	for _, ns := range nsList.Items {
 		// list all pods in the namespace which match the rule binding selectors
 		podList, err := engine.k8sClientset.CoreV1().Pods(ns.Name).List(context.TODO(), metav1.ListOptions{
-			LabelSelector: metav1.FormatLabelSelector(&ruleBinding.Spec.PodSelector),
+			LabelSelector: podSelectorString,
 			FieldSelector: "spec.nodeName=" + engine.nodeName,
 		})
 		if err != nil {

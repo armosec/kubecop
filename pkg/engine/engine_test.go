@@ -121,6 +121,9 @@ func TestEngine_ContainerStartStop(t *testing.T) {
 
 	// Create a new engine
 	e := NewEngine(fakeclientset, NewApplicationProfileCacheMock(), nil, 0, "localhost")
+	e.SetGetRulesForPodFunc(func(podName, namespace string) ([]string, error) {
+		return []string{"testrule"}, nil
+	})
 	// Assert e is not nil
 	if e == nil {
 		t.Errorf("Expected e to not be nil")
