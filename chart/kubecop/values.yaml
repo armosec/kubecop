@@ -67,3 +67,6 @@ affinity:
           values:
           - arm64
           - amd64
+
+# default rule binding to catch all pods
+installDefaultAlertRuleBinding: true
