@@ -18,6 +18,7 @@ import (
 	"github.com/kubescape/kapprofiler/pkg/eventsink"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -137,12 +138,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create Kubernetes client: %v\n", err)
 	}
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+	if err != nil {
+		log.Fatalf("Failed to create Kubernetes dynamic client: %v\n", err)
+	}
 
 	// Create the "Rule Engine" and start it
 	engine := engine.NewEngine(clientset, appProfileCache, tracer, 4, NodeName)
 
 	// Create the rule binding store and start it
-	ruleBindingStore, err := rulebindingstore.NewRuleBindingK8sStore(k8sConfig, NodeName)
+	ruleBindingStore, err := rulebindingstore.NewRuleBindingK8sStore(dynamicClient, clientset.CoreV1(), NodeName)
 	if err != nil {
 		log.Fatalf("Failed to create rule binding store: %v\n", err)
 	}

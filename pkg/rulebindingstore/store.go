@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/kubescape/kapprofiler/pkg/collector"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,7 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/dynamic/dynamicinformer"
-	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
@@ -26,9 +24,13 @@ var RuleBindingAlertGvr schema.GroupVersionResource = schema.GroupVersionResourc
 	Resource: RuntimeRuleBindingAlertPlural,
 }
 
+type dynClient interface {
+	Resource(gvr schema.GroupVersionResource) dynamic.NamespaceableResourceInterface
+}
+
 type RuleBindingK8sStore struct {
 	k8sConfig           *rest.Config
-	dynamicClient       *dynamic.DynamicClient
+	dynamicClient       dynClient
 	coreV1Client        v1.CoreV1Interface
 	informerStopChannel chan struct{}
 	nodeName            string
@@ -36,25 +38,17 @@ type RuleBindingK8sStore struct {
 	callBacks []RuleBindingChangedHandler
 }
 
-func NewRuleBindingK8sStore(k8sConfig *rest.Config, nodeName string) (*RuleBindingK8sStore, error) {
-	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
-	if err != nil {
-		return nil, err
-	}
+func NewRuleBindingK8sStore(dynamicClient dynClient, coreV1Client v1.CoreV1Interface, nodeName string) (*RuleBindingK8sStore, error) {
 
-	controlChannel := make(chan struct{})
-	ruleBindingStore := RuleBindingK8sStore{k8sConfig: k8sConfig, dynamicClient: dynamicClient, informerStopChannel: controlChannel, nodeName: nodeName}
-	ruleBindingStore.initPodsClient()
+	stopCh := make(chan struct{})
+	ruleBindingStore := RuleBindingK8sStore{
+		dynamicClient:       dynamicClient,
+		informerStopChannel: stopCh,
+		nodeName:            nodeName,
+		coreV1Client:        coreV1Client,
+	}
 	ruleBindingStore.StartController()
 	return &ruleBindingStore, nil
-}
-
-func (store *RuleBindingK8sStore) initPodsClient() {
-	clientset, err := kubernetes.NewForConfig(store.k8sConfig)
-	if err != nil {
-		log.Fatalf("Error creating clientset: %v", err)
-	}
-	store.coreV1Client = clientset.CoreV1()
 }
 
 func (store *RuleBindingK8sStore) getAllRuleBindings() ([]RuntimeAlertRuleBinding, error) {
