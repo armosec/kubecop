@@ -87,6 +87,9 @@ func (store *RuleBindingK8sStore) getRuleBindingsForPod(podName, namespace strin
 	for _, ruleBinding := range allBindings {
 		// check the namespace selector fits the pod namespace
 		nsLabelSelector := ruleBinding.Spec.NamespaceSelector
+		if nsLabelSelector.MatchLabels == nil {
+			nsLabelSelector.MatchLabels = make(map[string]string)
+		}
 		// according to https://kubernetes.io/docs/concepts/services-networking/network-policies/#targeting-a-namespace-by-its-name this should do the job
 		nsLabelSelector.MatchLabels["kubernetes.io/metadata.name"] = namespace
 		selectorString := metav1.FormatLabelSelector(&nsLabelSelector)
