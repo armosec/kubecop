@@ -61,3 +61,6 @@ am-values.yaml
 
 *.pyc
 /*.png
+/tmp
+*.gz
+/single-trace

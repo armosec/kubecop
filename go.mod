@@ -6,6 +6,7 @@ require (
 	github.com/cilium/ebpf v0.12.3
 	github.com/gammazero/workerpool v1.1.3
 	github.com/go-openapi/strfmt v0.21.7
+	github.com/inspektor-gadget/inspektor-gadget v0.22.0
 	github.com/kubescape/kapprofiler v0.0.20
 	github.com/prometheus/alertmanager v0.26.0
 	github.com/prometheus/client_golang v1.17.0
@@ -68,7 +69,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/inspektor-gadget/inspektor-gadget v0.22.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.2 // indirect
