@@ -11,12 +11,14 @@ import (
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine"
 	"github.com/armosec/kubecop/pkg/exporters"
+	"github.com/armosec/kubecop/pkg/rulebindingstore"
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/kubescape/kapprofiler/pkg/collector"
 	reconcilercontroller "github.com/kubescape/kapprofiler/pkg/controller"
 	"github.com/kubescape/kapprofiler/pkg/eventsink"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -136,9 +138,23 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create Kubernetes client: %v\n", err)
 	}
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+	if err != nil {
+		log.Fatalf("Failed to create Kubernetes dynamic client: %v\n", err)
+	}
 
 	// Create the "Rule Engine" and start it
-	engine := engine.NewEngine(clientset, appProfileCache, tracer, 4)
+	engine := engine.NewEngine(clientset, appProfileCache, tracer, 4, NodeName)
+
+	// Create the rule binding store and start it
+	ruleBindingStore, err := rulebindingstore.NewRuleBindingK8sStore(dynamicClient, clientset.CoreV1(), NodeName)
+	if err != nil {
+		log.Fatalf("Failed to create rule binding store: %v\n", err)
+	}
+	defer ruleBindingStore.Destroy()
+	// set mutual callbacks between engine and rulebindingstore
+	engine.SetGetRulesForPodFunc(ruleBindingStore.GetRulesForPod)
+	ruleBindingStore.SetRuleBindingChangedHandlers([]rulebindingstore.RuleBindingChangedHandler{engine.OnRuleBindingChanged})
 
 	// Add the engine to the tracer
 	tracer.AddContainerActivityListener(engine)

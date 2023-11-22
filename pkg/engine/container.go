@@ -6,25 +6,61 @@ import (
 	"log"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
+	"github.com/armosec/kubecop/pkg/rulebindingstore"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type containerEntry struct {
-	ContainerName string
-	PodName       string
-	Namespace     string
-	OwnerKind     string
-	OwnerName     string
-	// Low level container information
-	NsMntId uint64
-
-	// Add rules here
-	BoundRules []rule.Rule
+func fullPodName(namespace, podName string) string {
+	return namespace + "/" + podName
 }
 
-// Container ID to details cache
-var containerIdToDetailsCache = make(map[string]containerEntry)
+func (engine *Engine) OnRuleBindingChanged(ruleBinding rulebindingstore.RuntimeAlertRuleBinding) {
+	log.Printf("OnRuleBindingChanged: %s\n", ruleBinding.Name)
+	// list all namespaces which match the rule binding selectors
+	selectorString := metav1.FormatLabelSelector(&ruleBinding.Spec.NamespaceSelector)
+	if selectorString == "<none>" {
+		selectorString = ""
+	} else if selectorString == "<error>" {
+		log.Printf("Failed to parse namespace selector for rule binding %s\n", ruleBinding.Name)
+		return
+	}
+	nsList, err := engine.k8sClientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{
+		LabelSelector: selectorString,
+	})
+	if err != nil {
+		log.Printf("Failed to list namespaces: %v\n", err)
+		return
+	}
+	podsMap := make(map[string]struct{})
+	podSelectorString := metav1.FormatLabelSelector(&ruleBinding.Spec.PodSelector)
+	if podSelectorString == "<none>" {
+		podSelectorString = ""
+	} else if podSelectorString == "<error>" {
+		log.Printf("Failed to parse pod selector for rule binding %s\n", ruleBinding.Name)
+		return
+	}
+	for _, ns := range nsList.Items {
+		// list all pods in the namespace which match the rule binding selectors
+		podList, err := engine.k8sClientset.CoreV1().Pods(ns.Name).List(context.TODO(), metav1.ListOptions{
+			LabelSelector: podSelectorString,
+			FieldSelector: "spec.nodeName=" + engine.nodeName,
+		})
+		if err != nil {
+			log.Printf("Failed to list pods in namespace %s: %v\n", ns.Name, err)
+			continue
+		}
+		for _, pod := range podList.Items {
+			podsMap[fullPodName(ns.Name, pod.Name)] = struct{}{}
+		}
+	}
+
+	for _, det := range getcontainerIdToDetailsCacheCopy() {
+		if _, ok := podsMap[fullPodName(det.Namespace, det.PodName)]; ok {
+			go engine.associateRulesWithContainerInCache(det)
+		}
+	}
+}
 
 func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityEvent) {
 	if event.Activity == tracing.ContainerActivityEventStart {
@@ -44,28 +80,43 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 				log.Printf("Failed to anticipate application profile for container %s/%s/%s/%s: %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
 			}
 		}
-
-		// Get the rules that are bound to the container
-		// TODO do real binding implementation, right now we just get a single rule
-		boundRules := rule.CreateRulesByTags([]string{"whitelisted"})
-
-		// Add the container to the cache
-		containerIdToDetailsCache[event.ContainerID] = containerEntry{
+		contEntry := containerEntry{
+			ContainerID:   event.ContainerID,
 			ContainerName: event.ContainerName,
 			PodName:       event.PodName,
 			Namespace:     event.Namespace,
 			OwnerKind:     ownerRef.Kind,
 			OwnerName:     ownerRef.Name,
 			NsMntId:       event.NsMntId,
-			BoundRules:    boundRules,
+		}
+		err = engine.associateRulesWithContainerInCache(contEntry)
+		if err != nil {
+			log.Printf("Failed to add container details to cache: %v\n", err)
 		}
 
 	} else if event.Activity == tracing.ContainerActivityEventStop {
 		go func() {
-			// Remove the container from the cache
-			delete(containerIdToDetailsCache, event.ContainerID)
+			deleteContainerDetails(event.ContainerID)
 		}()
 	}
+}
+
+func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntry) error {
+
+	// Get the rules that are bound to the container
+	ruleNames, err := engine.getRulesForPodFunc(contEntry.PodName, contEntry.Namespace)
+	if err != nil {
+		return fmt.Errorf("failed to get rules for pod %s/%s: %v", contEntry.Namespace, contEntry.PodName, err)
+	}
+	if len(ruleNames) == 0 {
+		return nil
+	}
+	boundRules := rule.CreateRulesByNames(ruleNames)
+	contEntry.BoundRules = boundRules
+
+	// Add the container to the cache
+	setContainerDetails(contEntry.ContainerID, contEntry)
+	return nil
 }
 
 func (engine *Engine) GetWorkloadOwnerKindAndName(event *tracing.GeneralEvent) (string, string, error) {
@@ -74,7 +125,7 @@ func (engine *Engine) GetWorkloadOwnerKindAndName(event *tracing.GeneralEvent) (
 		return "", "", fmt.Errorf("eventContainerId is empty")
 	}
 	// Get the container details from the cache
-	containerDetails, ok := containerIdToDetailsCache[eventContainerId]
+	containerDetails, ok := getContainerDetails(eventContainerId)
 	if !ok {
 		return "", "", fmt.Errorf("container details not found in cache")
 	}
@@ -87,7 +138,7 @@ func (engine *Engine) GetRulesForEvent(event *tracing.GeneralEvent) []rule.Rule 
 		return []rule.Rule{}
 	}
 	// Get the container details from the cache
-	containerDetails, ok := containerIdToDetailsCache[eventContainerId]
+	containerDetails, ok := getContainerDetails(eventContainerId)
 	if !ok {
 		return []rule.Rule{}
 	}
@@ -121,7 +172,7 @@ func getHighestOwnerOfPod(clientset ClientSetInterface, podName, namespace strin
 	}
 
 	// Traverse through owner references until we get the top owner
-	for true {
+	for {
 		ownerReference := owner[0]
 
 		switch ownerReference.Kind {
@@ -180,5 +231,4 @@ func getHighestOwnerOfPod(clientset ClientSetInterface, podName, namespace strin
 		}
 
 	}
-	return retOwner, nil
 }

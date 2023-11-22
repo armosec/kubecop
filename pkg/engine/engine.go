@@ -25,18 +25,26 @@ type Engine struct {
 	k8sClientset          ClientSetInterface
 	pollLoopRunning       bool
 	pollLoopCancelChannel chan struct{}
+	// TODO: change the signature of this function to support in parameters and custom priority
+	getRulesForPodFunc func(podName, namespace string) ([]string, error)
+	nodeName           string
 }
 
-func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.ApplicationProfileCache, tracer *tracing.Tracer, workerPoolWidth int) *Engine {
+func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.ApplicationProfileCache, tracer *tracing.Tracer, workerPoolWidth int, nodeName string) *Engine {
 	workerPool := workerpool.New(workerPoolWidth)
 	engine := Engine{
 		applicationProfileCache: appProfileCache,
 		k8sClientset:            k8sClientset,
 		eventProcessingPool:     workerPool,
 		tracer:                  tracer,
+		nodeName:                nodeName,
 	}
 	engine.StartPullComponent()
 	return &engine
+}
+
+func (e *Engine) SetGetRulesForPodFunc(getRulesForPodFunc func(podName, namespace string) ([]string, error)) {
+	e.getRulesForPodFunc = getRulesForPodFunc
 }
 
 func (e *Engine) Delete() {
