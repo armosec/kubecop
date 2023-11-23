@@ -19,6 +19,9 @@ type containerEntry struct {
 	// Low level container information
 	NsMntId uint64
 
+	// Attached late (after container already started)
+	AttachedLate bool
+
 	// Add rules here
 	BoundRules []rule.Rule
 }
@@ -27,7 +30,9 @@ type containerEntry struct {
 var containerIdToDetailsCache = make(map[string]containerEntry)
 
 func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityEvent) {
-	if event.Activity == tracing.ContainerActivityEventStart {
+	if event.Activity == tracing.ContainerActivityEventStart || event.Activity == tracing.ContainerActivityEventAttached {
+
+		attached := event.Activity == tracing.ContainerActivityEventAttached
 
 		ownerRef, err := getHighestOwnerOfPod(engine.k8sClientset, event.PodName, event.Namespace)
 		if err != nil {
@@ -36,10 +41,10 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 		}
 
 		// Load application profile if it exists
-		err = engine.applicationProfileCache.LoadApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID)
+		err = engine.applicationProfileCache.LoadApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID, attached)
 		if err != nil {
 			// Ask cache to load the application profile when/if it becomes available
-			err = engine.applicationProfileCache.AnticipateApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID)
+			err = engine.applicationProfileCache.AnticipateApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID, attached)
 			if err != nil {
 				log.Printf("Failed to anticipate application profile for container %s/%s/%s/%s: %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
 			}
@@ -58,14 +63,53 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			OwnerName:     ownerRef.Name,
 			NsMntId:       event.NsMntId,
 			BoundRules:    boundRules,
+			AttachedLate:  event.Activity == tracing.ContainerActivityEventAttached,
+		}
+
+		// Start tracing the container
+		neededEvents := map[tracing.EventType]bool{}
+		for _, rule := range boundRules {
+			for _, needEvent := range rule.Requirements().EventTypes {
+				neededEvents[needEvent] = true
+			}
+		}
+		for neededEvent := range neededEvents {
+			err = engine.tracer.StartTraceContainer(event.NsMntId, event.Pid, neededEvent)
+			if err != nil {
+				log.Printf("Failed to enable event %v for container %s/%s/%s/%s: %v\n", neededEvent, event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
+			}
 		}
 
 	} else if event.Activity == tracing.ContainerActivityEventStop {
 		go func() {
+			eventsInUse := GetRequiredEventsFromRules(containerIdToDetailsCache[event.ContainerID].BoundRules)
+
+			// Stop tracing the container
+			for _, eventInUse := range eventsInUse {
+				err := engine.tracer.StopTraceContainer(event.NsMntId, event.Pid, eventInUse)
+				if err != nil {
+					log.Printf("Failed to disable event %v for container %s/%s/%s: %v\n", eventInUse, event.Namespace, event.PodName, event.ContainerName, err)
+				}
+			}
+
 			// Remove the container from the cache
 			delete(containerIdToDetailsCache, event.ContainerID)
 		}()
 	}
+}
+
+func GetRequiredEventsFromRules(rules []rule.Rule) []tracing.EventType {
+	neededEvents := map[tracing.EventType]bool{}
+	for _, rule := range rules {
+		for _, needEvent := range rule.Requirements().EventTypes {
+			neededEvents[needEvent] = true
+		}
+	}
+	var ret []tracing.EventType
+	for neededEvent := range neededEvents {
+		ret = append(ret, neededEvent)
+	}
+	return ret
 }
 
 func (engine *Engine) GetWorkloadOwnerKindAndName(event *tracing.GeneralEvent) (string, string, error) {
