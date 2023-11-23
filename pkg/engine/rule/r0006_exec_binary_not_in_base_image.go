@@ -16,9 +16,6 @@ import (
 const (
 	R0006ID                               = "R0006"
 	R0006ExecBinaryNotInBaseImageRuleName = "Exec Binary Not In Base Image"
-	OVERLAY_FIELD_INDEX                   = 8
-	MOUNT_POINT_FIELD_INDEX               = 9
-	OVERLAY_LINE_FIELD_COUNT              = 10
 )
 
 var R0006ExecBinaryNotInBaseImageRuleDescriptor = RuleDesciptor{
