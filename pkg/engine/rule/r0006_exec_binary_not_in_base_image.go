@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/prometheus/procfs"
+	"golang.org/x/sys/unix"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -79,8 +81,15 @@ func (rule *R0006ExecBinaryNotInBaseImage) ProcessEvent(eventType tracing.EventT
 
 func IsExecBinaryNotInBaseImage(execEvent *tracing.ExecveEvent) bool {
 	// Check if the path is in the upper layer.
-	// upperLayerPath, err := getOverlayMountPoint(execEvent.GeneralEvent.Pid)
-	upperLayerPath, err := getOverlayMountPoint(1) // TODO: Replace with execEvent.GeneralEvent.Pid once the bug is fixed.
+	processes, err := findProcessByPathAndNamespace(execEvent)
+	if err != nil {
+		fmt.Printf("Error finding process by path and namespace: %s\n", err)
+		return false
+	}
+
+	process := processes[0] // TODO: Verify that this is the correct process.
+
+	upperLayerPath, err := getOverlayMountPoint(&process)
 	if err != nil {
 		return false
 	}
@@ -88,8 +97,56 @@ func IsExecBinaryNotInBaseImage(execEvent *tracing.ExecveEvent) bool {
 	return !fileExists(filepath.Join(upperLayerPath, execEvent.PathName))
 }
 
-func getOverlayMountPoint(pid int) (string, error) {
-	if mounts, err := procfs.GetProcMounts(pid); err == nil {
+func findProcessByPathAndNamespace(execEvent *tracing.ExecveEvent) ([]procfs.Proc, error) {
+	var matchingProcesses []procfs.Proc
+
+	procs, err := procfs.AllProcs()
+	if err != nil {
+		return nil, err
+	}
+
+	mountNamespaceID, err := strconv.ParseUint(execEvent.Namespace, 10, 32)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, proc := range procs {
+		comm, err := proc.Comm()
+		if err != nil {
+			fmt.Printf("Error reading comm for PID %d: %s\n", proc.PID, err)
+			continue
+		}
+
+		// Check if the executable comm matches the specified path comm
+		if comm == filepath.Base(execEvent.PathName) {
+			// Check if the mount namespace ID matches the specified namespaceID
+			mountNamespaceId, err := getMountNamespaceID(proc.PID)
+			if err != nil {
+				fmt.Printf("Error reading mount namespace ID for PID %d: %s\n", proc.PID, err)
+				continue
+			}
+
+			if mountNamespaceId == int(mountNamespaceID) {
+				matchingProcesses = append(matchingProcesses, proc)
+			}
+		}
+	}
+
+	return matchingProcesses, nil
+}
+
+func getMountNamespaceID(pid int) (int, error) {
+	var stat unix.Statfs_t
+	err := unix.Statfs(fmt.Sprintf("/proc/%d/ns/mnt", pid), &stat)
+	if err != nil {
+		return 0, err
+	}
+	return int(stat.Type), nil
+}
+
+func getOverlayMountPoint(process *procfs.Proc) (string, error) {
+	// Read the mount info for the process, and find the overlay mount point. (There should only be one?).
+	if mounts, err := process.MountInfo(); err == nil {
 		for _, mount := range mounts {
 			if mount.FSType == "overlay" {
 				return mount.Options["upperdir"], nil
@@ -97,7 +154,7 @@ func getOverlayMountPoint(pid int) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("failed to get mount point for pid %d", pid)
+	return "", fmt.Errorf("failed to get mount point for pid %d", process.PID)
 }
 
 func fileExists(filename string) bool {
