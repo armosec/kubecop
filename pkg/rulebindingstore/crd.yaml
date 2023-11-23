@@ -109,14 +109,6 @@ spec:
                       - Exec from malicious source
                       type: string
                     ruleTags:
-                      enum:
-                      - capabilities
-                      - dns
-                      - signature
-                      - exec
-                      - whitelisted
-                      - open
-                      - syscall
                       items:
                         enum:
                         - exec
@@ -135,9 +127,3 @@ spec:
         type: object
     served: true
     storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: null
-  storedVersions: null
