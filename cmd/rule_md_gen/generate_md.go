@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -33,6 +35,7 @@ func main() {
 	for tag := range tagsMap {
 		tagsList = append(tagsList, tag)
 	}
+	slices.Sort(tagsList)
 	fillListsInCRD(idsList, namesList, tagsList)
 }
 
@@ -93,7 +96,7 @@ func fillListsInCRD(idsList []string, namesList []string, tagsList []string) {
 	for _, tag := range tagsList {
 		enumVals = append(enumVals, apiextensionsv1.JSON{Raw: []byte("\"" + tag + "\"")})
 	}
-	specRuleTags.Enum = enumVals
+	specRuleTags.Items.Schema.Enum = enumVals
 	specRules.Items.Schema.Properties["ruleTags"] = specRuleTags
 	// write back
 	spec.Properties["rules"] = specRules
@@ -101,7 +104,27 @@ func fillListsInCRD(idsList []string, namesList []string, tagsList []string) {
 
 	// write CRD YAML file
 	crdFile.Seek(0, 0)
-	if newFileContent, err := yaml.Marshal(crDef); err != nil {
+	var jbytes []byte
+	if jbytes, err = json.Marshal(crDef); err != nil {
+		fmt.Printf("Error encoding CRD file to JSON: %v\n", err)
+		return
+	}
+	// convert JSON to map[string]interface{} to remove empty fields
+	var jmap map[string]interface{}
+	if err := json.Unmarshal(jbytes, &jmap); err != nil {
+		fmt.Printf("Error decoding CRD file from JSON: %v\n", err)
+		return
+	}
+	// remove empty fields
+	delete(jmap, "status")
+	// delete(, "creationTimestamp")
+
+	// convert back to JSON
+	if jbytes, err = json.Marshal(jmap); err != nil {
+		fmt.Printf("Error encoding CRD file back to JSON: %v\n", err)
+		return
+	}
+	if newFileContent, err := yaml.JSONToYAML(jbytes); err != nil {
 		fmt.Printf("Error encoding CRD file: %v\n", err)
 		return
 	} else {
