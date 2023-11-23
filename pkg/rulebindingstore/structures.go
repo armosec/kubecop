@@ -26,6 +26,8 @@ type RuntimeAlertRuleBindingSpec struct {
 
 type RuntimeAlertRuleBindingRule struct {
 	RuleName   string                 `json:"ruleName" yaml:"ruleName"`
+	RuleID     string                 `json:"ruleID" yaml:"ruleID"`
+	RuleTags   []string               `json:"ruleTags" yaml:"ruleTags"`
 	Severity   string                 `json:"severity" yaml:"severity"`
 	Parameters map[string]interface{} `json:"parameters" yaml:"parameters"`
 }

@@ -104,16 +104,41 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntry) error {
 
 	// Get the rules that are bound to the container
-	ruleNames, err := engine.getRulesForPodFunc(contEntry.PodName, contEntry.Namespace)
+	ruleParamsSlc, err := engine.getRulesForPodFunc(contEntry.PodName, contEntry.Namespace)
 	if err != nil {
 		return fmt.Errorf("failed to get rules for pod %s/%s: %v", contEntry.Namespace, contEntry.PodName, err)
 	}
-	if len(ruleNames) == 0 {
+	if len(ruleParamsSlc) == 0 {
 		return nil
 	}
-	boundRules := rule.CreateRulesByNames(ruleNames)
-	contEntry.BoundRules = boundRules
 
+	ruleDescs := make([]rule.Rule, 0, len(ruleParamsSlc))
+	for _, ruleParams := range ruleParamsSlc {
+		if ruleParams.RuleName != "" {
+			rulrDesc := rule.CreateRuleByName(ruleParams.RuleName)
+			if rulrDesc != nil {
+				ruleDescs = append(ruleDescs, rulrDesc)
+			}
+			continue
+		}
+		if ruleParams.RuleID != "" {
+			rulrDesc := rule.CreateRuleByID(ruleParams.RuleID)
+			if rulrDesc != nil {
+				ruleDescs = append(ruleDescs, rulrDesc)
+			}
+			continue
+		}
+		if len(ruleParams.RuleTags) > 0 {
+			rulrDesc := rule.CreateRulesByTags(ruleParams.RuleTags)
+			if rulrDesc != nil {
+				ruleDescs = append(ruleDescs, rulrDesc...)
+			}
+			continue
+		}
+		log.Printf("No rule name, id or tags specified for rule binding \n")
+	}
+
+	contEntry.BoundRules = ruleDescs
 	// Add the container to the cache
 	setContainerDetails(contEntry.ContainerID, contEntry)
 	return nil

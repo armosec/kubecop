@@ -8,7 +8,7 @@ spec:
   versions:
     - name: v1
       served: true
-      storage: true      
+      storage: true
       schema:
         openAPIV3Schema:
           type: object
@@ -20,16 +20,52 @@ spec:
                   type: array
                   items:
                     type: object
+                    oneOf:
+                      - required: [ruleTags]
+                        not:
+                          anyOf:
+                            - required: [ruleID]
+                            - required: [ruleName]
+                      - required: [ruleID]
+                        not:
+                          anyOf:
+                            - required: [ruleTags]
+                            - required: [ruleName]
+                      - required: [ruleName]
+                        not:
+                          anyOf:
+                            - required: [ruleTags]
+                            - required: [ruleID]
                     properties:
+                      ruleTags:
+                        type: array
+                        items:
+                          type: string
+                          enum:
+                            - "exec"
+                            - "whitelisted"
+                            - "open"
+                            - "syscall"
+                            - "capabilities"
+                            - "dns"
+                      ruleID:
+                        type: string
+                        enum:
+                          - "R001"
+                          - "R002"
+                          - "R003"
+                          - "R004"
+                          - "R005"
+                          - "R100"
                       ruleName:
                         type: string
                         enum:
-                        - "Exec Whitelisted"
-                        - "Unexpected file access"
-                        - "Unexpected system call"
-                        - "Unexpected capability used"
-                        - "Unexpected domain request"
-                        - "Exec from malicious source"
+                          - "Exec Whitelisted"
+                          - "Unexpected file access"
+                          - "Unexpected system call"
+                          - "Unexpected capability used"
+                          - "Unexpected domain request"
+                          - "Exec from malicious source"
                       severity:
                         type: string
                       parameters:
