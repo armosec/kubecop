@@ -57,7 +57,7 @@ func (engine *Engine) OnRuleBindingChanged(ruleBinding rulebindingstore.RuntimeA
 
 	for _, det := range getcontainerIdToDetailsCacheCopy() {
 		if _, ok := podsMap[fullPodName(det.Namespace, det.PodName)]; ok {
-			go engine.associateRulesWithContainerInCache(det)
+			go engine.associateRulesWithContainerInCache(det, true)
 		}
 	}
 }
@@ -89,7 +89,7 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			OwnerName:     ownerRef.Name,
 			NsMntId:       event.NsMntId,
 		}
-		err = engine.associateRulesWithContainerInCache(contEntry)
+		err = engine.associateRulesWithContainerInCache(contEntry, false)
 		if err != nil {
 			log.Printf("Failed to add container details to cache: %v\n", err)
 		}
@@ -101,7 +101,7 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 	}
 }
 
-func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntry) error {
+func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntry, exists bool) error {
 
 	// Get the rules that are bound to the container
 	ruleParamsSlc, err := engine.getRulesForPodFunc(contEntry.PodName, contEntry.Namespace)
@@ -140,7 +140,7 @@ func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntr
 
 	contEntry.BoundRules = ruleDescs
 	// Add the container to the cache
-	setContainerDetails(contEntry.ContainerID, contEntry)
+	setContainerDetails(contEntry.ContainerID, contEntry, exists)
 	return nil
 }
 
