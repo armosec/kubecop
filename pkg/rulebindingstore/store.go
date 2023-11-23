@@ -124,22 +124,20 @@ func (store *RuleBindingK8sStore) getRuleBindingsForPod(podName, namespace strin
 	return ruleBindingsForPod, nil
 }
 
-func (store *RuleBindingK8sStore) GetRulesForPod(podName, namespace string) ([]string, error) {
+func (store *RuleBindingK8sStore) GetRulesForPod(podName, namespace string) ([]RuntimeAlertRuleBindingRule, error) {
 	// TODO: change to support parameters of rule + custom priority
 	ruleBindingsForPod, err := store.getRuleBindingsForPod(podName, namespace)
 	if err != nil {
 		return nil, err
 	}
-	rules := make(map[string]struct{})
+
+	// we may have here duplications of rules, this should be handled by the caller logic
+	// Issue in GH: https://github.com/armosec/kubecop/issues/30
+	var rulesSlice []RuntimeAlertRuleBindingRule
 	for _, ruleBinding := range ruleBindingsForPod {
-		for _, rule := range ruleBinding.Spec.Rules {
-			rules[rule.RuleName] = struct{}{}
-		}
+		rulesSlice = append(rulesSlice, ruleBinding.Spec.Rules...)
 	}
-	var rulesSlice []string
-	for rule := range rules {
-		rulesSlice = append(rulesSlice, rule)
-	}
+
 	return rulesSlice, nil
 }
 

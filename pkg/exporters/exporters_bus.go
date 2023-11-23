@@ -1,7 +1,7 @@
 package exporters
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
 )
@@ -32,7 +32,7 @@ func InitExporters(exportersConfig ExportersConfig) {
 	if len(exporters) == 0 {
 		panic("no exporters were initialized")
 	}
-	fmt.Println("exporters initialized")
+	log.Print("exporters initialized")
 }
 
 func SendAlert(failedRule rule.RuleFailure) {

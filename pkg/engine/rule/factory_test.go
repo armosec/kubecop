@@ -23,3 +23,34 @@ func TestCreateRulesByNames(t *testing.T) {
 		t.Errorf("Expected rules to not be nil")
 	}
 }
+
+// Test CreateRuleByName
+func TestCreateRuleByName(t *testing.T) {
+	// Create a new rule
+	rule := CreateRuleByName(R0001ExecWhitelistedRuleName)
+	// Assert r is not nil
+	if rule == nil {
+		t.Errorf("Expected rule to not be nil")
+	}
+	// not exist
+	rule = CreateRuleByName("not exist")
+	// Assert r is not nil
+	if rule != nil {
+		t.Errorf("Expected rule to be nil")
+	}
+}
+
+// Test CreateRuleByID
+func TestCreateRuleByID(t *testing.T) {
+	rule := CreateRuleByID(R0001ID)
+	// Assert r is not nil
+	if rule == nil {
+		t.Errorf("Expected rule to not be nil")
+	}
+	// not exist
+	rule = CreateRuleByID("not exist")
+	// Assert r is not nil
+	if rule != nil {
+		t.Errorf("Expected rule to be nil")
+	}
+}

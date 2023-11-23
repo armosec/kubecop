@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
+	"github.com/armosec/kubecop/pkg/rulebindingstore"
 	"github.com/kubescape/kapprofiler/pkg/collector"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	appsv1 "k8s.io/api/apps/v1"
@@ -121,8 +122,8 @@ func TestEngine_ContainerStartStop(t *testing.T) {
 
 	// Create a new engine
 	e := NewEngine(fakeclientset, NewApplicationProfileCacheMock(), nil, 0, "localhost")
-	e.SetGetRulesForPodFunc(func(podName, namespace string) ([]string, error) {
-		return []string{"testrule"}, nil
+	e.SetGetRulesForPodFunc(func(podName, namespace string) ([]rulebindingstore.RuntimeAlertRuleBindingRule, error) {
+		return []rulebindingstore.RuntimeAlertRuleBindingRule{{RuleName: "testrule"}}, nil
 	})
 	// Assert e is not nil
 	if e == nil {

@@ -8,6 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine"
 	"github.com/armosec/kubecop/pkg/exporters"
@@ -17,6 +20,7 @@ import (
 	reconcilercontroller "github.com/kubescape/kapprofiler/pkg/controller"
 	"github.com/kubescape/kapprofiler/pkg/eventsink"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -80,6 +84,13 @@ func serviceInitNChecks() error {
 }
 
 func main() {
+	// Start the pprof server if _PPROF_SERVER environment variable is set
+	if os.Getenv("_PPROF_SERVER") != "" {
+		go func() {
+			log.Println(http.ListenAndServe("localhost:6060", nil))
+		}()
+	}
+
 	// Initialize the service backend
 	if err := serviceInitNChecks(); err != nil {
 		log.Fatalf("Failed to initialize service: %v\n", err)
@@ -108,7 +119,6 @@ func main() {
 	if err := eventSink.Start(); err != nil {
 		log.Fatalf("Failed to start event sink: %v\n", err)
 	}
-	fmt.Println("Event sink started")
 	defer eventSink.Stop()
 
 	// Start the collector manager
@@ -169,12 +179,21 @@ func main() {
 	if err := tracer.Start(); err != nil {
 		log.Fatalf("Failed to start tracer: %v\n", err)
 	}
-	fmt.Println("Tracer started")
+	log.Printf("Tracer started")
+
+	// Start prometheus metrics server
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":9090", nil)
+	}()
+
 	// Wait for shutdown signal
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 	<-shutdown
 	log.Println("Shutting down...")
+
+	// Stop HTTP server
 
 	// Stop the tracer
 	tracer.Stop()

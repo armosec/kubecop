@@ -57,7 +57,7 @@ func (engine *Engine) OnRuleBindingChanged(ruleBinding rulebindingstore.RuntimeA
 
 	for _, det := range getcontainerIdToDetailsCacheCopy() {
 		if _, ok := podsMap[fullPodName(det.Namespace, det.PodName)]; ok {
-			go engine.associateRulesWithContainerInCache(det)
+			go engine.associateRulesWithContainerInCache(det, true)
 		}
 	}
 }
@@ -89,7 +89,7 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			OwnerName:     ownerRef.Name,
 			NsMntId:       event.NsMntId,
 		}
-		err = engine.associateRulesWithContainerInCache(contEntry)
+		err = engine.associateRulesWithContainerInCache(contEntry, false)
 		if err != nil {
 			log.Printf("Failed to add container details to cache: %v\n", err)
 		}
@@ -101,21 +101,46 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 	}
 }
 
-func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntry) error {
+func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntry, exists bool) error {
 
 	// Get the rules that are bound to the container
-	ruleNames, err := engine.getRulesForPodFunc(contEntry.PodName, contEntry.Namespace)
+	ruleParamsSlc, err := engine.getRulesForPodFunc(contEntry.PodName, contEntry.Namespace)
 	if err != nil {
 		return fmt.Errorf("failed to get rules for pod %s/%s: %v", contEntry.Namespace, contEntry.PodName, err)
 	}
-	if len(ruleNames) == 0 {
+	if len(ruleParamsSlc) == 0 {
 		return nil
 	}
-	boundRules := rule.CreateRulesByNames(ruleNames)
-	contEntry.BoundRules = boundRules
 
+	ruleDescs := make([]rule.Rule, 0, len(ruleParamsSlc))
+	for _, ruleParams := range ruleParamsSlc {
+		if ruleParams.RuleName != "" {
+			rulrDesc := rule.CreateRuleByName(ruleParams.RuleName)
+			if rulrDesc != nil {
+				ruleDescs = append(ruleDescs, rulrDesc)
+			}
+			continue
+		}
+		if ruleParams.RuleID != "" {
+			rulrDesc := rule.CreateRuleByID(ruleParams.RuleID)
+			if rulrDesc != nil {
+				ruleDescs = append(ruleDescs, rulrDesc)
+			}
+			continue
+		}
+		if len(ruleParams.RuleTags) > 0 {
+			rulrDesc := rule.CreateRulesByTags(ruleParams.RuleTags)
+			if rulrDesc != nil {
+				ruleDescs = append(ruleDescs, rulrDesc...)
+			}
+			continue
+		}
+		log.Printf("No rule name, id or tags specified for rule binding \n")
+	}
+
+	contEntry.BoundRules = ruleDescs
 	// Add the container to the cache
-	setContainerDetails(contEntry.ContainerID, contEntry)
+	setContainerDetails(contEntry.ContainerID, contEntry, exists)
 	return nil
 }
 
@@ -143,6 +168,11 @@ func (engine *Engine) GetRulesForEvent(event *tracing.GeneralEvent) []rule.Rule 
 		return []rule.Rule{}
 	}
 	return containerDetails.BoundRules
+}
+
+func (engine *Engine) IsContainerIDInCache(containerID string) bool {
+	_, ok := containerIdToDetailsCache[containerID]
+	return ok
 }
 
 // getHighestOwnerOfPod gets the highest owner of a pod in the given namespace.

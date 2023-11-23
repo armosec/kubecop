@@ -25,6 +25,24 @@ func CreateRulesByTags(tags []string) []Rule {
 	return rules
 }
 
+func CreateRuleByID(id string) Rule {
+	for _, rule := range ruleDescriptions {
+		if rule.ID == id {
+			return rule.RuleCreationFunc()
+		}
+	}
+	return nil
+}
+
+func CreateRuleByName(name string) Rule {
+	for _, rule := range ruleDescriptions {
+		if rule.Name == name {
+			return rule.RuleCreationFunc()
+		}
+	}
+	return nil
+}
+
 func CreateRulesByNames(names []string) []Rule {
 	var rules []Rule
 	for _, rule := range ruleDescriptions {

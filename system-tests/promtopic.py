@@ -21,7 +21,7 @@ def execute_promql_query(prometheus_url, query, time_start, time_end, steps):
         raise Exception("Query failed")
     return results['data']['result']
 
-def plotprom(test_case_name,time_start, time_end, steps =14):
+def plotprom(test_case_name,time_start, time_end, steps = '1s'):
     print("Ploting test %s from %s to %s" % (test_case_name, time_start, time_end))
     # Replace with your Prometheus URL and Query
     prometheus_url = 'http://localhost:9090'
@@ -30,20 +30,10 @@ def plotprom(test_case_name,time_start, time_end, steps =14):
 
     # Get kubecop pod name
     pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True)
-
-    query = '''sum(
-        node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{cluster="", namespace="kubescape"}
-    * on(namespace,pod)
-        group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="", namespace="kubescape", workload="kubecop", workload_type=~"daemonset"}
-    ) by (pod)
-    '''
-    query = 'sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="kubescape", cluster=""}) by (pod)'
     query = 'sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="kubescape", pod=%s,cluster=""}) by (container)'%pod_name
-    steps = int((time_end - time_start)/10)
-    #print("Query: %s" % query)
+
     # Execute the query
     data = execute_promql_query(prometheus_url, query, time_start, time_end, steps)
-    #print("Data: %s" % data)
 
     # Example of processing and plotting
     # This will vary greatly depending on the shape of your data
