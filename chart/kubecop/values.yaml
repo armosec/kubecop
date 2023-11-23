@@ -15,6 +15,10 @@ kubecop:
   alertmanager:
     enabled: false
     endpoint: "localhost:9093"
+  prometheusExporter:
+    enabled: false
+  pprofserver:
+    enabled: false
 
 serviceAccount:
   # Specifies whether a service account should be created

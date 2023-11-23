@@ -170,6 +170,11 @@ func (engine *Engine) GetRulesForEvent(event *tracing.GeneralEvent) []rule.Rule 
 	return containerDetails.BoundRules
 }
 
+func (engine *Engine) IsContainerIDInCache(containerID string) bool {
+	_, ok := containerIdToDetailsCache[containerID]
+	return ok
+}
+
 // getHighestOwnerOfPod gets the highest owner of a pod in the given namespace.
 func getHighestOwnerOfPod(clientset ClientSetInterface, podName, namespace string) (metav1.OwnerReference, error) {
 	var retOwner metav1.OwnerReference
