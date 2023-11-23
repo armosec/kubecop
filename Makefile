@@ -43,6 +43,9 @@ build-image-and-push: build-image
 clean:
 	rm -f $(BINARY_NAME)
 
+validate-crd:
+	./scripts/validate-crd.sh
+
 all: $(BINARY_NAME)
 
 .PHONY: clean all install deploy-dev-pod test open-shell build
