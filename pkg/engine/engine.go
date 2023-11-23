@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
+	"github.com/armosec/kubecop/pkg/rulebindingstore"
 	"github.com/gammazero/workerpool"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	discovery "k8s.io/client-go/discovery"
@@ -29,7 +30,7 @@ type Engine struct {
 	pollLoopCancelChannel chan struct{}
 	promCollector         *prometheusMetric
 	// TODO: change the signature of this function to support in parameters and custom priority
-	getRulesForPodFunc func(podName, namespace string) ([]string, error)
+	getRulesForPodFunc func(podName, namespace string) ([]rulebindingstore.RuntimeAlertRuleBindingRule, error)
 	nodeName           string
 }
 
@@ -48,7 +49,7 @@ func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.A
 	return &engine
 }
 
-func (e *Engine) SetGetRulesForPodFunc(getRulesForPodFunc func(podName, namespace string) ([]string, error)) {
+func (e *Engine) SetGetRulesForPodFunc(getRulesForPodFunc func(podName, namespace string) ([]rulebindingstore.RuntimeAlertRuleBindingRule, error)) {
 	e.getRulesForPodFunc = getRulesForPodFunc
 }
 
