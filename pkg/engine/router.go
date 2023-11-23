@@ -9,16 +9,18 @@ import (
 )
 
 // This function enables prefiltering of events before they are processed by the engine.
-func (engine *Engine) eventNeedsProcessing(event interface{}) bool {
+func (engine *Engine) eventNeedsProcessing(containerId string, eventType tracing.EventType, event interface{}) bool {
 	// TODO - implement
 	// check if there are any rules that are bound to this event
-	return true
+
+	return engine.IsContainerIDInCache(containerId)
 }
 
 // submitEventForProcessing submits an event for processing by the engine through the event processing pool.
 // This decouples the event fire thread from the event processing thread.
-func (engine *Engine) submitEventForProcessing(eventType tracing.EventType, event interface{}) {
-	if !engine.eventNeedsProcessing(event) {
+func (engine *Engine) submitEventForProcessing(containerId string, eventType tracing.EventType, event interface{}) {
+
+	if !engine.eventNeedsProcessing(containerId, eventType, event) {
 		return
 	}
 
@@ -108,21 +110,26 @@ func convertEventInterfaceToGenericEvent(eventType tracing.EventType, event inte
 // implement EventSink interface for the engine
 
 func (engine *Engine) SendExecveEvent(event *tracing.ExecveEvent) {
-	engine.submitEventForProcessing(tracing.ExecveEventType, event)
+	engine.promCollector.ReportEbpfEvent(tracing.ExecveEventType)
+	engine.submitEventForProcessing(event.ContainerID, tracing.ExecveEventType, event)
 }
 
 func (engine *Engine) SendOpenEvent(event *tracing.OpenEvent) {
-	engine.submitEventForProcessing(tracing.OpenEventType, event)
+	engine.promCollector.ReportEbpfEvent(tracing.OpenEventType)
+	engine.submitEventForProcessing(event.ContainerID, tracing.OpenEventType, event)
 }
 
 func (engine *Engine) SendNetworkEvent(event *tracing.NetworkEvent) {
-	engine.submitEventForProcessing(tracing.NetworkEventType, event)
+	engine.promCollector.ReportEbpfEvent(tracing.NetworkEventType)
+	engine.submitEventForProcessing(event.ContainerID, tracing.NetworkEventType, event)
 }
 
 func (engine *Engine) SendCapabilitiesEvent(event *tracing.CapabilitiesEvent) {
-	engine.submitEventForProcessing(tracing.CapabilitiesEventType, event)
+	engine.promCollector.ReportEbpfEvent(tracing.CapabilitiesEventType)
+	engine.submitEventForProcessing(event.ContainerID, tracing.CapabilitiesEventType, event)
 }
 
 func (engine *Engine) SendDnsEvent(event *tracing.DnsEvent) {
-	engine.submitEventForProcessing(tracing.DnsEventType, event)
+	engine.promCollector.ReportEbpfEvent(tracing.DnsEventType)
+	engine.submitEventForProcessing(event.ContainerID, tracing.DnsEventType, event)
 }

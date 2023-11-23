@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"log"
+
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/gammazero/workerpool"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -25,6 +27,7 @@ type Engine struct {
 	k8sClientset          ClientSetInterface
 	pollLoopRunning       bool
 	pollLoopCancelChannel chan struct{}
+	promCollector         *prometheusMetric
 	// TODO: change the signature of this function to support in parameters and custom priority
 	getRulesForPodFunc func(podName, namespace string) ([]string, error)
 	nodeName           string
@@ -37,8 +40,10 @@ func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.A
 		k8sClientset:            k8sClientset,
 		eventProcessingPool:     workerPool,
 		tracer:                  tracer,
+		promCollector:           CreatePrometheusMetric(),
 		nodeName:                nodeName,
 	}
+	log.Print("Engine created")
 	engine.StartPullComponent()
 	return &engine
 }
@@ -50,4 +55,5 @@ func (e *Engine) SetGetRulesForPodFunc(getRulesForPodFunc func(podName, namespac
 func (e *Engine) Delete() {
 	e.StopPullComponent()
 	e.eventProcessingPool.StopWait()
+	e.promCollector.Destroy()
 }

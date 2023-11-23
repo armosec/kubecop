@@ -28,11 +28,14 @@ func (engine *Engine) ProcessEvent(eventType tracing.EventType, event interface{
 			if os.Getenv("DEBUG") == "true" {
 				fmt.Printf("%v - warning missing app profile", e)
 			}
+			continue // TODO - check with the RuleBinding if alert should be fired or not
 		}
 
 		ruleFailure := rule.ProcessEvent(eventType, event, appProfile)
 		if ruleFailure != nil {
 			exporters.SendAlert(ruleFailure)
+			engine.promCollector.ReportRuleAlereted(rule.Name())
 		}
+		engine.promCollector.ReportRuleProcessed(rule.Name())
 	}
 }
