@@ -24,9 +24,15 @@ type containerEntry struct {
 var containerIdToDetailsCache = make(map[string]containerEntry)
 var containerIdToDetailsCacheLock = sync.RWMutex{}
 
-func setContainerDetails(containerId string, containerDetails containerEntry) {
+func setContainerDetails(containerId string, containerDetails containerEntry, exists bool) {
 	containerIdToDetailsCacheLock.Lock()
 	defer containerIdToDetailsCacheLock.Unlock()
+	if exists {
+		// If the container used to be exist and it's not in the cache, don't add it again
+		if _, ok := containerIdToDetailsCache[containerId]; !ok {
+			return
+		}
+	}
 	containerIdToDetailsCache[containerId] = containerDetails
 }
 
