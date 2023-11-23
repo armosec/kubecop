@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/prometheus/procfs"
 	"golang.org/x/sys/unix"
@@ -102,11 +101,6 @@ func findProcessByPathAndNamespace(execEvent *tracing.ExecveEvent) ([]procfs.Pro
 		return nil, err
 	}
 
-	mountNamespaceID, err := strconv.ParseUint(execEvent.Namespace, 10, 32)
-	if err != nil {
-		return nil, err
-	}
-
 	for _, proc := range procs {
 		comm, err := proc.Comm()
 		if err != nil {
@@ -123,7 +117,7 @@ func findProcessByPathAndNamespace(execEvent *tracing.ExecveEvent) ([]procfs.Pro
 				continue
 			}
 
-			if mountNamespaceId == int(mountNamespaceID) {
+			if mountNamespaceId == int(execEvent.MountNsID) {
 				matchingProcesses = append(matchingProcesses, proc)
 			}
 		}
