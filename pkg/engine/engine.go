@@ -28,9 +28,12 @@ type Engine struct {
 	pollLoopRunning       bool
 	pollLoopCancelChannel chan struct{}
 	promCollector         *prometheusMetric
+	// TODO: change the signature of this function to support in parameters and custom priority
+	getRulesForPodFunc func(podName, namespace string) ([]string, error)
+	nodeName           string
 }
 
-func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.ApplicationProfileCache, tracer *tracing.Tracer, workerPoolWidth int) *Engine {
+func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.ApplicationProfileCache, tracer *tracing.Tracer, workerPoolWidth int, nodeName string) *Engine {
 	workerPool := workerpool.New(workerPoolWidth)
 	engine := Engine{
 		applicationProfileCache: appProfileCache,
@@ -38,10 +41,15 @@ func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.A
 		eventProcessingPool:     workerPool,
 		tracer:                  tracer,
 		promCollector:           CreatePrometheusMetric(),
+		nodeName:                nodeName,
 	}
 	log.Print("Engine created")
 	engine.StartPullComponent()
 	return &engine
+}
+
+func (e *Engine) SetGetRulesForPodFunc(getRulesForPodFunc func(podName, namespace string) ([]string, error)) {
+	e.getRulesForPodFunc = getRulesForPodFunc
 }
 
 func (e *Engine) Delete() {

@@ -1,0 +1,14 @@
+apiVersion: kubescape.io/v1
+kind: RuntimeRuleAlertBinding
+metadata:
+  name: all-rules-all-pods
+spec:
+  namespaceSelector:
+  podSelector:
+  rules:
+    - ruleName: "Exec Whitelisted"
+    - ruleName: "Unexpected file access"
+    - ruleName: "Unexpected system call"
+    - ruleName: "Unexpected capability used"
+    - ruleName: "Unexpected domain request"
+    - ruleName: "Exec from malicious source"

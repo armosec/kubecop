@@ -49,7 +49,7 @@ func (engine *Engine) Poll() {
 			// Time elapsed without cancelation, do the work
 			if engine.tracer != nil {
 				// Loop over the containerIdToDetailsCache map
-				for containerId, containerDetails := range containerIdToDetailsCache {
+				for containerId, containerDetails := range getcontainerIdToDetailsCacheCopy() {
 					syscalls, err := engine.tracer.PeekSyscallInContainer(containerDetails.NsMntId)
 					if err != nil {
 						log.Printf("Failed to peek syscalls in container %s: %v\n", containerId, err)
