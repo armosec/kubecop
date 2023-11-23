@@ -10,6 +10,7 @@ require (
 	github.com/prometheus/alertmanager v0.26.0
 	github.com/stretchr/testify v1.8.4
 	k8s.io/api v0.28.3
+	k8s.io/apiextensions-apiserver v0.28.0
 	k8s.io/apimachinery v0.28.3
 	k8s.io/client-go v0.28.3
 )
