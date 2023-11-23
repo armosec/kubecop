@@ -58,13 +58,13 @@ func NewApplicationProfileCacheMock() *ApplicationProfileCacheMock {
 }
 
 // LoadApplicationProfile mocks loading an application profile to the cache.
-func (apc *ApplicationProfileCacheMock) LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error {
+func (apc *ApplicationProfileCacheMock) LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string, acceptPartial bool) error {
 	// Mock implementation, return nil to simulate success
 	return nil
 }
 
 // AnticipateApplicationProfile mocks anticipating an application profile to be loaded to the cache.
-func (apc *ApplicationProfileCacheMock) AnticipateApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error {
+func (apc *ApplicationProfileCacheMock) AnticipateApplicationProfile(namespace, kind, workloadName, containerName, containerID string, acceptPartial bool) error {
 	// Mock implementation, return nil to simulate success
 	return nil
 }

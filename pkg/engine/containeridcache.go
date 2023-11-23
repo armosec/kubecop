@@ -16,6 +16,9 @@ type containerEntry struct {
 	// Low level container information
 	NsMntId uint64
 
+	// Attached late (after container already started)
+	AttachedLate bool
+
 	// Add rules here
 	BoundRules []rule.Rule
 }
