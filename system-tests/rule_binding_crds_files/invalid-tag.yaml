@@ -1,0 +1,12 @@
+apiVersion: kubescape.io/v1
+kind: RuntimeRuleAlertBinding
+metadata:
+  name: all-pods-1
+spec:
+  namespaceSelector:
+  podSelector:
+  rules:
+    - ruleTags:
+      - "exec"
+      - "whitelistedmnmnn"
+    
