@@ -39,7 +39,7 @@ var R0006ExecBinaryNotInBaseImageRuleDescriptor = RuleDesciptor{
 type R0006ExecBinaryNotInBaseImage struct {
 }
 
-type R0006ExecWhitelistedFailure struct {
+type R0006ExecBinaryNotInBaseImageFailure struct {
 	RuleName     string
 	Err          string
 	RulePriority int
@@ -71,7 +71,7 @@ func (rule *R0006ExecBinaryNotInBaseImage) ProcessEvent(eventType tracing.EventT
 		return nil
 	}
 
-	return &R0006ExecWhitelistedFailure{
+	return &R0006ExecBinaryNotInBaseImageFailure{
 		RuleName:     rule.Name(),
 		Err:          fmt.Sprintf("exec call \"%s\" binary is not from the base image", execEvent.PathName),
 		FailureEvent: execEvent,
@@ -173,18 +173,18 @@ func (rule *R0006ExecBinaryNotInBaseImage) Requirements() RuleRequirements {
 	}
 }
 
-func (rule *R0006ExecWhitelistedFailure) Name() string {
+func (rule *R0006ExecBinaryNotInBaseImageFailure) Name() string {
 	return rule.RuleName
 }
 
-func (rule *R0006ExecWhitelistedFailure) Error() string {
+func (rule *R0006ExecBinaryNotInBaseImageFailure) Error() string {
 	return rule.Err
 }
 
-func (rule *R0006ExecWhitelistedFailure) Event() tracing.GeneralEvent {
+func (rule *R0006ExecBinaryNotInBaseImageFailure) Event() tracing.GeneralEvent {
 	return rule.FailureEvent.GeneralEvent
 }
 
-func (rule *R0006ExecWhitelistedFailure) Priority() int {
+func (rule *R0006ExecBinaryNotInBaseImageFailure) Priority() int {
 	return rule.RulePriority
 }
