@@ -4,7 +4,7 @@
 
 image:
   repository: quay.io/armosec/kubecop
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: "latest"
 
 imagePullSecrets: []
