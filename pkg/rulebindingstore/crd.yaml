@@ -111,12 +111,13 @@ spec:
                     ruleTags:
                       items:
                         enum:
-                        - exec
-                        - whitelisted
-                        - open
-                        - syscall
                         - capabilities
                         - dns
+                        - exec
+                        - open
+                        - signature
+                        - syscall
+                        - whitelisted
                         type: string
                       type: array
                     severity:
