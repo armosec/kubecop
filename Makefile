@@ -48,4 +48,4 @@ validate-crd:
 
 all: $(BINARY_NAME)
 
-.PHONY: clean all install deploy-dev-pod test open-shell build
+.PHONY: clean all install deploy-dev-pod test open-shell build validate-crd 
