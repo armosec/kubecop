@@ -3,6 +3,7 @@ import requests
 import subprocess
 import time
 from promtopic import plotprom
+import kill_in_the_middle
 
 alert_manager_url = "http://localhost:9093/"
 prometheus_url = "http://localhost:9090/"
@@ -130,7 +131,9 @@ def rule_binding_apply_test(namespace="kubecop-test"):
 
 test_cases = [
     (basic_alert_test, "Basic alert test"),
-    (rule_binding_apply_test, "Rule binding apply test")
+    (rule_binding_apply_test, "Rule binding apply test"),
+    (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test"),
+    (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test")
 ]
 
 def main():
