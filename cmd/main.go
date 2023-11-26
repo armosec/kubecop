@@ -96,10 +96,11 @@ func main() {
 		log.Fatalf("Failed to initialize service: %v\n", err)
 	}
 
-	// Create tracer (without sink for now)
-	tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
 	// TODO: support exporters config from file/crd
 	exporters.InitExporters(exporters.ExportersConfig{})
+
+	// Create tracer (without sink for now)
+	tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
 	// Create application profile cache
 	appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(k8sConfig)
 	if err != nil {

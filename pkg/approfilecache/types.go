@@ -21,10 +21,10 @@ type SingleApplicationProfileAccess interface {
 
 type ApplicationProfileCache interface {
 	// Load an application profile to the cache
-	LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error
+	LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string, acceptPartial bool) error
 
 	// Anticipate an application profile to be loaded to the cache
-	AnticipateApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error
+	AnticipateApplicationProfile(namespace, kind, workloadName, containerName, containerID string, acceptPartial bool) error
 
 	// Delete an application profile from the cache
 	DeleteApplicationProfile(containerID string) error

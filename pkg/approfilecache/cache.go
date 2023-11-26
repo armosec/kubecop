@@ -21,6 +21,7 @@ type ApplicationProfileChacheEntry struct {
 	WorkloadName       string
 	WorkloadKind       string
 	Namespace          string
+	AcceptPartial      bool
 }
 
 type ApplicationProfileK8sCache struct {
@@ -80,7 +81,7 @@ func (cache *ApplicationProfileK8sCache) HasApplicationProfile(namespace, kind, 
 	return false
 }
 
-func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error {
+func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string, acceptPartial bool) error {
 	appProfile, err := cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(namespace).Get(context.TODO(), generateApplicationProfileName(kind, workloadName), metav1.GetOptions{})
 	if err != nil {
 		return err
@@ -94,16 +95,18 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 		WorkloadName:       workloadName,
 		WorkloadKind:       kind,
 		Namespace:          namespace,
+		AcceptPartial:      acceptPartial,
 	}
 	return nil
 }
 
-func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace, kind, workloadName, containerName, containerID string) error {
+func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace, kind, workloadName, containerName, containerID string, acceptPartial bool) error {
 	cache.cache[containerID] = &ApplicationProfileChacheEntry{
 		ApplicationProfile: nil,
 		WorkloadName:       workloadName,
 		WorkloadKind:       kind,
 		Namespace:          namespace,
+		AcceptPartial:      acceptPartial,
 	}
 	return nil
 }
@@ -186,8 +189,12 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj interface{}) {
 		log.Printf("Failed to get application profile from object: %v\n", err)
 		return
 	}
-	// Check if the application profile is final
-	if appProfile.GetAnnotations()["kapprofiler.kubescape.io/final"] != "true" {
+
+	partial := appProfile.GetAnnotations()["kapprofiler.kubescape.io/final"] != "true"
+	final := appProfile.GetAnnotations()["kapprofiler.kubescape.io/final"] == "true"
+
+	// Check if the application profile is final or partial, if not then skip it
+	if !final && !partial {
 		return
 	}
 
@@ -199,6 +206,10 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj interface{}) {
 	// Loop over the application profile cache entries and check if there is an entry for the same workload
 	for _, cacheEntry := range c.cache {
 		if cacheEntry.WorkloadName == workloadName && strings.ToLower(cacheEntry.WorkloadKind) == kind && cacheEntry.Namespace == appProfile.GetNamespace() {
+			if !cacheEntry.AcceptPartial && partial {
+				// Skip the partial application profile
+				continue
+			}
 			// Update the cache entry
 			cacheEntry.ApplicationProfile = appProfile
 		}
