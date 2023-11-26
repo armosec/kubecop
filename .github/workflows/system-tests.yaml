@@ -34,21 +34,31 @@ jobs:
         echo "${IMAGE_TAG}" > test-image-tag.txt
         make build-image-and-push
 
+    - name: Check what K8s cluster to use
+      id: check-act
+      run: |
+        if [ -z $ACT ]; then
+          echo 'K8S_TYPE=kind'  >> $GITHUB_OUTPUT
+        else
+          echo 'K8S_TYPE=GKE' >> $GITHUB_OUTPUT
+        fi
+        echo "::set-output name=K8S_TYPE::$(cat $GITHUB_OUTPUT | grep K8S_TYPE | cut -d'=' -f2)"
+
     - name: Set up Google Cloud      
-      if: ${{ env.ACT == null || env.ACT != 'true' }}
+      if: ${{ steps.check-act.outputs.K8S_TYPE == 'GKE' }}
       uses: google-github-actions/setup-gcloud@v0.2.0
       with:
         service_account_key: ${{ secrets.GKE_SA_KEY }}
         project_id: ${{ vars.GKE_TEST_PROJECT }}
 
     - name: Connect to GKE cluster
-      if: ${{ env.ACT == null || env.ACT != 'true' }}
+      if: ${{ steps.check-act.outputs.K8S_TYPE == 'GKE' }}
       run: |
         gcloud components install --quiet kubectl
         gcloud container clusters get-credentials ${{ vars.GKE_TEST_CLUSTER }} --zone ${{ vars.GKE_TEST_ZONE }} --project ${{ vars.GKE_TEST_PROJECT }} || echo "Failed to connect to GKE cluster"
 
     - name: Set up Kind
-      if: ${{ env.ACT != null && env.ACT == 'true' }} 
+      if: ${{ steps.check-act.outputs.K8S_TYPE == 'kind' }}
       run: |
         curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-$(uname)-amd64
         chmod +x ./kind
