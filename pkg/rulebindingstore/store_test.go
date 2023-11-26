@@ -48,7 +48,7 @@ func TestRuleBindingK8sStore_getAllRuleBindings(t *testing.T) {
 		return ruleBindings[i].Name < ruleBindings[j].Name
 	})
 	assert.NoError(t, err)
-	assert.Len(t, ruleBindings, 6)
+	assert.Len(t, ruleBindings, 7)
 	assert.Equal(t, "all-rules-all-pods", ruleBindings[0].Name)
 	assert.Equal(t, 0, len(ruleBindings[1].Spec.NamespaceSelector.MatchLabels))
 	assert.Equal(t, "all-rules-for-app-nginx", ruleBindings[1].Name)
@@ -71,7 +71,7 @@ func TestRuleBindingK8sStore_getRuleBindingsForPod(t *testing.T) {
 	// only "all-rules-all-pods" should match
 	assert.Len(t, ruleBindings, 1)
 	assert.Equal(t, "all-rules-all-pods", ruleBindings[0].Name)
-	assert.Equal(t, 6, len(ruleBindings[0].Spec.Rules))
+	assert.Equal(t, 7, len(ruleBindings[0].Spec.Rules))
 }
 
 func TestRuleBindingK8sStore_GetRulesForPod(t *testing.T) {
@@ -87,7 +87,7 @@ func TestRuleBindingK8sStore_GetRulesForPod(t *testing.T) {
 	// Call the GetRulesForPod function
 	rules, err := store.GetRulesForPod("test-pod", "test-namespace")
 	assert.NoError(t, err)
-	assert.Len(t, rules, 6)
+	assert.Len(t, rules, 7)
 }
 
 //go:embed testdata/rulebindingsfiles/*.yaml
