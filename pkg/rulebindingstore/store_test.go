@@ -9,6 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	dfake "k8s.io/client-go/dynamic/fake"
 
+	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -71,7 +72,8 @@ func TestRuleBindingK8sStore_getRuleBindingsForPod(t *testing.T) {
 	// only "all-rules-all-pods" should match
 	assert.Len(t, ruleBindings, 1)
 	assert.Equal(t, "all-rules-all-pods", ruleBindings[0].Name)
-	assert.Equal(t, 7, len(ruleBindings[0].Spec.Rules))
+	number_of_all_rules := len(rule.GetAllRuleDescriptors())
+	assert.Equal(t, number_of_all_rules, len(ruleBindings[0].Spec.Rules))
 }
 
 func TestRuleBindingK8sStore_GetRulesForPod(t *testing.T) {
@@ -87,7 +89,8 @@ func TestRuleBindingK8sStore_GetRulesForPod(t *testing.T) {
 	// Call the GetRulesForPod function
 	rules, err := store.GetRulesForPod("test-pod", "test-namespace")
 	assert.NoError(t, err)
-	assert.Len(t, rules, 7)
+	number_of_all_rules := len(rule.GetAllRuleDescriptors())
+	assert.Len(t, rules, number_of_all_rules)
 }
 
 //go:embed testdata/rulebindingsfiles/*.yaml

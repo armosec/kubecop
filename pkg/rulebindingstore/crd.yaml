@@ -98,6 +98,7 @@ spec:
                       - R0004
                       - R0005
                       - R0006
+                      - R0007
                       - R1000
                       type: string
                     ruleName:
@@ -108,6 +109,7 @@ spec:
                       - Unexpected capability used
                       - Unexpected domain request
                       - Exec from malicious source
+                      - Kernel Module Load
                       - Exec Binary Not In Base Image
                       type: string
                     ruleTags:
