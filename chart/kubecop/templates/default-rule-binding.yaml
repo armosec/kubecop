@@ -14,5 +14,5 @@ spec:
     - ruleName: "Unexpected domain request"
     - ruleName: "Exec from malicious source"
     - ruleName: "Kernel Module Load"
-
+    - ruleName: "Exec Binary Not In Base Image"
 {{- end }}

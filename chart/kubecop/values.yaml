@@ -12,6 +12,9 @@ nameOverride: ""
 fullnameOverride: "kubecop"
 
 kubecop:
+  recording:
+    samplingInterval: 60s
+    finalizationDuration: 900s
   alertmanager:
     enabled: false
     endpoint: "localhost:9093"

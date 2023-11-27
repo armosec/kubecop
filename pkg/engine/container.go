@@ -63,7 +63,9 @@ func (engine *Engine) OnRuleBindingChanged(ruleBinding rulebindingstore.RuntimeA
 }
 
 func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityEvent) {
-	if event.Activity == tracing.ContainerActivityEventStart {
+	if event.Activity == tracing.ContainerActivityEventStart || event.Activity == tracing.ContainerActivityEventAttached {
+
+		attached := event.Activity == tracing.ContainerActivityEventAttached
 
 		ownerRef, err := getHighestOwnerOfPod(engine.k8sClientset, event.PodName, event.Namespace)
 		if err != nil {
@@ -72,10 +74,10 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 		}
 
 		// Load application profile if it exists
-		err = engine.applicationProfileCache.LoadApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID)
+		err = engine.applicationProfileCache.LoadApplicationProfile(event.Namespace, "Pod", event.PodName, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID, attached)
 		if err != nil {
 			// Ask cache to load the application profile when/if it becomes available
-			err = engine.applicationProfileCache.AnticipateApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID)
+			err = engine.applicationProfileCache.AnticipateApplicationProfile(event.Namespace, "Pod", event.PodName, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID, attached)
 			if err != nil {
 				log.Printf("Failed to anticipate application profile for container %s/%s/%s/%s: %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
 			}
@@ -88,28 +90,67 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			OwnerKind:     ownerRef.Kind,
 			OwnerName:     ownerRef.Name,
 			NsMntId:       event.NsMntId,
+			AttachedLate:  event.Activity == tracing.ContainerActivityEventAttached,
 		}
 		err = engine.associateRulesWithContainerInCache(contEntry, false)
 		if err != nil {
 			log.Printf("Failed to add container details to cache: %v\n", err)
 		}
 
+		// Start tracing the container
+		neededEvents := map[tracing.EventType]bool{}
+		for _, rule := range contEntry.BoundRules {
+			for _, needEvent := range rule.Requirements().EventTypes {
+				neededEvents[needEvent] = true
+			}
+		}
+		for neededEvent := range neededEvents {
+			err = engine.tracer.StartTraceContainer(event.NsMntId, event.Pid, neededEvent)
+			if err != nil {
+				log.Printf("Failed to enable event %v for container %s/%s/%s/%s: %v\n", neededEvent, event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
+			}
+		}
+
 	} else if event.Activity == tracing.ContainerActivityEventStop {
 		go func() {
+			eventsInUse := GetRequiredEventsFromRules(containerIdToDetailsCache[event.ContainerID].BoundRules)
+
+			// Stop tracing the container
+			for _, eventInUse := range eventsInUse {
+				err := engine.tracer.StopTraceContainer(event.NsMntId, event.Pid, eventInUse)
+				if err != nil {
+					log.Printf("Failed to disable event %v for container %s/%s/%s: %v\n", eventInUse, event.Namespace, event.PodName, event.ContainerName, err)
+				}
+			}
+
+			// Remove the container from the cache
 			deleteContainerDetails(event.ContainerID)
+
+			// Remove the container from the cache
+			delete(containerIdToDetailsCache, event.ContainerID)
 		}()
 	}
 }
 
-func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntry, exists bool) error {
+func GetRequiredEventsFromRules(rules []rule.Rule) []tracing.EventType {
+	neededEvents := map[tracing.EventType]bool{}
+	for _, rule := range rules {
+		for _, needEvent := range rule.Requirements().EventTypes {
+			neededEvents[needEvent] = true
+		}
+	}
+	var ret []tracing.EventType
+	for neededEvent := range neededEvents {
+		ret = append(ret, neededEvent)
+	}
+	return ret
+}
 
+func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntry, exists bool) error {
 	// Get the rules that are bound to the container
 	ruleParamsSlc, err := engine.getRulesForPodFunc(contEntry.PodName, contEntry.Namespace)
 	if err != nil {
 		return fmt.Errorf("failed to get rules for pod %s/%s: %v", contEntry.Namespace, contEntry.PodName, err)
-	}
-	if len(ruleParamsSlc) == 0 {
-		return nil
 	}
 
 	ruleDescs := make([]rule.Rule, 0, len(ruleParamsSlc))

@@ -63,6 +63,10 @@ func CreatePrometheusMetric() *prometheusMetric {
 		Name: "kubecop_alert_counter",
 		Help: "The total number of alerts sent by the engine",
 	})
+	prometheus.MustRegister(alertCounter)
+
+	//prometheus.MustRegister(perf.RecordReadCounter)
+	//prometheus.MustRegister(perf.WaitCounter)
 
 	return &prometheusMetric{
 		ebpfExecCounter:       ebpfExecCounter,
