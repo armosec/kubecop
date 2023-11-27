@@ -19,3 +19,4 @@ spec:
     - ruleName: "Unexpected capability used"
     - ruleName: "Unexpected domain request"
     - ruleName: "Exec from malicious source"
+    - ruleName: "Disallowed SSH Connection Port"

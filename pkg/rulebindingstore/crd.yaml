@@ -97,6 +97,7 @@ spec:
                       - R0003
                       - R0004
                       - R0005
+                      - R0008
                       - R1000
                       type: string
                     ruleName:
@@ -107,6 +108,7 @@ spec:
                       - Unexpected capability used
                       - Unexpected domain request
                       - Exec from malicious source
+                      - Disallowed SSH Connection Port
                       type: string
                     ruleTags:
                       items:
@@ -118,6 +120,8 @@ spec:
                         - signature
                         - syscall
                         - whitelisted
+                        - ssh
+                        - connection
                         type: string
                       type: array
                     severity:
