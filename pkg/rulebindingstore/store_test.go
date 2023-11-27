@@ -48,7 +48,7 @@ func TestRuleBindingK8sStore_getAllRuleBindings(t *testing.T) {
 		return ruleBindings[i].Name < ruleBindings[j].Name
 	})
 	assert.NoError(t, err)
-	assert.Len(t, ruleBindings, 7)
+	assert.Len(t, ruleBindings, 6)
 	assert.Equal(t, "all-rules-all-pods", ruleBindings[0].Name)
 	assert.Equal(t, 0, len(ruleBindings[1].Spec.NamespaceSelector.MatchLabels))
 	assert.Equal(t, "all-rules-for-app-nginx", ruleBindings[1].Name)
