@@ -42,3 +42,7 @@ Then pull the sample file and see results with these commands:
 curl http://<KubeCopIP>:6060/debug/pprof/profile?seconds=120 -o pprof.pd.gz
 go tool pprof -http=:8082 pprof.pd.gz
 ```
+
+## Rules
+
+See [here](/pkg/engine/rule/README.md) more about our rules

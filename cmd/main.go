@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"net/http"
@@ -31,6 +32,8 @@ import (
 // Global variables
 var NodeName string
 var k8sConfig *rest.Config
+var FinalizationDurationInSeconds int64 = 120
+var SamplingIntervalInSeconds int64 = 60
 
 func checkKubernetesConnection() (*rest.Config, error) {
 	// Check if the Kubernetes cluster is reachable
@@ -80,6 +83,24 @@ func serviceInitNChecks() error {
 		NodeName = nodeName
 	}
 
+	// Get finalization time from environment variable
+	if finalizationDuration := os.Getenv("FINALIZATION_DURATION"); finalizationDuration != "" {
+		if finalizationTimeInt, err := parseTimeToSeconds(finalizationDuration); err != nil {
+			return fmt.Errorf("FINALIZATION_DURATION environment variable is not in format <number><unit> like 20s, 5m, 1h")
+		} else {
+			FinalizationDurationInSeconds = int64(finalizationTimeInt)
+		}
+	}
+
+	// Get sampling interval from environment variable
+	if samplingInterval := os.Getenv("SAMPLING_INTERVAL"); samplingInterval != "" {
+		if samplingIntervalInt, err := parseTimeToSeconds(samplingInterval); err != nil {
+			return fmt.Errorf("SAMPLING_INTERVAL environment variable is not in format <number><unit> like 20s, 5m, 1h")
+		} else {
+			SamplingIntervalInSeconds = int64(samplingIntervalInt)
+		}
+	}
+
 	return nil
 }
 
@@ -126,8 +147,8 @@ func main() {
 	collectorManagerConfig := &collector.CollectorManagerConfig{
 		EventSink:    eventSink,
 		Tracer:       tracer,
-		Interval:     60,  // 60 seconds for now, TODO: make it configurable
-		FinalizeTime: 120, // 120 seconds for now, TODO: make it configurable
+		Interval:     uint64(SamplingIntervalInSeconds),
+		FinalizeTime: uint64(FinalizationDurationInSeconds),
 		K8sConfig:    k8sConfig,
 	}
 	cm, err := collector.StartCollectorManager(collectorManagerConfig)
@@ -201,4 +222,32 @@ func main() {
 
 	// Exit with success
 	os.Exit(0)
+}
+
+func parseTimeToSeconds(timeStr string) (int, error) {
+	if len(timeStr) < 2 {
+		return 0, fmt.Errorf("invalid time format")
+	}
+
+	// Get the time unit and the number part
+	unit := timeStr[len(timeStr)-1:]
+	numberStr := timeStr[:len(timeStr)-1]
+
+	// Convert the number part to an integer
+	number, err := strconv.Atoi(numberStr)
+	if err != nil {
+		return 0, err
+	}
+
+	// Convert according to the unit
+	switch unit {
+	case "s":
+		return number, nil
+	case "m":
+		return number * 60, nil
+	case "h":
+		return number * 3600, nil
+	default:
+		return 0, fmt.Errorf("unknown time unit: %s", unit)
+	}
 }

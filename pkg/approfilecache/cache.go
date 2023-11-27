@@ -20,8 +20,11 @@ type ApplicationProfileChacheEntry struct {
 	ApplicationProfile *collector.ApplicationProfile
 	WorkloadName       string
 	WorkloadKind       string
+	OwnerName          string
+	OwnerKind          string
 	Namespace          string
 	AcceptPartial      bool
+	OwnerLevelProfile  bool
 }
 
 type ApplicationProfileK8sCache struct {
@@ -81,10 +84,17 @@ func (cache *ApplicationProfileK8sCache) HasApplicationProfile(namespace, kind, 
 	return false
 }
 
-func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind, workloadName, containerName, containerID string, acceptPartial bool) error {
-	appProfile, err := cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(namespace).Get(context.TODO(), generateApplicationProfileName(kind, workloadName), metav1.GetOptions{})
+func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind, workloadName, ownerKind, ownerName, containerName, containerID string, acceptPartial bool) error {
+	ownerLevel := true
+	appProfile, err := cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(namespace).Get(context.TODO(), generateApplicationProfileName(ownerKind, ownerName), metav1.GetOptions{})
 	if err != nil {
-		return err
+		// Failed to get the application profile at the owner level, try to get it at the workload level
+		appProfile, err = cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(namespace).Get(context.TODO(), generateApplicationProfileName(kind, workloadName), metav1.GetOptions{})
+		if err != nil {
+			// Failed to get the application profile at the workload level as well, return the error
+			return err
+		}
+		ownerLevel = false
 	}
 	applicationProfile, err := getApplicationProfileFromObj(appProfile)
 	if err != nil {
@@ -94,17 +104,22 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 		ApplicationProfile: applicationProfile,
 		WorkloadName:       workloadName,
 		WorkloadKind:       kind,
+		OwnerName:          ownerName,
+		OwnerKind:          ownerKind,
 		Namespace:          namespace,
 		AcceptPartial:      acceptPartial,
+		OwnerLevelProfile:  ownerLevel,
 	}
 	return nil
 }
 
-func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace, kind, workloadName, containerName, containerID string, acceptPartial bool) error {
+func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace, kind, workloadName, ownerKind, ownerName, containerName, containerID string, acceptPartial bool) error {
 	cache.cache[containerID] = &ApplicationProfileChacheEntry{
 		ApplicationProfile: nil,
 		WorkloadName:       workloadName,
 		WorkloadKind:       kind,
+		OwnerName:          ownerName,
+		OwnerKind:          ownerKind,
 		Namespace:          namespace,
 		AcceptPartial:      acceptPartial,
 	}
@@ -190,11 +205,11 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj interface{}) {
 		return
 	}
 
-	partial := appProfile.GetAnnotations()["kapprofiler.kubescape.io/final"] != "true"
+	partial := appProfile.GetAnnotations()["kapprofiler.kubescape.io/partial"] == "true"
 	final := appProfile.GetAnnotations()["kapprofiler.kubescape.io/final"] == "true"
 
 	// Check if the application profile is final or partial, if not then skip it
-	if !final && !partial {
+	if !final {
 		return
 	}
 
@@ -205,13 +220,23 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj interface{}) {
 
 	// Loop over the application profile cache entries and check if there is an entry for the same workload
 	for _, cacheEntry := range c.cache {
-		if cacheEntry.WorkloadName == workloadName && strings.ToLower(cacheEntry.WorkloadKind) == kind && cacheEntry.Namespace == appProfile.GetNamespace() {
+		if cacheEntry.Namespace == appProfile.GetNamespace() {
 			if !cacheEntry.AcceptPartial && partial {
-				// Skip the partial application profile
+				// Skip the partial application profile becuase we expect a final one
 				continue
 			}
-			// Update the cache entry
-			cacheEntry.ApplicationProfile = appProfile
+			if cacheEntry.WorkloadName == workloadName && cacheEntry.WorkloadKind == kind {
+				// Update the cache entry
+				cacheEntry.ApplicationProfile = appProfile
+				cacheEntry.OwnerLevelProfile = false
+				continue
+			}
+			if cacheEntry.OwnerName == workloadName && cacheEntry.OwnerKind == kind {
+				// Update the cache entry
+				cacheEntry.ApplicationProfile = appProfile
+				cacheEntry.OwnerLevelProfile = true
+				continue
+			}
 		}
 	}
 }
