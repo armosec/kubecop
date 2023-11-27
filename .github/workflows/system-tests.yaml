@@ -38,11 +38,10 @@ jobs:
       id: check-act
       run: |
         if [ -z $ACT ]; then
-          echo 'K8S_TYPE=kind'  >> $GITHUB_OUTPUT
-        else
           echo 'K8S_TYPE=GKE' >> $GITHUB_OUTPUT
-        fi
-        echo "::set-output name=K8S_TYPE::$(cat $GITHUB_OUTPUT | grep K8S_TYPE | cut -d'=' -f2)"
+        else
+          echo 'K8S_TYPE=kind'  >> $GITHUB_OUTPUT
+        fi        
 
     - name: Set up Google Cloud      
       if: ${{ steps.check-act.outputs.K8S_TYPE == 'GKE' }}
@@ -77,7 +76,7 @@ jobs:
       run: |
         helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
         helm repo update
-        helm install prometheus prometheus-community/kube-prometheus-stack --set grafana.enabled=false --namespace monitoring --create-namespace --wait --timeout 5m
+        helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --set grafana.enabled=false --namespace monitoring --create-namespace --wait --timeout 5m
         # Check that the prometheus pod is running
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=prometheus -n monitoring --timeout=300s
         echo "prometheus" >> cleanup.txt
