@@ -9,4 +9,5 @@
 | R0003 | Unexpected system call | Detecting unexpected system calls that are not whitelisted by application profile. Every unexpected system call will be alerted only once. | [syscall whitelisted] | 7 | true |
 | R0004 | Unexpected capability used | Detecting unexpected capabilities that are not whitelisted by application profile. Every unexpected capability is identified in context of a syscall and will be alerted only once per container. | [capabilities whitelisted] | 8 | true |
 | R0005 | Unexpected domain request | Detecting unexpected domain requests that are not whitelisted by application profile. | [dns whitelisted] | 6 | true |
+| R008 | Disallowed SSH Connection Port | Detecting SSH connection to disallowed port | [ssh, connection, port] | 7 | false |
 | R1000 | Exec from malicious source | Detecting exec calls that are from malicious source like: /dev/shm, /run, /var/run, /proc/self | [exec signature] | 9 | false |
