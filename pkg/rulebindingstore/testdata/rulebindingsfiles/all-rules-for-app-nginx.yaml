@@ -13,3 +13,4 @@ spec:
     - ruleName: "Unexpected capability used"
     - ruleName: "Unexpected domain request"
     - ruleName: "Exec from malicious source"
+    - ruleName: "Exec Binary Not In Base Image"
