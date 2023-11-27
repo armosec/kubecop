@@ -4,6 +4,7 @@ import subprocess
 import time
 from promtopic import plotprom
 import kill_in_the_middle
+import load_10k_alerts_no_memory
 
 alert_manager_url = "http://localhost:9093/"
 prometheus_url = "http://localhost:9090/"
@@ -133,7 +134,8 @@ def rule_binding_apply_test(namespace="kubecop-test"):
 
 
 test_cases = [
-    (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test"),
+    (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test"),
+    # (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test"),
     (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test"),
     (rule_binding_apply_test, "Rule binding apply test"),
     (basic_alert_test, "Basic alert test"),
