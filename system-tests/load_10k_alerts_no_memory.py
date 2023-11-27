@@ -30,9 +30,9 @@ def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
         # time.sleep(60)
 
         # Get kubecop pod name
-        kc_pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True)
+        kc_pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
         # Build query to get memory usage
-        query = 'sum(node_namespace_pod_container:container_memory_usage_bytes:sum{namespace="kubescape", pod=%s,cluster=""}) by (container)'%kc_pod_name        
+        query = 'sum(container_memory_usage_bytes{pod="%s", container="kubecop"}) by (container)'%kc_pod_name
         
         values = []
         while len(values) == 0:
@@ -40,7 +40,7 @@ def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
             _, values = send_promql_query_to_prom("load_10k_alerts_no_memory_leak", query, time_start,time_end=time.time())
         # _, values = send_promql_query_to_prom(query, time_start,time_end=time.time())
         # validate that there is no memory leak
-        assert values[-1] <= values[0], "Memory leak detected"
+        assert values[-1] <= values[0], f"Memory leak detected in kubecop pod. Memory usage at the end of the test is {values[-1]} and at the beginning of the test is {values[0]}"
     except Exception as e:
         print("Exception: ", e)
         # Delete the namespace
