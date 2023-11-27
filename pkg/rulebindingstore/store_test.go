@@ -89,7 +89,8 @@ func TestRuleBindingK8sStore_GetRulesForPod(t *testing.T) {
 	// Call the GetRulesForPod function
 	rules, err := store.GetRulesForPod("test-pod", "test-namespace")
 	assert.NoError(t, err)
-	assert.Len(t, rules, 7)
+	number_of_all_rules := len(rule.GetAllRuleDescriptors())
+	assert.Len(t, rules, number_of_all_rules)
 }
 
 //go:embed testdata/rulebindingsfiles/*.yaml
