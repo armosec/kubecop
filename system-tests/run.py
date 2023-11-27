@@ -125,15 +125,18 @@ def rule_binding_apply_test(namespace="kubecop-test"):
             print("Duplicate fields id-tag test failed")
             return 1
 
-    except:
+    except Exception as e:
+        print("Exception occured: %s" % e)
         return 1
+    
+    return 0
 
 
 test_cases = [
-    (basic_alert_test, "Basic alert test"),
-    (rule_binding_apply_test, "Rule binding apply test"),
+    (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test"),
     (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test"),
-    (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test")
+    (rule_binding_apply_test, "Rule binding apply test"),
+    (basic_alert_test, "Basic alert test"),
 ]
 
 def main():
