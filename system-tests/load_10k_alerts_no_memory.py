@@ -20,14 +20,14 @@ def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
         nginx_pod_name = subprocess.check_output(["kubectl", "-n", namespace , "get", "pod", "-l", "app=nginx", "-o", "jsonpath='{.items[0].metadata.name}'"]).decode("utf-8").strip("'")
         time_start = time.time()
         # Exec into the nginx pod 10k times        
-        for i in range(10):
+        for i in range(10000):
             subprocess.check_call(["kubectl", "-n", namespace , "exec", nginx_pod_name, "--", "touch", "/tmp/nginx-test"])
             if i%1000 == 0:
                 print("Executed %s times"%i)
 
              
         # wait for 60 seconds so the memory leak can be detected
-        # time.sleep(60)
+        time.sleep(60)
 
         # Get kubecop pod name
         kc_pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")

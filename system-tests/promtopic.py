@@ -56,8 +56,8 @@ def send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps
     # Example of processing and plotting
     # This will vary greatly depending on the shape of your data
     assert len(data) > 0, "No data found in prometheus when looking for %s" % test_case_name
-    timestamps = [datetime.fromtimestamp(item[0]).strftime("%M:%S") for item in data[1]['values']]  # Assuming the first result and it's a time series
-    values = [float(item[1]) for item in data[1]['values']]
+    timestamps = [datetime.fromtimestamp(item[0]).strftime("%M:%S") for item in data[0]['values']]  # Assuming the first result and it's a time series
+    values = [float(item[1]) for item in data[0]['values']]
     return timestamps, values
 
 
