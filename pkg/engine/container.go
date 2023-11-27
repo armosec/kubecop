@@ -74,10 +74,10 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 		}
 
 		// Load application profile if it exists
-		err = engine.applicationProfileCache.LoadApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID, attached)
+		err = engine.applicationProfileCache.LoadApplicationProfile(event.Namespace, "Pod", event.PodName, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID, attached)
 		if err != nil {
 			// Ask cache to load the application profile when/if it becomes available
-			err = engine.applicationProfileCache.AnticipateApplicationProfile(event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID, attached)
+			err = engine.applicationProfileCache.AnticipateApplicationProfile(event.Namespace, "Pod", event.PodName, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID, attached)
 			if err != nil {
 				log.Printf("Failed to anticipate application profile for container %s/%s/%s/%s: %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
 			}
@@ -151,9 +151,6 @@ func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntr
 	ruleParamsSlc, err := engine.getRulesForPodFunc(contEntry.PodName, contEntry.Namespace)
 	if err != nil {
 		return fmt.Errorf("failed to get rules for pod %s/%s: %v", contEntry.Namespace, contEntry.PodName, err)
-	}
-	if len(ruleParamsSlc) == 0 {
-		return nil
 	}
 
 	ruleDescs := make([]rule.Rule, 0, len(ruleParamsSlc))
