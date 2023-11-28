@@ -38,8 +38,9 @@ jobs:
       id: check-act
       run: |
         if [ -z $ACT ]; then
-          echo 'K8S_TYPE=GKE' >> $GITHUB_OUTPUT
+        echo 'K8S_TYPE=GKE' >> $GITHUB_OUTPUT
         else
+          echo $ACT
           echo 'K8S_TYPE=kind'  >> $GITHUB_OUTPUT
         fi        
 

@@ -18,21 +18,21 @@ def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
         subprocess.check_call(["kubectl", "-n", namespace , "wait", "--for=condition=ready", "pod", "-l", "app=nginx", "--timeout=120s"])
         # Get the pod name of the nginx pod
         nginx_pod_name = subprocess.check_output(["kubectl", "-n", namespace , "get", "pod", "-l", "app=nginx", "-o", "jsonpath='{.items[0].metadata.name}'"]).decode("utf-8").strip("'")
-        time_start = time.time()
-        # Exec into the nginx pod 10k times        
-        for i in range(10000):
-            subprocess.check_call(["kubectl", "-n", namespace , "exec", nginx_pod_name, "--", "touch", "/tmp/nginx-test"])
-            if i%1000 == 0:
-                print("Executed %s times"%i)
-
-             
+        time_start = time.time()               
+        # Exec into the nginx pod and create a file in the /tmp directory in a loop
+        for i in range(100):
+            subprocess.check_call(["kubectl", "-n", namespace , "exec", nginx_pod_name, "--", "bash", "-c", 
+                                   "for i in {1..100}; do touch /tmp/nginx-test-$i; done"])            
+            if i % 5 == 0:
+                print(f"Created file {(i+1)*100} times")
+        
         # wait for 60 seconds so the memory leak can be detected
         time.sleep(60)
 
         # Get kubecop pod name
         kc_pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
         # Build query to get memory usage
-        query = 'sum(container_memory_usage_bytes{pod="%s", container="kubecop"}) by (container)'%kc_pod_name
+        query = 'sum(container_memory_working_set_bytes{pod="%s", container="kubecop"}) by (container)'%kc_pod_name
         
         values = []
         while len(values) == 0:

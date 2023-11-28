@@ -22,6 +22,8 @@ if ! curl -s http://localhost:9090/api/v1/query?query=up  > /dev/null; then
 fi
 
 python3 system-tests/run.py
+test_result=$?
 
 kill $ALERT_MANAGER_PORT_PID
 kill $PROMETHEUS_PORT_PID
+exit $test_result
