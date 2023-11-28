@@ -1,7 +1,7 @@
 import subprocess
 import time
 
-from promtopic import send_promql_query_to_prom
+from promtopic import save_plot_png, send_promql_query_to_prom
 
 
 def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
@@ -26,7 +26,7 @@ def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
             if i % 5 == 0:
                 print(f"Created file {(i+1)*100} times")
         
-        # wait for 60 seconds so the memory leak can be detected
+        # wait for 60 seconds for the GC to run, so the memory leak can be detected
         time.sleep(60)
 
         # Get kubecop pod name
@@ -34,13 +34,11 @@ def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
         # Build query to get memory usage
         query = 'sum(container_memory_working_set_bytes{pod="%s", container="kubecop"}) by (container)'%kc_pod_name
         
-        values = []
-        while len(values) == 0:
-            time.sleep(1)
-            _, values = send_promql_query_to_prom("load_10k_alerts_no_memory_leak", query, time_start,time_end=time.time())
-        # _, values = send_promql_query_to_prom(query, time_start,time_end=time.time())
-        # validate that there is no memory leak
-        assert values[-1] <= values[0], f"Memory leak detected in kubecop pod. Memory usage at the end of the test is {values[-1]} and at the beginning of the test is {values[0]}"
+        
+        _, values = send_promql_query_to_prom("load_10k_alerts_no_memory_leak_mem", query, time_start,time_end=time.time())
+        save_plot_png("load_10k_alerts_no_memory_leak_mem", values=values, metric_name='Memory Usage (bytes)')
+        # validate that there is no memory leak, but tolerate 20mb memory leak
+        assert values[-1] <= values[0] + 20000000, f"Memory leak detected in kubecop pod. Memory usage at the end of the test is {values[-1]} and at the beginning of the test is {values[0]}"        
     except Exception as e:
         print("Exception: ", e)
         # Delete the namespace

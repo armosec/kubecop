@@ -31,10 +31,13 @@ def plotprom(test_case_name,time_start, time_end, steps = '1s'):
     
     timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)
     # Plotting
+    return save_plot_png(test_case_name, timestamps, values, metric_name='CPU Usage (ms)')
+
+def save_plot_png(test_case_name, timestamps, values, metric_name='CPU Usage (ms)'):
     plt.plot(timestamps, values)
-    plt.title('KubeCop CPU Usage - %s'%test_case_name)
+    plt.title(f'KubeCop {metric_name} - {test_case_name}')
     plt.xlabel('Time (epoch)')
-    plt.ylabel('CPU Usage (ms)')
+    plt.ylabel(metric_name)
 
     # Convert test case name to file name
     filename = test_case_name.replace(' ', '_').lower()

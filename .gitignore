@@ -64,3 +64,4 @@ am-values.yaml
 /tmp
 *.gz
 /single-trace
+*.pprof
