@@ -89,16 +89,9 @@ func (rule *BaseRule) GetParameters() map[string]interface{} {
 	defer rule.parametersMutex.RUnlock()
 	if rule.parameters == nil {
 		rule.parameters = make(map[string]interface{})
-		return rule.parameters
 	}
 
-	// Create a copy to avoid returning a reference to the internal map
-	parametersCopy := make(map[string]interface{})
-	for key, value := range rule.parameters {
-		parametersCopy[key] = value
-	}
-
-	return parametersCopy
+	return rule.parameters
 }
 
 func (r *RuleDesciptor) HasTags(tags []string) bool {
