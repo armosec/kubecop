@@ -193,7 +193,9 @@ func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntr
 	for _, ruleParams := range ruleParamsSlc {
 		if ruleParams.RuleName != "" {
 			ruleDesc := rule.CreateRuleByName(ruleParams.RuleName)
-			ruleDesc.SetParameters(ruleParams.Parameters)
+			if ruleParams.Parameters != nil {
+				ruleDesc.SetParameters(ruleParams.Parameters)
+			}
 			if ruleDesc != nil {
 				ruleDescs = append(ruleDescs, ruleDesc)
 			}
@@ -201,7 +203,9 @@ func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntr
 		}
 		if ruleParams.RuleID != "" {
 			ruleDesc := rule.CreateRuleByID(ruleParams.RuleID)
-			ruleDesc.SetParameters(ruleParams.Parameters)
+			if ruleParams.Parameters != nil {
+				ruleDesc.SetParameters(ruleParams.Parameters)
+			}
 			if ruleDesc != nil {
 				ruleDescs = append(ruleDescs, ruleDesc)
 			}
@@ -210,7 +214,9 @@ func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntr
 		if len(ruleParams.RuleTags) > 0 {
 			ruleTagsDescs := rule.CreateRulesByTags(ruleParams.RuleTags)
 			for _, ruleDesc := range ruleTagsDescs {
-				ruleDesc.SetParameters(ruleParams.Parameters)
+				if ruleParams.Parameters != nil {
+					ruleDesc.SetParameters(ruleParams.Parameters)
+				}
 			}
 			if ruleDescs != nil {
 				ruleDescs = append(ruleDescs, ruleTagsDescs...)
