@@ -68,6 +68,7 @@ func TestR0002UnexpectedFileAccess(t *testing.T) {
 
 	// Test with mounted file
 	e.PathName = "/var/test1"
+	r.SetParameters(map[string]interface{}{"ignoreMounts": true})
 	ruleResult = r.ProcessEvent(tracing.OpenEventType, e, &MockAppProfileAccess{
 		OpenCalls: []collector.OpenCalls{
 			{

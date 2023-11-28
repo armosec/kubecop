@@ -74,7 +74,7 @@ type Rule interface {
 
 type BaseRule struct {
 	// Mutex for protecting rule parameters.
-	parametersMutex *sync.Mutex
+	parametersMutex sync.RWMutex
 	parameters      map[string]interface{}
 }
 
@@ -85,13 +85,20 @@ func (rule *BaseRule) SetParameters(parameters map[string]interface{}) {
 }
 
 func (rule *BaseRule) GetParameters() map[string]interface{} {
-	rule.parametersMutex.Lock()
-	defer rule.parametersMutex.Unlock()
+	rule.parametersMutex.RLock()
+	defer rule.parametersMutex.RUnlock()
 	if rule.parameters == nil {
 		rule.parameters = make(map[string]interface{})
+		return rule.parameters
 	}
 
-	return rule.parameters
+	// Create a copy to avoid returning a reference to the internal map
+	parametersCopy := make(map[string]interface{})
+	for key, value := range rule.parameters {
+		parametersCopy[key] = value
+	}
+
+	return parametersCopy
 }
 
 func (r *RuleDesciptor) HasTags(tags []string) bool {
