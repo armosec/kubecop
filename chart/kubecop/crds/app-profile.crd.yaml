@@ -1,0 +1,110 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: applicationprofiles.kubescape.io
+spec:
+  group: kubescape.io
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              containers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    syscalls:
+                      type: array
+                      items:
+                        type: string
+                    dns:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          dnsName:
+                            type: string
+                          addresses:
+                            type: array
+                            items:
+                              type: string
+                    capabilities:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          caps:
+                            type: array
+                            items:
+                              type: string
+                          syscall:
+                            type: string
+                    execs:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          args:
+                            type: array
+                            items:
+                              type: string
+                          envs:
+                            type: array
+                            items:
+                              type: string
+                          path:
+                            type: string
+                    name:
+                      type: string
+                    opens:
+                     type: array
+                     items:
+                      type: object
+                      properties:
+                        path:
+                          type: string
+                        taskName:
+                          type: string
+                        taskId:
+                          type: integer
+                        flags:
+                          type: array
+                          items:
+                            type: string
+                    networkActivity:
+                      type: object
+                      properties:
+                        incoming:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              port:
+                                type: integer
+                              protocol:
+                                type: string
+                              dstEndpoint:
+                                type: string
+                        outgoing:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              port:
+                                type: integer
+                              protocol:
+                                type: string
+                              dstEndpoint:
+                                type: string
+  scope: Namespaced
+  names:
+    plural: applicationprofiles
+    singular: applicationprofile
+    kind: ApplicationProfile
