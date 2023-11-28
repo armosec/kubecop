@@ -21,7 +21,7 @@ def execute_promql_query(prometheus_url, query, time_start, time_end, steps):
         raise Exception("Query failed")
     return results['data']['result']
 
-def plotprom(test_case_name,time_start, time_end, steps = '1s'):
+def plotprom_cpu_usage(test_case_name,time_start, time_end, steps = '1s'):
     print("Ploting test %s from %s to %s" % (test_case_name, time_start, time_end))
     
     # Get kubecop pod name
@@ -29,8 +29,9 @@ def plotprom(test_case_name,time_start, time_end, steps = '1s'):
     # Build query
     query = 'sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="kubescape", pod="%s",container="kubecop"}) by (container)'%pod_name
     
-    timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)
-    return save_plot_png(test_case_name, timestamps, values, metric_name='CPU Usage (ms)')
+    timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)    
+    values = [float(item) for item in values]
+    return save_plot_png(test_case_name+"_cpu", timestamps, values, metric_name='CPU Usage (ms)')
 
 def plotprom_mem(test_case_name,time_start, time_end, steps = '1s'):
     print("Ploting test %s from %s to %s" % (test_case_name, time_start, time_end))
@@ -40,6 +41,7 @@ def plotprom_mem(test_case_name,time_start, time_end, steps = '1s'):
     # Build query
     query = 'sum(container_memory_working_set_bytes{pod="%s", container="kubecop"}) by (container)'%pod_name    
     timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)
+    values = [int(item) for item in values]
     return save_plot_png(test_case_name+"_mem", timestamps, values, metric_name='Memory Usage (bytes)')
 
 def save_plot_png(test_case_name, timestamps, values, metric_name='CPU Usage (ms)'):
@@ -69,7 +71,7 @@ def send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps
     # This will vary greatly depending on the shape of your data
     assert len(data) > 0, "No data found in prometheus when looking for %s" % test_case_name
     timestamps = [datetime.fromtimestamp(item[0]).strftime("%M:%S") for item in data[0]['values']]  # Assuming the first result and it's a time series
-    values = [float(item[1]) for item in data[0]['values']]
+    values = [item[1] for item in data[0]['values']]
     return timestamps, values
 
 
@@ -77,4 +79,4 @@ if __name__ == "__main__":
     test_case_name = sys.argv[1]
     time_start = float(sys.argv[2])
     time_end = float(sys.argv[3])
-    plotprom(test_case_name=test_case_name, time_start=time_start, time_end=time_end)
+    plotprom_cpu_usage(test_case_name=test_case_name, time_start=time_start, time_end=time_end)

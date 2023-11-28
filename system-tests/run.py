@@ -2,7 +2,7 @@ import sys
 import requests
 import subprocess
 import time
-from promtopic import plotprom, plotprom_mem
+from promtopic import plotprom_cpu_usage, plotprom_mem
 import kill_in_the_middle
 import load_10k_alerts_no_memory
 import creation_app_profile_memory_leak
@@ -137,10 +137,10 @@ def rule_binding_apply_test(namespace="kubecop-test"):
 test_cases = [
     (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test"),
     (creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test"),
-    # (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test"),
     (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test"),
     (rule_binding_apply_test, "Rule binding apply test"),
     (basic_alert_test, "Basic alert test"),
+    # (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test"),
 ]
 
 def main():
@@ -161,7 +161,7 @@ def main():
         # Give two minutes for prometheus to scrape the data
         print("Waiting 60 seconds for prometheus to scrape the data")
         time.sleep(60)
-        result = plotprom(test_case_name, time_start, time_end)
+        result = plotprom_cpu_usage(test_case_name, time_start, time_end)
         if result == 0:
             print("Ploting succeeded")
         else:
