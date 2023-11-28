@@ -2,7 +2,7 @@ import sys
 import requests
 import subprocess
 import time
-from promtopic import plotprom
+from promtopic import plotprom, plotprom_mem
 import kill_in_the_middle
 import load_10k_alerts_no_memory
 
@@ -153,14 +153,9 @@ def main():
         print("Running test %s" % test_case_name)
         # Save start time in epoch
         time_start = time.time()
-        result = test_case()
+        test_result = test_case()
         # Save end time in epoch
         time_end = time.time()
-        if result == 0:
-            print("Test passed")
-        else:
-            print("Test failed")
-            return result
         # Give two minutes for prometheus to scrape the data
         print("Waiting 60 seconds for prometheus to scrape the data")
         time.sleep(60)
@@ -169,6 +164,19 @@ def main():
             print("Ploting succeeded")
         else:
             print("Ploting failed")
+        # plot memory usage
+        result = plotprom_mem(test_case_name, time_start, time_end)
+        if result == 0:
+            print("Ploting memory usage succeeded")
+        else:
+            print("Ploting memory usage failed")
+        
+        if test_result == 0:
+            print("Test passed")
+        else:
+            print("Test failed")
+            return test_result
+
     sys.exit(result)
 
 

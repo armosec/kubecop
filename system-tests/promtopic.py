@@ -30,8 +30,17 @@ def plotprom(test_case_name,time_start, time_end, steps = '1s'):
     query = 'sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="kubescape", pod=%s,cluster=""}) by (container)'%pod_name
     
     timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)
-    # Plotting
     return save_plot_png(test_case_name, timestamps, values, metric_name='CPU Usage (ms)')
+
+def plotprom_mem(test_case_name,time_start, time_end, steps = '1s'):
+    print("Ploting test %s from %s to %s" % (test_case_name, time_start, time_end))
+    
+    # Get kubecop pod name
+    pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True)
+    # Build query
+    query = 'sum(container_memory_working_set_bytes{pod="%s", container="kubecop"}) by (container)'%pod_name    
+    timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)
+    return save_plot_png(test_case_name+"_mem", timestamps, values, metric_name='Memory Usage (bytes)')
 
 def save_plot_png(test_case_name, timestamps, values, metric_name='CPU Usage (ms)'):
     plt.plot(timestamps, values)
