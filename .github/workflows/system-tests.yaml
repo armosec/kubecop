@@ -54,6 +54,7 @@ jobs:
     - name: Connect to GKE cluster
       if: ${{ steps.check-act.outputs.K8S_TYPE == 'GKE' }}
       run: |
+        gcloud auth login --quiet
         gcloud components install --quiet kubectl
         gcloud container clusters get-credentials ${{ vars.GKE_TEST_CLUSTER }} --zone ${{ vars.GKE_TEST_ZONE }} --project ${{ vars.GKE_TEST_PROJECT }} || echo "Failed to connect to GKE cluster"
 
