@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
+	corev1 "k8s.io/api/core/v1"
 )
 
 type containerEntry struct {
@@ -18,6 +19,9 @@ type containerEntry struct {
 
 	// Attached late (after container already started)
 	AttachedLate bool
+
+	// Pod spec
+	PodSpec *corev1.PodSpec
 
 	// Add rules here
 	BoundRules []rule.Rule

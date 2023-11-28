@@ -31,7 +31,7 @@ func (engine *Engine) ProcessEvent(eventType tracing.EventType, event interface{
 			continue // TODO - check with the RuleBinding if alert should be fired or not
 		}
 
-		ruleFailure := rule.ProcessEvent(eventType, event, appProfile)
+		ruleFailure := rule.ProcessEvent(eventType, event, appProfile, engine)
 		if ruleFailure != nil {
 			exporters.SendAlert(ruleFailure)
 			engine.promCollector.ReportRuleAlereted(rule.Name())

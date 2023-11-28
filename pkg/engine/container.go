@@ -8,6 +8,7 @@ import (
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/rulebindingstore"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -82,6 +83,13 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 				log.Printf("Failed to anticipate application profile for container %s/%s/%s/%s: %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
 			}
 		}
+
+		podSpec, err := fetchPodSpec(engine.k8sClientset, event.PodName, event.Namespace)
+		if err != nil {
+			log.Printf("Failed to get pod spec for pod %s/%s: %v\n", event.Namespace, event.PodName, err)
+			return
+		}
+
 		contEntry := containerEntry{
 			ContainerID:   event.ContainerID,
 			ContainerName: event.ContainerName,
@@ -91,7 +99,9 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			OwnerName:     ownerRef.Name,
 			NsMntId:       event.NsMntId,
 			AttachedLate:  event.Activity == tracing.ContainerActivityEventAttached,
+			PodSpec:       podSpec,
 		}
+
 		err = engine.associateRulesWithContainerInCache(contEntry, false)
 		if err != nil {
 			log.Printf("Failed to add container details to cache: %v\n", err)
@@ -130,6 +140,32 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			delete(containerIdToDetailsCache, event.ContainerID)
 		}()
 	}
+}
+
+func (engine *Engine) GetPodSpec(podName, namespace, containerID string) (*corev1.PodSpec, error) {
+	if podName == "" || namespace == "" {
+		return nil, fmt.Errorf("podName or namespace is empty")
+	}
+
+	podSpec, ok := containerIdToDetailsCache[containerID]
+	if !ok {
+		return nil, fmt.Errorf("containerID not found in cache")
+	}
+
+	if podSpec.PodSpec == nil {
+		return nil, fmt.Errorf("podSpec is nil")
+	}
+
+	return podSpec.PodSpec, nil
+}
+
+func fetchPodSpec(clientset ClientSetInterface, podName, namespace string) (*corev1.PodSpec, error) {
+	pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pod.Spec, nil
 }
 
 func GetRequiredEventsFromRules(rules []rule.Rule) []tracing.EventType {

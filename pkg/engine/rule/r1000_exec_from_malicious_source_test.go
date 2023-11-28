@@ -25,14 +25,14 @@ func TestR1000ExecFromMaliciousSource(t *testing.T) {
 		Args:     []string{"test"},
 	}
 
-	ruleResult := r.ProcessEvent(tracing.ExecveEventType, e, nil)
+	ruleResult := r.ProcessEvent(tracing.ExecveEventType, e, nil, nil)
 	if ruleResult != nil {
 		t.Errorf("Expected ruleResult to be nil since test is not a malicious exec")
 	}
 
 	e.PathName = "/proc/self/fd/3"
 
-	ruleResult = r.ProcessEvent(tracing.ExecveEventType, e, nil)
+	ruleResult = r.ProcessEvent(tracing.ExecveEventType, e, nil, nil)
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult since exec is is malicious")
 	}

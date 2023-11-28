@@ -61,7 +61,7 @@ func CreateRule{rule_id}{rule_abbrev}() *{rule_id}{rule_abbrev} {
 func (rule *{rule_id}{rule_abbrev}) DeleteRule() {
 }
 
-func (rule *{rule_id}{rule_abbrev}) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess) RuleFailure {
+func (rule *{rule_id}{rule_abbrev}) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
 	if eventType != replaceme {
 		return nil
 	}

@@ -26,7 +26,7 @@ func TestR0007LoadKernelModule(t *testing.T) {
 		Syscalls: []string{"test"},
 	}
 
-	ruleResult := r.ProcessEvent(tracing.SyscallEventType, e, nil)
+	ruleResult := r.ProcessEvent(tracing.SyscallEventType, e, nil, nil)
 	if ruleResult != nil {
 		fmt.Printf("ruleResult: %v\n", ruleResult)
 		t.Errorf("Expected ruleResult to be nil since syscall is not init_module")
@@ -43,7 +43,7 @@ func TestR0007LoadKernelModule(t *testing.T) {
 		Syscalls: []string{"init_module"},
 	}
 
-	ruleResult = r.ProcessEvent(tracing.SyscallEventType, e, nil)
+	ruleResult = r.ProcessEvent(tracing.SyscallEventType, e, nil, nil)
 	if ruleResult == nil {
 		fmt.Printf("ruleResult: %v\n", ruleResult)
 		t.Errorf("Expected ruleResult to be Failure because of init_module is not allowed")

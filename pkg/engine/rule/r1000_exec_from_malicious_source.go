@@ -49,7 +49,7 @@ func CreateRuleR1000ExecFromMaliciousSource() *R1000ExecFromMaliciousSource {
 func (rule *R1000ExecFromMaliciousSource) DeleteRule() {
 }
 
-func (rule *R1000ExecFromMaliciousSource) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess) RuleFailure {
+func (rule *R1000ExecFromMaliciousSource) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
 	if eventType != tracing.ExecveEventType {
 		return nil
 	}

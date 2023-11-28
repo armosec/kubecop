@@ -58,7 +58,7 @@ type Rule interface {
 	Name() string
 
 	// Needed events for the rule.
-	ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess) RuleFailure
+	ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure
 
 	// Rule requirements.
 	Requirements() RuleRequirements

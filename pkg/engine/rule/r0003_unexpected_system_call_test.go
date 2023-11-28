@@ -27,13 +27,13 @@ func TestR0003UnexpectedSystemCall(t *testing.T) {
 	}
 
 	// Test with nil appProfileAccess
-	ruleResult := r.ProcessEvent(tracing.SyscallEventType, e, nil)
+	ruleResult := r.ProcessEvent(tracing.SyscallEventType, e, nil, nil)
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to be nil since no syscall event")
 	}
 
 	// Test with mock appProfileAccess
-	ruleResult = r.ProcessEvent(tracing.SyscallEventType, e, &MockAppProfileAccess{})
+	ruleResult = r.ProcessEvent(tracing.SyscallEventType, e, &MockAppProfileAccess{}, nil)
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to be not nil since no syscall event")
 	}
@@ -41,7 +41,7 @@ func TestR0003UnexpectedSystemCall(t *testing.T) {
 	// Test with mock appProfileAccess and syscall
 	ruleResult = r.ProcessEvent(tracing.SyscallEventType, e, &MockAppProfileAccess{
 		Syscalls: []string{"test"},
-	})
+	}, nil)
 	if ruleResult != nil {
 		fmt.Printf("ruleResult: %v\n", ruleResult)
 		t.Errorf("Expected ruleResult to be nil since syscall is whitelisted")
