@@ -55,7 +55,7 @@ func CreateRuleR0006ExecBinaryNotInBaseImage() *R0006ExecBinaryNotInBaseImage {
 func (rule *R0006ExecBinaryNotInBaseImage) DeleteRule() {
 }
 
-func (rule *R0006ExecBinaryNotInBaseImage) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess) RuleFailure {
+func (rule *R0006ExecBinaryNotInBaseImage) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
 	if eventType != tracing.ExecveEventType {
 		return nil
 	}

@@ -30,13 +30,13 @@ func TestR0005UnexpectedDomainRequest(t *testing.T) {
 	}
 
 	// Test with nil appProfileAccess
-	ruleResult := r.ProcessEvent(tracing.DnsEventType, e, nil)
+	ruleResult := r.ProcessEvent(tracing.DnsEventType, e, nil, nil)
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to not be nil since no appProfile")
 	}
 
 	// Test with empty appProfileAccess
-	ruleResult = r.ProcessEvent(tracing.DnsEventType, e, &MockAppProfileAccess{})
+	ruleResult = r.ProcessEvent(tracing.DnsEventType, e, &MockAppProfileAccess{}, nil)
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to not be nil since domain is not whitelisted")
 	}
@@ -48,7 +48,7 @@ func TestR0005UnexpectedDomainRequest(t *testing.T) {
 				DnsName: "test.com",
 			},
 		},
-	})
+	}, nil)
 	if ruleResult != nil {
 		t.Errorf("Expected ruleResult to be nil since domain is whitelisted")
 	}

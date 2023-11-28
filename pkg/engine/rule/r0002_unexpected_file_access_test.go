@@ -28,13 +28,13 @@ func TestR0002UnexpectedFileAccess(t *testing.T) {
 	}
 
 	// Test with nil appProfileAccess
-	ruleResult := r.ProcessEvent(tracing.OpenEventType, e, nil)
+	ruleResult := r.ProcessEvent(tracing.OpenEventType, e, nil, nil)
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to not be nil since no appProfile")
 	}
 
 	// Test with empty appProfileAccess
-	ruleResult = r.ProcessEvent(tracing.OpenEventType, e, &MockAppProfileAccess{})
+	ruleResult = r.ProcessEvent(tracing.OpenEventType, e, &MockAppProfileAccess{}, nil)
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to not be nil since file is not whitelisted")
 	}
@@ -47,7 +47,7 @@ func TestR0002UnexpectedFileAccess(t *testing.T) {
 				Flags: []string{"O_RDONLY"},
 			},
 		},
-	})
+	}, nil)
 	if ruleResult != nil {
 		t.Errorf("Expected ruleResult to be nil since file is whitelisted")
 	}
@@ -61,7 +61,7 @@ func TestR0002UnexpectedFileAccess(t *testing.T) {
 				Flags: []string{"O_RDONLY"},
 			},
 		},
-	})
+	}, nil)
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to not be nil since flag is not whitelisted")
 	}
