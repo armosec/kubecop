@@ -1,8 +1,68 @@
-# kubecop 🚨🚔🚨
-Kubecop is a first of it's kind KDR - Kubernetes Detection and Response tool. It is designed to be a simple, easy to use, and effective tool for detecting and responding to threats in your Kubernetes cluster at runtime!<br>
-It is packed with an advanced rule engine that allows you to write rules that can detect and respond to threats in your cluster and more specifically in your workload itself🛡️.
+# KubeCop 🚨🚔🚢☸️🚨
+
+KubeCop is a KDR - Kubernetes Detection and Response tool. It is designed to be a simple, low-footprint, easy-to-use, and effective tool for detecting and responding to threats in your Kubernetes cluster at runtime.
+
+It is based on eBPF-based event monitoring on Kubernetes nodes and an advanced rule engine that allows you to write rules that can detect and respond to threats in your cluster and more specifically in your workload itself🛡️.
+
+KubeCop supports two kinds of malicious behavior detections:
+* Signature-based - detecting application behavior that resembles attack techniques
+* Anomaly-based - identifying events that are not aligned with the baseline behavior of applications
+
+KubeCop is capable of building an application baseline by itself and enforcing behavior. Application monitoring is based on the [Kapprofiler](https://github.com/kubescape/kapprofiler/) project
+
+What do you get when you install KubeCop?
+
+Hopefully nothing 😉
+
+If you connect it to your AlertManager endpoint, you will be able to monitor your Kubernetes cluster for malicious events and get alerted if something happens!
+
+
+![Design](/docs/images/kubecop-software-design.png)
+
+
+## Detection capabilities
+
+KubeCop leverages advanced eBPF (extended Berkeley Packet Filter) technology for comprehensive runtime security detection in Kubernetes environments. Its detection capabilities encompass a wide array of events including new process initiations, file activities, network operations, system call activities, and usage of Linux capabilities.
+
+### Anomaly-based detection
+
+A standout feature of KubeCop is its anomaly detection mechanism, which is grounded in application profiling. During a default learning period of 15 minutes (customizable by users), KubeCop monitors applications for the aforementioned activities, subsequently building a detailed application profile. This profile, stored as a Kubernetes Custom Resource (CR), serves as a benchmark for normal behavior. Once the learning phase concludes and the profile is established, KubeCop validates application events coming from eBPF for deviations from this norm, triggering alerts upon detecting anomalies.
+
+### Signature-based detection
+
+Additionally, KubeCop is equipped with rules designed to identify well-known attack signatures. These rules are adept at uncovering various threats, such as unauthorized software executions that deviate from the original container image, detection of unpackers in memory, reverse shell activities, and more. Users have the flexibility to create 'Rule Bindings'—specific instructions that direct KubeCop on which rules should be applied to which Pods. This level of customization ensures that security measures are tailored to the unique needs of each Kubernetes deployment, enhancing the overall security posture and responsiveness of the system.
+
+### Rules
+
+See [here](/pkg/engine/rule/README.md) more about our rules
+
+### Rule bindings
 
 To learn more about binding rules to workloads, see [RuntimeRuleAlertBinding](pkg/rulebindingstore/README.md).
+
+## Getting started
+
+KubeCop deployment is installed and managed using Helm.
+
+### Installation
+
+To install KubeCop on your Kubernetes cluster, do the following steps:
+
+```bash
+git clone https://github.com/armosec/kubecop.git && cd kubecop
+# Assuming AlertManager is running in service  "alertmanager-operated" in namespace "monitoring"
+helm install kubecop chart/kubecop -n kubescape --create-namespace --set kubecop.alertmanager.enabled=true --set kubecop.alertmanager.endpoint="alertmanager-operated.monitoring.svc.cluster.local:9093"
+```
+
+You can change the "learning period" using the `kubecop.recording.finalizationDuration` Helm parameters (example values are "30s", "5m" or "1h").
+
+You should be getting alerts after the learning period ends. Try `kubectl exec` on one of the Pods after the learning period!
+
+
+
+### Requirements
+
+KubeCop supports Linux nodes only (since it is eBPF based), it also requires `CAP_SYS_ADMIN` capability (but not `privilged:true`).
 
 ## Development setup
 > **Note:** make sure to configure the [exportes](pkg/exporters/README.md) before running the KubeCop.
@@ -43,6 +103,3 @@ curl http://<KubeCopIP>:6060/debug/pprof/profile?seconds=120 -o pprof.pd.gz
 go tool pprof -http=:8082 pprof.pd.gz
 ```
 
-## Rules
-
-See [here](/pkg/engine/rule/README.md) more about our rules
