@@ -22,7 +22,7 @@ def kill_process_in_the_middle(namespace="kubecop-test"):
         # Exec into the nginx pod and kill the process
         subprocess.check_call(["kubectl", "-n", namespace , "exec", nginx_pod_name, "--", "bash", "-c", "kill -9 1"])
 
-        # check that the app profile did not get created
+        # check that the final app profile did not get created
         get_proc = subprocess.run(["kubectl", "-n", namespace, "get", "applicationprofiles", f"pod-{nginx_pod_name}", "-oyaml"], capture_output=True)
         assert get_proc.returncode == 0 and 'kapprofiler.kubescape.io/final: "true"' not in get_proc.stdout.decode("utf-8"), f"applicationprofile ({get_proc.returncode}) did got created {get_proc.stdout.decode('utf-8')}"
 
