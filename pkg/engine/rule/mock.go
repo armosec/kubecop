@@ -2,7 +2,29 @@ package rule
 
 import (
 	"github.com/kubescape/kapprofiler/pkg/collector"
+	corev1 "k8s.io/api/core/v1"
 )
+
+type EngineAccessMock struct {
+}
+
+func (e *EngineAccessMock) GetPodSpec(podName, namespace, containerID string) (*corev1.PodSpec, error) {
+	podSpec := corev1.PodSpec{}
+	podSpec.Containers = []corev1.Container{
+		{
+			Name:  "test",
+			Image: "test",
+			VolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      "test",
+					MountPath: "/var/test1",
+				},
+			},
+		},
+	}
+
+	return &podSpec, nil
+}
 
 type MockAppProfileAccess struct {
 	Execs        []collector.ExecCalls
