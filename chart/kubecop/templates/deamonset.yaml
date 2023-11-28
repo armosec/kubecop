@@ -66,6 +66,14 @@ spec:
           - name: _PPROF_SERVER
             value: "true"
           {{- end }}
+          {{- if .Values.kubecop.recording.samplingInterval  }}
+          - name: SAMPLING_INTERVAL
+            value: "{{ .Values.kubecop.recording.samplingInterval }}"
+          {{- end }}
+          {{- if .Values.kubecop.recording.finalizationDuration  }}
+          - name: FINALIZATION_DURATION
+            value: "{{ .Values.kubecop.recording.finalizationDuration }}"
+          {{- end }}
         volumeMounts:
         - name: host
           mountPath: /host
