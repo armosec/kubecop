@@ -38,7 +38,7 @@ def install_app_no_application_profile_no_leak(namespace="kubecop-test"):
         save_plot_png("install_app_no_application_profile_no_leak_mem", values=values,timestamps=timestamps, metric_name='Memory Usage (bytes)')
         
         # validate that there is no memory leak, but tolerate 20mb memory leak
-        assert values[-1] <= values[0] + 20000000, f"Memory leak detected in kubecop pod. Memory usage at the end of the test is {values[-1]} and at the beginning of the test is {values[0]}"        
+        assert int(values[-1]) <= int(values[0]) + 20000000, f"Memory leak detected in kubecop pod. Memory usage at the end of the test is {values[-1]} and at the beginning of the test is {values[0]}"        
         
         
     except Exception as e:

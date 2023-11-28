@@ -35,9 +35,9 @@ def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
         query = 'sum(container_memory_working_set_bytes{pod="%s", container="kubecop"}) by (container)'%kc_pod_name                
         timestamps, values = send_promql_query_to_prom("load_10k_alerts_no_memory_leak_mem", query, time_start,time_end=time.time())
         save_plot_png("load_10k_alerts_no_memory_leak_mem", values=values,timestamps=timestamps, metric_name='Memory Usage (bytes)')
-        
+
         # validate that there is no memory leak, but tolerate 20mb memory leak
-        assert values[-1] <= values[0] + 20000000, f"Memory leak detected in kubecop pod. Memory usage at the end of the test is {values[-1]} and at the beginning of the test is {values[0]}"        
+        assert int(values[-1]) <= int(values[0]) + 20000000, f"Memory leak detected in kubecop pod. Memory usage at the end of the test is {values[-1]} and at the beginning of the test is {values[0]}"        
     except Exception as e:
         print("Exception: ", e)
         # Delete the namespace
