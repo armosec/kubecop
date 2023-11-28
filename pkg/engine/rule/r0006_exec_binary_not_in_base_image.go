@@ -35,6 +35,7 @@ var R0006ExecBinaryNotInBaseImageRuleDescriptor = RuleDesciptor{
 }
 
 type R0006ExecBinaryNotInBaseImage struct {
+	BaseRule
 }
 
 type R0006ExecBinaryNotInBaseImageFailure struct {

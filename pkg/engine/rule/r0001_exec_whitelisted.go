@@ -28,6 +28,7 @@ var R0001ExecWhitelistedRuleDescriptor = RuleDesciptor{
 }
 
 type R0001ExecWhitelisted struct {
+	BaseRule
 }
 
 type R0001ExecWhitelistedFailure struct {

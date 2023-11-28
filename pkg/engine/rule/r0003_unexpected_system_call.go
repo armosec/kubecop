@@ -30,6 +30,7 @@ var R0003UnexpectedSystemCallRuleDescriptor = RuleDesciptor{
 }
 
 type R0003UnexpectedSystemCall struct {
+	BaseRule
 	listOfAlertedSyscalls []string
 }
 

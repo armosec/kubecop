@@ -2,6 +2,9 @@ package rule
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strings"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -28,6 +31,7 @@ var R0002UnexpectedFileAccessRuleDescriptor = RuleDesciptor{
 }
 
 type R0002UnexpectedFileAccess struct {
+	BaseRule
 }
 
 type R0002UnexpectedFileAccessFailure struct {
@@ -56,6 +60,25 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 	openEvent, ok := event.(*tracing.OpenEvent)
 	if !ok {
 		return nil
+	}
+
+	shouldIgnoreMounts := fmt.Sprintf("%v", rule.GetParameters()["ignoreMounts"]) == "true"
+
+	if shouldIgnoreMounts {
+		mounts, err := getMountPaths(openEvent.PodName, openEvent.Namespace, openEvent.ContainerID, engineAccess)
+		if err != nil {
+			return nil
+		}
+
+		for _, mount := range mounts {
+			contained := isPathContained(mount, openEvent.PathName)
+			if contained {
+				if os.Getenv("DEBUG") == "true" {
+					log.Printf("Path %s is mounted in pod %s/%s - Skipping check", openEvent.PathName, openEvent.Namespace, openEvent.PodName)
+				}
+				return nil
+			}
+		}
 	}
 
 	if appProfileAccess == nil {
@@ -101,6 +124,26 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 		FailureEvent: openEvent,
 		RulePriority: R0002UnexpectedFileAccessRuleDescriptor.Priority,
 	}
+}
+
+func getMountPaths(podName string, namespace string, containerID string, engineAccess EngineAccess) ([]string, error) {
+	podSpec, err := engineAccess.GetPodSpec(podName, namespace, containerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pod spec: %v", err)
+	}
+
+	mountPaths := []string{}
+	for _, container := range podSpec.Containers {
+		for _, volumeMount := range container.VolumeMounts {
+			mountPaths = append(mountPaths, volumeMount.MountPath)
+		}
+	}
+
+	return mountPaths, nil
+}
+
+func isPathContained(basepath, targetpath string) bool {
+	return strings.HasPrefix(targetpath, basepath)
 }
 
 func (rule *R0002UnexpectedFileAccess) Requirements() RuleRequirements {
