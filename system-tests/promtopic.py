@@ -44,7 +44,7 @@ def plotprom_mem(test_case_name,time_start, time_end, steps = '1s'):
     # values = [int(item) for item in values]
     return save_plot_png(test_case_name+"_mem", timestamps, values, metric_name='Memory Usage (bytes)')
 
-def save_plot_png(test_case_name, timestamps, values, metric_name='CPU Usage (ms)'):
+def save_plot_png(test_case_name, timestamps, values, metric_name):
     plt.plot(timestamps, values)
     plt.title(f'KubeCop {metric_name} - {test_case_name}')
     plt.xlabel('Time (epoch)')
@@ -54,7 +54,8 @@ def save_plot_png(test_case_name, timestamps, values, metric_name='CPU Usage (ms
     filename = test_case_name.replace(' ', '_').lower()
 
     # Save plot to an image file
-    plt.savefig('%s.png'%filename)
+    plt.savefig('%s.png'%filename)    
+    plt.clf()
 
     return 0
 
