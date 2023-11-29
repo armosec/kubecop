@@ -25,6 +25,14 @@ type MockAppProfileAccess struct {
 	Dns          []collector.DnsCalls
 }
 
+func (m *MockAppProfileAccess) GetName() string {
+	return "testProfileName"
+}
+
+func (m *MockAppProfileAccess) GetNamespace() string {
+	return "testProfileNamespace"
+}
+
 func (m *MockAppProfileAccess) GetExecList() (*[]collector.ExecCalls, error) {
 	return &m.Execs, nil
 }

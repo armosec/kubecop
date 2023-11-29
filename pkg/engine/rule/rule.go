@@ -40,6 +40,8 @@ type RuleFailure interface {
 	Priority() int
 	// Error interface.
 	Error() string
+	// Fix suggestion.
+	FixSuggestion() string
 	// Generic event
 	Event() tracing.GeneralEvent
 }

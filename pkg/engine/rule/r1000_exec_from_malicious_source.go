@@ -31,11 +31,12 @@ var R1000ExecFromMaliciousSourceDescriptor = RuleDesciptor{
 type R1000ExecFromMaliciousSource struct {
 }
 
-type R0001ExecFromMaliciousSourceFailure struct {
-	RuleName     string
-	RulePriority int
-	Err          string
-	FailureEvent *tracing.ExecveEvent
+type R1000ExecFromMaliciousSourceFailure struct {
+	RuleName         string
+	RulePriority     int
+	FixSuggestionMsg string
+	Err              string
+	FailureEvent     *tracing.ExecveEvent
 }
 
 func (rule *R1000ExecFromMaliciousSource) Name() string {
@@ -75,11 +76,12 @@ func (rule *R1000ExecFromMaliciousSource) ProcessEvent(eventType tracing.EventTy
 
 	for _, maliciousExecPathPrefix := range maliciousExecPathPrefixes {
 		if strings.HasPrefix(execEvent.PathName, maliciousExecPathPrefix) {
-			return &R0001ExecFromMaliciousSourceFailure{
-				RuleName:     rule.Name(),
-				Err:          fmt.Sprintf("exec call \"%s\" is from a malicious source \"%s\"", execEvent.PathName, maliciousExecPathPrefix),
-				FailureEvent: execEvent,
-				RulePriority: R1000ExecFromMaliciousSourceDescriptor.Priority,
+			return &R1000ExecFromMaliciousSourceFailure{
+				RuleName:         rule.Name(),
+				Err:              fmt.Sprintf("exec call \"%s\" is from a malicious source \"%s\"", execEvent.PathName, maliciousExecPathPrefix),
+				FixSuggestionMsg: "If this is a legitimate action, please add consider removing this workload from the binding of this rule.",
+				FailureEvent:     execEvent,
+				RulePriority:     R1000ExecFromMaliciousSourceDescriptor.Priority,
 			}
 		}
 	}
@@ -94,18 +96,22 @@ func (rule *R1000ExecFromMaliciousSource) Requirements() RuleRequirements {
 	}
 }
 
-func (rule *R0001ExecFromMaliciousSourceFailure) Name() string {
+func (rule *R1000ExecFromMaliciousSourceFailure) Name() string {
 	return rule.RuleName
 }
 
-func (rule *R0001ExecFromMaliciousSourceFailure) Error() string {
+func (rule *R1000ExecFromMaliciousSourceFailure) Error() string {
 	return rule.Err
 }
 
-func (rule *R0001ExecFromMaliciousSourceFailure) Event() tracing.GeneralEvent {
+func (rule *R1000ExecFromMaliciousSourceFailure) Event() tracing.GeneralEvent {
 	return rule.FailureEvent.GeneralEvent
 }
 
-func (rule *R0001ExecFromMaliciousSourceFailure) Priority() int {
+func (rule *R1000ExecFromMaliciousSourceFailure) Priority() int {
 	return rule.RulePriority
+}
+
+func (rule *R1000ExecFromMaliciousSourceFailure) FixSuggestion() string {
+	return rule.FixSuggestionMsg
 }
