@@ -9,6 +9,7 @@ var ruleDescriptions []RuleDesciptor = []RuleDesciptor{
 	R0005UnexpectedDomainRequestRuleDescriptor,
 	R0006ExecBinaryNotInBaseImageRuleDescriptor,
 	R0007LoadKernelModuleRuleDescriptor,
+	R0008MaliciousSSHConnectionRuleDescriptor,
 	R1000ExecFromMaliciousSourceDescriptor,
 }
 
