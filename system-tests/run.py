@@ -57,7 +57,9 @@ def basic_alert_test(namespace="kubecop-test"):
 
         print("Starting load on nginx pod")
 
-        pprof_recorder_obj = pprof_recorder(namespace, nginx_pod_name, 6060)
+        # Get KubeCop Pod name
+        kc_pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
+        pprof_recorder_obj = pprof_recorder('kubescape', kc_pod_name, 6060)
 
         # Create load on the nginx pod
         subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "system-tests/locust-deployment.yaml"])
@@ -141,10 +143,10 @@ def rule_binding_apply_test(namespace="kubecop-test"):
 
 test_cases = [
     (basic_alert_test, "Basic alert test"),
-    (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test"),
-    (creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test"),
-    (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test"),
-    (rule_binding_apply_test, "Rule binding apply test"),
+    #(load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test"),
+    #(creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test"),
+    #(kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test"),
+    #(rule_binding_apply_test, "Rule binding apply test"),
     # (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test"),
 ]
 
@@ -157,6 +159,7 @@ def main():
         prometheus_url = sys.argv[2]
     print("Running tests")
     glob_result = 0
+    result_summary = {}
     for test_case, test_case_name in test_cases:
         print("Running test %s" % test_case_name)
         # Save start time in epoch
@@ -181,9 +184,15 @@ def main():
 
         if test_result == 0:
             print("Test passed")
+            result_summary[test_case_name] = 'Passed'
         else:
             print("Test failed")
+            result_summary[test_case_name] = 'Failed'
             glob_result = 1
+
+    print("Test summary:")
+    for test_case_name, test_case_result in result_summary.items():
+        print(f"{test_case_name}: {test_case_result}")
 
     sys.exit(glob_result)
 

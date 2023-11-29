@@ -32,7 +32,8 @@ def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
         time.sleep(300)
 
         # Start to record memory usage
-        pprof_recorder_obj = pprof_recorder(namespace, nginx_pod_name, 6060)
+        kc_pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
+        pprof_recorder_obj = pprof_recorder('kubescape', kc_pod_name, 6060)
         pprof_recorder_obj.record_detached(duration=600, type="mem", filename="load_10k_alerts_no_memory_leak_mem.pprof")
 
         time_start = time.time()
@@ -44,7 +45,7 @@ def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
                 print(f"Created file {(i+1)*100} times")
 
         # wait for 300 seconds for the GC to run, so the memory leak can be detected
-        print("Waiting 300 seconds to create load")
+        print("Waiting 300 seconds to GC to run")
         time.sleep(300)
 
         # Get kubecop pod name

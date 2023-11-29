@@ -10,7 +10,7 @@ class pprof_recorder:
         self.port = port
         self.proc = None
         # Start kubectl port-forward as a subprocess
-        port_forward_command = "kubectl port-forward pod/%s %d:%d" % (self.pod_name, self.port, self.port)
+        port_forward_command = "kubectl -n %s port-forward pod/%s %d:%d" % (self.namespace,self.pod_name, self.port, self.port)
         self.proc = subprocess.Popen(port_forward_command, shell=True)
 
         # Give it a moment to establish the port forwarding
