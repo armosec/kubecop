@@ -28,6 +28,7 @@ var R0004UnexpectedCapabilityUsedRuleDescriptor = RuleDesciptor{
 }
 
 type R0004UnexpectedCapabilityUsed struct {
+	BaseRule
 }
 
 type R0004UnexpectedCapabilityUsedFailure struct {

@@ -28,6 +28,7 @@ var R0005UnexpectedDomainRequestRuleDescriptor = RuleDesciptor{
 }
 
 type R0005UnexpectedDomainRequest struct {
+	BaseRule
 }
 
 type R0005UnexpectedDomainRequestFailure struct {

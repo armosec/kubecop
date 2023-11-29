@@ -2,7 +2,7 @@ name: KubeCop System Test
 
 on:
   pull_request:
-    types: [labeled]
+    types: [labeled, synchronize, ready_for_review]
 
 env:
   GKE_TEST_CLUSTER: ${{ vars.GKE_TEST_CLUSTER }}
@@ -16,7 +16,7 @@ jobs:
     if: github.event.label.name == 'requires-system-test' || github.actor == 'nektos/act'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Login to Quay.io
       uses: docker/login-action@v3
       with:
@@ -34,22 +34,31 @@ jobs:
         echo "${IMAGE_TAG}" > test-image-tag.txt
         make build-image-and-push
 
-    - name: Set up Google Cloud
-      if: env.ACT == 'false'
+    - name: Check what K8s cluster to use
+      id: check-act
+      run: |
+        if [ -z $ACT ]; then
+        echo 'K8S_TYPE=GKE' >> $GITHUB_OUTPUT
+        else
+          echo $ACT
+          echo 'K8S_TYPE=kind'  >> $GITHUB_OUTPUT
+        fi        
+
+    - name: Set up Google Cloud      
+      if: ${{ steps.check-act.outputs.K8S_TYPE == 'GKE' }}
       uses: google-github-actions/setup-gcloud@v0.2.0
       with:
         service_account_key: ${{ secrets.GKE_SA_KEY }}
         project_id: ${{ vars.GKE_TEST_PROJECT }}
 
     - name: Connect to GKE cluster
-      if: env.ACT == 'false'
-      run: |
+      if: ${{ steps.check-act.outputs.K8S_TYPE == 'GKE' }}
+      run: |        
         gcloud components install --quiet kubectl
         gcloud container clusters get-credentials ${{ vars.GKE_TEST_CLUSTER }} --zone ${{ vars.GKE_TEST_ZONE }} --project ${{ vars.GKE_TEST_PROJECT }} || echo "Failed to connect to GKE cluster"
 
     - name: Set up Kind
-      if: env.ACT != 'false'
-      #if: env.ACT != 'true'
+      if: ${{ steps.check-act.outputs.K8S_TYPE == 'kind' }}
       run: |
         curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-$(uname)-amd64
         chmod +x ./kind
@@ -68,7 +77,7 @@ jobs:
       run: |
         helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
         helm repo update
-        helm install prometheus prometheus-community/kube-prometheus-stack --set grafana.enabled=false --namespace monitoring --create-namespace --wait --timeout 5m
+        helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --set grafana.enabled=false --namespace monitoring --create-namespace --wait --timeout 5m
         # Check that the prometheus pod is running
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=prometheus -n monitoring --timeout=300s
         echo "prometheus" >> cleanup.txt
@@ -77,7 +86,7 @@ jobs:
       run: |
         kubectl apply -f etc/app-profile.crd.yaml -f pkg/rulebindingstore/crd.yaml
         echo "crd" >> cleanup.txt
-        helm install kubecop chart/kubecop --set image.tag=$(cat test-image-tag.txt) --set image.repository=$(cat test-image-repo.txt) -f resources/system-tests/kubecop-values.yaml -n kubescape --create-namespace --wait --timeout 5m
+        helm install kubecop chart/kubecop --set image.tag=$(cat test-image-tag.txt) --set image.repository=$(cat test-image-repo.txt) --set kubecop.recording.finalizationDuration=120s -f resources/system-tests/kubecop-values.yaml -n kubescape --create-namespace --wait --timeout 5m
         # Check that the kubecop pod is running
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=kubecop -n kubescape --timeout=300s
         echo "kubecop" >> cleanup.txt
