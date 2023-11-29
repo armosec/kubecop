@@ -75,9 +75,7 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 		return nil
 	}
 
-	shouldIgnoreMounts := fmt.Sprintf("%v", rule.GetParameters()["ignoreMounts"]) == "true"
-
-	if shouldIgnoreMounts {
+	if rule.shouldIgnoreMounts {
 		rule.mutex.RLock()
 		mounts, ok := rule.containerIdToMountPaths[openEvent.ContainerID]
 		rule.mutex.RUnlock()
