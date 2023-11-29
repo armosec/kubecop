@@ -19,6 +19,11 @@ func (e *EngineAccessMock) GetPodSpec(podName, namespace, containerID string) (*
 					Name:      "test",
 					MountPath: "/var/test1",
 				},
+				{
+					Name:      "test2",
+					MountPath: "/var/test2",
+					SubPath:   "test2",
+				},
 			},
 		},
 	}
