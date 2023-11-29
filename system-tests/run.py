@@ -70,7 +70,11 @@ def basic_alert_test(namespace="kubecop-test"):
         print("Waiting 300 seconds to create load")
 
         # Start recording CPU usage for 300 seconds (we will CPU load for 300 seconds)
-        pprof_recorder_obj.record(duration=300, type="cpu", filename="basic_alert_test_cpu.pprof")
+        try:
+            pprof_recorder_obj.record(duration=300, type="cpu", filename="basic_alert_test_cpu.pprof")
+        except Exception as e:
+            print("Exception: ", e)
+            time.sleep(300)
 
     except Exception as e:
         print("Exception: ", e)
