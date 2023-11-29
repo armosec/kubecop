@@ -2,6 +2,7 @@ package exporters
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -60,6 +61,6 @@ func TestSendAlert(t *testing.T) {
 	assert.Equal(t, "none", alertLabels["severity"])
 	assert.Equal(t, "Rule 'testrule' in 'testpodname' namespace 'testnamespace' failed", alert["annotations"].(map[string]interface{})["summary"])
 	assert.Equal(t, "Application profile is missing", alert["annotations"].(map[string]interface{})["message"])
-	assert.Equal(t, "http://github.com/armosec/kubecop", alert["generatorURL"])
+	assert.Equal(t, strings.HasPrefix(fmt.Sprint(alert["generatorURL"]), "https://armosec.github.io/kubecop/alertviewer/"), true)
 
 }
