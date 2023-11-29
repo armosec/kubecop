@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KubeCop Alert View</title>
+    <!-- Fira Sans Font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Fira Sans',Arial,sans-serif;
+            color: #f9f9f9;
+            margin: 20px;
+            background-color: #e3e9f4;
+            background-image: url('background.jpeg'); /* Replace with your image URL */
+            background-size: cover; /* Cover the entire page */
+            background-repeat: no-repeat; /* Prevent the image from repeating */
+            background-attachment: fixed; /* Optional: Makes the background fixed during scroll */
+            background-position: center; /* Center the background image */
+
+        }
+        .alert {
+            margin: 10px 0;
+            padding: 10px;
+            color: #245fc7;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .alert_box {
+            margin: 10px 0;
+            padding: 10px;
+            color: #245fc7;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <p style="font-size: xx-large;">KubeCop Alert Information</p>
+    <div class="alert_box">
+        <div style="font-size: x-large;"><span id="alertMessage"></span></div>
+        <div style="font-size: large;">Rule: <span id="alertRuleName"></span></div>
+        <div style="font-size: large;">Fix: <span id="alertFix"></span></div>
+    </div>
+    <div class="alert_box">
+        <div style="font-size: x-large;">Source</div>
+        <div style="font-size: large;">Namespace: <span id="alertNamespace"></span></div>
+        <div style="font-size: large;">Pod: <span id="alertPod"></span></div>
+        <div style="font-size: large;">Container: <span id="alertContainer"></span></div>
+        <div style="font-size: large;">Process: <span id="alertProcess"></span></div>
+    </div>
+
+    <script>
+        function getQueryParams() {
+            const queryParams = new URLSearchParams(window.location.search);
+            return {
+                alertMessage: queryParams.get('AlertMessage') || 'Not provided',
+                alertNamespace: queryParams.get('AlertNamespace') || 'Not provided',
+                alertRuleName: queryParams.get('AlertRuleName') || 'Not provided',
+                alertPod: queryParams.get('AlertPod') || 'Not provided',
+                alertFix: queryParams.get('AlertFix') || 'Not provided',
+                alertProcess: queryParams.get('AlertProcess') || 'Not provided',
+                alertContainer: queryParams.get('AlertContainer') || 'Not provided',
+            };
+        }
+
+        function displayAlertInfo() {
+            const params = getQueryParams();
+            document.getElementById('alertMessage').textContent = params.alertMessage;
+            document.getElementById('alertNamespace').textContent = params.alertNamespace;
+            document.getElementById('alertRuleName').textContent =  params.alertRuleName;
+            document.getElementById('alertPod').textContent = params.alertPod;
+            document.getElementById('alertFix').textContent = params.alertFix;
+            document.getElementById('alertProcess').textContent = params.alertProcess;
+            document.getElementById('alertContainer').textContent = params.alertContainer;
+        }
+
+        displayAlertInfo();
+    </script>
+</body>
+</html>
