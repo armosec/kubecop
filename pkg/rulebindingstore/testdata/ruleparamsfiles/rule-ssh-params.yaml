@@ -1,0 +1,18 @@
+apiVersion: kubescape.io/v1
+kind: RuntimeRuleAlertBinding
+metadata:
+  name: single-rule-for-app-nginx-default-ns-params-ssh
+spec:
+  namespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: default
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - nginx
+  rules:
+    - ruleName: "Malicious SSH Connection"
+      parameters:
+        allowedPorts: [22, 2222]
