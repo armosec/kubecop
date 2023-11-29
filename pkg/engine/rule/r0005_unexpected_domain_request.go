@@ -48,7 +48,7 @@ func CreateRuleR0005UnexpectedDomainRequest() *R0005UnexpectedDomainRequest {
 func (rule *R0005UnexpectedDomainRequest) DeleteRule() {
 }
 
-func (rule *R0005UnexpectedDomainRequest) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess) RuleFailure {
+func (rule *R0005UnexpectedDomainRequest) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
 	if eventType != tracing.DnsEventType {
 		return nil
 	}

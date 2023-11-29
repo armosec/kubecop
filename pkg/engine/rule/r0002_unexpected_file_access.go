@@ -48,7 +48,7 @@ func CreateRuleR0002UnexpectedFileAccess() *R0002UnexpectedFileAccess {
 func (rule *R0002UnexpectedFileAccess) DeleteRule() {
 }
 
-func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess) RuleFailure {
+func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
 	if eventType != tracing.OpenEventType {
 		return nil
 	}

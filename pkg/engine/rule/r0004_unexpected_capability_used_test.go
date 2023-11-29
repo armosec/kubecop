@@ -28,7 +28,7 @@ func TestR0004UnexpectedCapabilityUsed(t *testing.T) {
 	}
 
 	// Test with nil appProfileAccess
-	ruleResult := r.ProcessEvent(tracing.CapabilitiesEventType, e, nil)
+	ruleResult := r.ProcessEvent(tracing.CapabilitiesEventType, e, nil, nil)
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to be nil since no capability event")
 	}
@@ -41,7 +41,7 @@ func TestR0004UnexpectedCapabilityUsed(t *testing.T) {
 				Syscall:      "test_call",
 			},
 		},
-	})
+	}, nil)
 	if ruleResult != nil {
 		t.Errorf("Expected ruleResult to be nil since capability is in the profile")
 	}

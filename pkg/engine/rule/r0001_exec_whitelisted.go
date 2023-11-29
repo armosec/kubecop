@@ -48,7 +48,7 @@ func CreateRuleR0001ExecWhitelisted() *R0001ExecWhitelisted {
 func (rule *R0001ExecWhitelisted) DeleteRule() {
 }
 
-func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess) RuleFailure {
+func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
 	if eventType != tracing.ExecveEventType {
 		return nil
 	}

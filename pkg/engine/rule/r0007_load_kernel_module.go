@@ -50,7 +50,7 @@ func CreateRuleR0007LoadKernelModule() *R0007LoadKernelModule {
 func (rule *R0007LoadKernelModule) DeleteRule() {
 }
 
-func (rule *R0007LoadKernelModule) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess) RuleFailure {
+func (rule *R0007LoadKernelModule) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
 	if eventType != tracing.SyscallEventType {
 		return nil
 	}

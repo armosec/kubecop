@@ -26,7 +26,7 @@ func TestR0006ExecBinaryNotInBaseImage(t *testing.T) {
 	}
 
 	// Test with non existing binary
-	ruleResult := r.ProcessEvent(tracing.ExecveEventType, e, nil)
+	ruleResult := r.ProcessEvent(tracing.ExecveEventType, e, nil, nil)
 	if ruleResult != nil {
 		t.Errorf("Expected ruleResult to be nil since exec is not in the upper layer")
 	}
