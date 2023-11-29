@@ -85,10 +85,25 @@ func CreateRuleR1003MaliciousSSHConnection() *R1003MaliciousSSHConnection {
 }
 
 func (rule *R1003MaliciousSSHConnection) SetParameters(params map[string]interface{}) {
-	if allowedPorts, ok := params["allowedPorts"].([]uint16); ok {
+	if allowedPortsInterface, ok := params["allowedPorts"].([]interface{}); ok {
+		if len(allowedPortsInterface) == 0 {
+			log.Printf("No allowed ports were provided for rule %s. Defaulting to port 22\n", rule.Name())
+			return
+		}
+
+		var allowedPorts []uint16
+		for _, port := range allowedPortsInterface {
+			if convertedPort, ok := port.(float64); ok {
+				allowedPorts = append(allowedPorts, uint16(convertedPort))
+			} else {
+				log.Printf("Failed to convert port %v to uint16\n", port)
+			}
+		}
+
+		log.Printf("Set parameters for rule %s. Allowed ports: %v\n", rule.Name(), allowedPorts)
 		rule.allowedPorts = allowedPorts
 	} else {
-		log.Printf("Failed to set parameters for rule %s, invalid type for allowedPorts\n", rule.Name())
+		log.Printf("Failed to set parameters for rule %s. Allowed ports: %v\n", rule.Name(), params["allowedPorts"])
 	}
 }
 
