@@ -65,10 +65,10 @@ type Rule interface {
 	// Rule requirements.
 	Requirements() RuleRequirements
 
-	// Set Parameters.
+	// Set rule parameters.
 	SetParameters(parameters map[string]interface{})
 
-	// Get Parameters.
+	// Get rule parameters.
 	GetParameters() map[string]interface{}
 }
 

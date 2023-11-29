@@ -18,10 +18,11 @@ func TestR0002UnexpectedFileAccess(t *testing.T) {
 	// Create a file access event
 	e := &tracing.OpenEvent{
 		GeneralEvent: tracing.GeneralEvent{
-			ContainerID: "test",
-			PodName:     "test",
-			Namespace:   "test",
-			Timestamp:   0,
+			ContainerID:   "test",
+			PodName:       "test",
+			Namespace:     "test",
+			ContainerName: "test",
+			Timestamp:     0,
 		},
 		PathName: "/test",
 		Flags:    []string{"O_RDONLY"},
