@@ -1,6 +1,8 @@
 package rule
 
 import (
+	"sync"
+
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
@@ -62,6 +64,41 @@ type Rule interface {
 
 	// Rule requirements.
 	Requirements() RuleRequirements
+
+	// Set rule parameters.
+	SetParameters(parameters map[string]interface{})
+
+	// Get rule parameters.
+	GetParameters() map[string]interface{}
+}
+
+type BaseRule struct {
+	// Mutex for protecting rule parameters.
+	parametersMutex sync.RWMutex
+	parameters      map[string]interface{}
+}
+
+func (rule *BaseRule) SetParameters(parameters map[string]interface{}) {
+	rule.parametersMutex.Lock()
+	defer rule.parametersMutex.Unlock()
+	rule.parameters = parameters
+}
+
+func (rule *BaseRule) GetParameters() map[string]interface{} {
+	rule.parametersMutex.RLock()
+	defer rule.parametersMutex.RUnlock()
+	if rule.parameters == nil {
+		rule.parameters = make(map[string]interface{})
+		return rule.parameters
+	}
+
+	// Create a copy to avoid returning a reference to the internal map
+	parametersCopy := make(map[string]interface{})
+	for key, value := range rule.parameters {
+		parametersCopy[key] = value
+	}
+
+	return parametersCopy
 }
 
 func (r *RuleDesciptor) HasTags(tags []string) bool {

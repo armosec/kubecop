@@ -1,0 +1,18 @@
+apiVersion: kubescape.io/v1
+kind: RuntimeRuleAlertBinding
+metadata:
+  name: single-rule-for-app-nginx-default-ns-params
+spec:
+  namespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: default
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - nginx
+  rules:
+    - ruleName: "Unexpected file access"
+      parameters:
+        ignoreMounts: true

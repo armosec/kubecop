@@ -18,23 +18,24 @@ func TestR0002UnexpectedFileAccess(t *testing.T) {
 	// Create a file access event
 	e := &tracing.OpenEvent{
 		GeneralEvent: tracing.GeneralEvent{
-			ContainerID: "test",
-			PodName:     "test",
-			Namespace:   "test",
-			Timestamp:   0,
+			ContainerID:   "test",
+			PodName:       "test",
+			Namespace:     "test",
+			ContainerName: "test",
+			Timestamp:     0,
 		},
 		PathName: "/test",
 		Flags:    []string{"O_RDONLY"},
 	}
 
 	// Test with nil appProfileAccess
-	ruleResult := r.ProcessEvent(tracing.OpenEventType, e, nil, nil)
+	ruleResult := r.ProcessEvent(tracing.OpenEventType, e, nil, &EngineAccessMock{})
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to not be nil since no appProfile")
 	}
 
 	// Test with empty appProfileAccess
-	ruleResult = r.ProcessEvent(tracing.OpenEventType, e, &MockAppProfileAccess{}, nil)
+	ruleResult = r.ProcessEvent(tracing.OpenEventType, e, &MockAppProfileAccess{}, &EngineAccessMock{})
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to not be nil since file is not whitelisted")
 	}
@@ -47,7 +48,7 @@ func TestR0002UnexpectedFileAccess(t *testing.T) {
 				Flags: []string{"O_RDONLY"},
 			},
 		},
-	}, nil)
+	}, &EngineAccessMock{})
 	if ruleResult != nil {
 		t.Errorf("Expected ruleResult to be nil since file is whitelisted")
 	}
@@ -61,9 +62,24 @@ func TestR0002UnexpectedFileAccess(t *testing.T) {
 				Flags: []string{"O_RDONLY"},
 			},
 		},
-	}, nil)
+	}, &EngineAccessMock{})
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult to not be nil since flag is not whitelisted")
 	}
 
+	// Test with mounted file
+	e.PathName = "/var/test1"
+	r.SetParameters(map[string]interface{}{"ignoreMounts": true})
+	ruleResult = r.ProcessEvent(tracing.OpenEventType, e, &MockAppProfileAccess{
+		OpenCalls: []collector.OpenCalls{
+			{
+				Path:  "/test",
+				Flags: []string{"O_RDONLY"},
+			},
+		},
+	}, &EngineAccessMock{})
+
+	if ruleResult != nil {
+		t.Errorf("Expected ruleResult to be nil since file is mounted")
+	}
 }

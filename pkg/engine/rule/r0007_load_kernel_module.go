@@ -30,6 +30,7 @@ var R0007LoadKernelModuleRuleDescriptor = RuleDesciptor{
 }
 
 type R0007LoadKernelModule struct {
+	BaseRule
 }
 
 type R0007LoadKernelModuleFailure struct {
