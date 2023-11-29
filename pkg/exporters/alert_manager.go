@@ -45,6 +45,15 @@ func InitAlertManagerExporter(alertmanagerURL string) *AlertManagerExporter {
 }
 
 func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
+	sourceUrl := fmt.Sprintf("https://armosec.github.io/kubecop/alertviewer/?AlertMessage=%s&AlertRuleName=%s&AlertFix=%s&AlertNamespace=%s&AlertPod=%s&AlertContainer=%s&AlertProcess=%s",
+		failedRule.Error(),
+		failedRule.Name(),
+		failedRule.FixSuggestion(),
+		failedRule.Event().Namespace,
+		failedRule.Event().PodName,
+		failedRule.Event().ContainerName,
+		fmt.Sprintf("%s (%d)", failedRule.Event().Comm, failedRule.Event().Pid),
+	)
 	myAlert := models.PostableAlert{
 		StartsAt: strfmt.DateTime(time.Now()),
 		EndsAt:   strfmt.DateTime(time.Now().Add(time.Hour)),
@@ -54,7 +63,7 @@ func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 			"fix":     failedRule.FixSuggestion(),
 		},
 		Alert: models.Alert{
-			GeneratorURL: "http://github.com/armosec/kubecop",
+			GeneratorURL: strfmt.URI(sourceUrl),
 			Labels: map[string]string{
 				"alertname":      "KubeCopRuleViolated",
 				"rule_name":      failedRule.Name(),
