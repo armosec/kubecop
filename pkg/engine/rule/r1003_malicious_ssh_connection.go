@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	R0008ID                             = "R0008"
-	R0008MaliciousSSHConnectionRuleName = "Malicious SSH Connection"
+	R1003ID                             = "R1003"
+	R1003MaliciousSSHConnectionRuleName = "Malicious SSH Connection"
 	MaxTimeDiffInSeconds                = 2
 )
 
@@ -41,9 +41,9 @@ var SSHRelatedFiles = []string{
 	"id_xmss.pub",
 }
 
-var R0008MaliciousSSHConnectionRuleDescriptor = RuleDesciptor{
-	ID:          R0008ID,
-	Name:        R0008MaliciousSSHConnectionRuleName,
+var R1003MaliciousSSHConnectionRuleDescriptor = RuleDesciptor{
+	ID:          R1003ID,
+	Name:        R1003MaliciousSSHConnectionRuleName,
 	Description: "Detecting ssh connection to disallowed port",
 	Tags:        []string{"ssh", "connection", "port", "malicious"},
 	Priority:    7,
@@ -52,11 +52,11 @@ var R0008MaliciousSSHConnectionRuleDescriptor = RuleDesciptor{
 		NeedApplicationProfile: false,
 	},
 	RuleCreationFunc: func() Rule {
-		return CreateRuleR0008MaliciousSSHConnection()
+		return CreateRuleR1003MaliciousSSHConnection()
 	},
 }
 
-type R0008MaliciousSSHConnection struct {
+type R1003MaliciousSSHConnection struct {
 	BaseRule
 	accessRelatedFiles        bool
 	sshInitiatorPid           uint32
@@ -64,7 +64,7 @@ type R0008MaliciousSSHConnection struct {
 	allowedPorts              []uint16
 }
 
-type R0008MaliciousSSHConnectionFailure struct {
+type R1003MaliciousSSHConnectionFailure struct {
 	RuleName         string
 	Err              string
 	FixSuggestionMsg string
@@ -72,19 +72,19 @@ type R0008MaliciousSSHConnectionFailure struct {
 	FailureEvent     *tracing.NetworkEvent
 }
 
-func (rule *R0008MaliciousSSHConnection) Name() string {
-	return R0008MaliciousSSHConnectionRuleName
+func (rule *R1003MaliciousSSHConnection) Name() string {
+	return R1003MaliciousSSHConnectionRuleName
 }
 
-func CreateRuleR0008MaliciousSSHConnection() *R0008MaliciousSSHConnection {
-	return &R0008MaliciousSSHConnection{accessRelatedFiles: false,
+func CreateRuleR1003MaliciousSSHConnection() *R1003MaliciousSSHConnection {
+	return &R1003MaliciousSSHConnection{accessRelatedFiles: false,
 		sshInitiatorPid:           0,
 		configFileAccessTimeStamp: 0,
 		allowedPorts:              []uint16{22},
 	}
 }
 
-func (rule *R0008MaliciousSSHConnection) SetParameters(params map[string]interface{}) {
+func (rule *R1003MaliciousSSHConnection) SetParameters(params map[string]interface{}) {
 	if allowedPorts, ok := params["allowedPorts"].([]uint16); ok {
 		rule.allowedPorts = allowedPorts
 	} else {
@@ -92,10 +92,10 @@ func (rule *R0008MaliciousSSHConnection) SetParameters(params map[string]interfa
 	}
 }
 
-func (rule *R0008MaliciousSSHConnection) DeleteRule() {
+func (rule *R1003MaliciousSSHConnection) DeleteRule() {
 }
 
-func (rule *R0008MaliciousSSHConnection) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
+func (rule *R1003MaliciousSSHConnection) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
 	if eventType != tracing.OpenEventType && eventType != tracing.NetworkEventType {
 		return nil
 	}
@@ -130,12 +130,12 @@ func (rule *R0008MaliciousSSHConnection) ProcessEvent(eventType tracing.EventTyp
 			rule.accessRelatedFiles = false
 			rule.sshInitiatorPid = 0
 			rule.configFileAccessTimeStamp = 0
-			return &R0008MaliciousSSHConnectionFailure{
+			return &R1003MaliciousSSHConnectionFailure{
 				RuleName:         rule.Name(),
 				Err:              fmt.Sprintf("ssh connection to port %d is not allowed", networkEvent.Port),
 				FixSuggestionMsg: "If this is a legitimate action, please add the port as a parameter to the binding of this rule",
 				FailureEvent:     networkEvent,
-				RulePriority:     R0008MaliciousSSHConnectionRuleDescriptor.Priority,
+				RulePriority:     R1003MaliciousSSHConnectionRuleDescriptor.Priority,
 			}
 		}
 	}
@@ -157,29 +157,29 @@ func IsSSHConfigFile(path string) bool {
 	return false
 }
 
-func (rule *R0008MaliciousSSHConnection) Requirements() RuleRequirements {
+func (rule *R1003MaliciousSSHConnection) Requirements() RuleRequirements {
 	return RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.OpenEventType, tracing.NetworkEventType},
 		NeedApplicationProfile: false,
 	}
 }
 
-func (rule *R0008MaliciousSSHConnectionFailure) Name() string {
+func (rule *R1003MaliciousSSHConnectionFailure) Name() string {
 	return rule.RuleName
 }
 
-func (rule *R0008MaliciousSSHConnectionFailure) Error() string {
+func (rule *R1003MaliciousSSHConnectionFailure) Error() string {
 	return rule.Err
 }
 
-func (rule *R0008MaliciousSSHConnectionFailure) Event() tracing.GeneralEvent {
+func (rule *R1003MaliciousSSHConnectionFailure) Event() tracing.GeneralEvent {
 	return rule.FailureEvent.GeneralEvent
 }
 
-func (rule *R0008MaliciousSSHConnectionFailure) Priority() int {
+func (rule *R1003MaliciousSSHConnectionFailure) Priority() int {
 	return rule.RulePriority
 }
 
-func (rule *R0008MaliciousSSHConnectionFailure) FixSuggestion() string {
+func (rule *R1003MaliciousSSHConnectionFailure) FixSuggestion() string {
 	return rule.FixSuggestionMsg
 }

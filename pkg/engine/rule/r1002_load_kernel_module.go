@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	R0007ID                       = "R0007"
-	R0007LoadKernelModuleRuleName = "Kernel Module Load"
+	R1002ID                       = "R1002"
+	R1002LoadKernelModuleRuleName = "Kernel Module Load"
 )
 
-var R0007LoadKernelModuleRuleDescriptor = RuleDesciptor{
-	ID:          R0007ID,
-	Name:        R0007LoadKernelModuleRuleName,
+var R1002LoadKernelModuleRuleDescriptor = RuleDesciptor{
+	ID:          R1002ID,
+	Name:        R1002LoadKernelModuleRuleName,
 	Description: "Detecting Kernel Module Load.",
 	Tags:        []string{"syscall", "kernel", "module", "load"},
 	Priority:    7,
@@ -25,15 +25,15 @@ var R0007LoadKernelModuleRuleDescriptor = RuleDesciptor{
 		NeedApplicationProfile: false,
 	},
 	RuleCreationFunc: func() Rule {
-		return CreateRuleR0007LoadKernelModule()
+		return CreateRuleR1002LoadKernelModule()
 	},
 }
 
-type R0007LoadKernelModule struct {
+type R1002LoadKernelModule struct {
 	BaseRule
 }
 
-type R0007LoadKernelModuleFailure struct {
+type R1002LoadKernelModuleFailure struct {
 	RuleName         string
 	RulePriority     int
 	Err              string
@@ -41,18 +41,18 @@ type R0007LoadKernelModuleFailure struct {
 	FailureEvent     *tracing.SyscallEvent
 }
 
-func (rule *R0007LoadKernelModule) Name() string {
-	return R0007LoadKernelModuleRuleName
+func (rule *R1002LoadKernelModule) Name() string {
+	return R1002LoadKernelModuleRuleName
 }
 
-func CreateRuleR0007LoadKernelModule() *R0007LoadKernelModule {
-	return &R0007LoadKernelModule{}
+func CreateRuleR1002LoadKernelModule() *R1002LoadKernelModule {
+	return &R1002LoadKernelModule{}
 }
 
-func (rule *R0007LoadKernelModule) DeleteRule() {
+func (rule *R1002LoadKernelModule) DeleteRule() {
 }
 
-func (rule *R0007LoadKernelModule) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
+func (rule *R1002LoadKernelModule) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
 	if eventType != tracing.SyscallEventType {
 		return nil
 	}
@@ -62,41 +62,41 @@ func (rule *R0007LoadKernelModule) ProcessEvent(eventType tracing.EventType, eve
 		return nil
 	}
 	if slices.Contains(syscallEvent.Syscalls, "init_module") {
-		return &R0007LoadKernelModuleFailure{
+		return &R1002LoadKernelModuleFailure{
 			RuleName:         rule.Name(),
 			Err:              "Kernel Module Load",
 			FailureEvent:     syscallEvent,
 			FixSuggestionMsg: "If this is a legitimate action, please add consider removing this workload from the binding of this rule",
-			RulePriority:     R0007LoadKernelModuleRuleDescriptor.Priority,
+			RulePriority:     R1002LoadKernelModuleRuleDescriptor.Priority,
 		}
 	}
 
 	return nil
 }
 
-func (rule *R0007LoadKernelModule) Requirements() RuleRequirements {
+func (rule *R1002LoadKernelModule) Requirements() RuleRequirements {
 	return RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.SyscallEventType},
 		NeedApplicationProfile: false,
 	}
 }
 
-func (rule *R0007LoadKernelModuleFailure) Name() string {
+func (rule *R1002LoadKernelModuleFailure) Name() string {
 	return rule.RuleName
 }
 
-func (rule *R0007LoadKernelModuleFailure) Error() string {
+func (rule *R1002LoadKernelModuleFailure) Error() string {
 	return rule.Err
 }
 
-func (rule *R0007LoadKernelModuleFailure) Event() tracing.GeneralEvent {
+func (rule *R1002LoadKernelModuleFailure) Event() tracing.GeneralEvent {
 	return rule.FailureEvent.GeneralEvent
 }
 
-func (rule *R0007LoadKernelModuleFailure) Priority() int {
+func (rule *R1002LoadKernelModuleFailure) Priority() int {
 	return rule.RulePriority
 }
 
-func (rule *R0007LoadKernelModuleFailure) FixSuggestion() string {
+func (rule *R1002LoadKernelModuleFailure) FixSuggestion() string {
 	return rule.FixSuggestionMsg
 }
