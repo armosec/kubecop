@@ -25,6 +25,16 @@
             border: 1px solid #ddd;
             background-color: #f9f9f9;
         }
+        .command {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: medium;
+            margin: 5px 0;
+            padding: 5px;
+            color: #24c74d;
+            border: 1px solid #ddd;
+            background-color: #0e0d0d;
+            opacity: 1;
+        }
         .alert_box {
             margin: 10px 0;
             padding: 10px;
@@ -39,11 +49,13 @@
     <p style="font-size: xx-large;">KubeCop Alert Information</p>
     <div class="alert_box">
         <div style="font-size: x-large;"><span id="alertMessage"></span></div>
-        <div style="font-size: large;">Rule: <span id="alertRuleName"></span></div>
-        <div style="font-size: large;">Fix: <span id="alertFix"></span></div>
+        <br>
+        <div style="font-size: large;"><b>Rule:</b> <span id="alertRuleName"></span></div>
+        <div style="font-size: large;"><b>Fix:</b> <span id="alertFix"></span></div>
     </div>
     <div class="alert_box">
         <div style="font-size: x-large;">Source</div>
+        <br>
         <div style="font-size: large;">Namespace: <span id="alertNamespace"></span></div>
         <div style="font-size: large;">Pod: <span id="alertPod"></span></div>
         <div style="font-size: large;">Container: <span id="alertContainer"></span></div>
@@ -66,11 +78,22 @@
 
         function displayAlertInfo() {
             const params = getQueryParams();
+
+            // Split the fix into lines if kubectl is available
+            if (params.alertFix !== 'Not provided') {
+                const fixLines = params.alertFix.split('kubectl');
+                if (fixLines.length > 1) {
+                    document.getElementById('alertFix').innerHTML = fixLines[0] + '<br><div class="command">kubectl' + fixLines[1] + '</div>';
+                } else {
+                    document.getElementById('alertFix').textContent = fixLines[0]
+                }
+            }
+
             document.getElementById('alertMessage').textContent = params.alertMessage;
             document.getElementById('alertNamespace').textContent = params.alertNamespace;
             document.getElementById('alertRuleName').textContent =  params.alertRuleName;
             document.getElementById('alertPod').textContent = params.alertPod;
-            document.getElementById('alertFix').textContent = params.alertFix;
+            //document.getElementById('alertFix').textContent = params.alertFix;
             document.getElementById('alertProcess').textContent = params.alertProcess;
             document.getElementById('alertContainer').textContent = params.alertContainer;
         }
