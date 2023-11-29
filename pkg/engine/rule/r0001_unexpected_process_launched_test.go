@@ -7,9 +7,9 @@ import (
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
 
-func TestR0001ExecWhitelisted(t *testing.T) {
+func TestR0001UnexpectedProcessLaunched(t *testing.T) {
 	// Create a new rule
-	r := CreateRuleR0001ExecWhitelisted()
+	r := CreateRuleR0001UnexpectedProcessLaunched()
 	// Assert r is not nil
 	if r == nil {
 		t.Errorf("Expected r to not be nil")

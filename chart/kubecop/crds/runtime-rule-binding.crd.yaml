@@ -97,14 +97,14 @@ spec:
                       - R0003
                       - R0004
                       - R0005
-                      - R0006
-                      - R0007
-                      - R0008
+                      - R1001
+                      - R1002
+                      - R1003
                       - R1000
                       type: string
                     ruleName:
                       enum:
-                      - Exec Whitelisted
+                      - Unexpected process launched
                       - Unexpected file access
                       - Unexpected system call
                       - Unexpected capability used

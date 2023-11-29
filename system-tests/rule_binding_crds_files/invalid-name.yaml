@@ -6,4 +6,4 @@ spec:
   namespaceSelector:
   podSelector:
   rules:
-    - ruleName: "Exec Whitelistedffdsfds"
+    - ruleName: "Unexpected process launchedffdsfds"

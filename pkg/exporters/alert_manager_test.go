@@ -34,7 +34,7 @@ func TestSendAlert(t *testing.T) {
 	}
 	// Call SendAlert
 
-	exporter.SendAlert(&rule.R0001ExecWhitelistedFailure{
+	exporter.SendAlert(&rule.R0001UnexpectedProcessLaunchedFailure{
 		RuleName: "testrule",
 		Err:      "Application profile is missing",
 		FailureEvent: &tracing.ExecveEvent{GeneralEvent: tracing.GeneralEvent{

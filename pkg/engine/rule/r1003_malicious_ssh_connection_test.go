@@ -6,8 +6,8 @@ import (
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
 
-func TestR0008DisallowedSSHConnectionPort_ProcessEvent(t *testing.T) {
-	rule := CreateRuleR0008MaliciousSSHConnection()
+func TestR1003DisallowedSSHConnectionPort_ProcessEvent(t *testing.T) {
+	rule := CreateRuleR1003MaliciousSSHConnection()
 
 	// Test case 1: SSH connection to disallowed port
 	networkEvent := &tracing.NetworkEvent{
