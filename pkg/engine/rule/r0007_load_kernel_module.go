@@ -34,10 +34,11 @@ type R0007LoadKernelModule struct {
 }
 
 type R0007LoadKernelModuleFailure struct {
-	RuleName     string
-	RulePriority int
-	Err          string
-	FailureEvent *tracing.SyscallEvent
+	RuleName         string
+	RulePriority     int
+	Err              string
+	FixSuggestionMsg string
+	FailureEvent     *tracing.SyscallEvent
 }
 
 func (rule *R0007LoadKernelModule) Name() string {
@@ -62,10 +63,11 @@ func (rule *R0007LoadKernelModule) ProcessEvent(eventType tracing.EventType, eve
 	}
 	if slices.Contains(syscallEvent.Syscalls, "init_module") {
 		return &R0007LoadKernelModuleFailure{
-			RuleName:     rule.Name(),
-			Err:          "Kernel Module Load",
-			FailureEvent: syscallEvent,
-			RulePriority: R0007LoadKernelModuleRuleDescriptor.Priority,
+			RuleName:         rule.Name(),
+			Err:              "Kernel Module Load",
+			FailureEvent:     syscallEvent,
+			FixSuggestionMsg: "If this is a legitimate action, please add consider removing this workload from the binding of this rule",
+			RulePriority:     R0007LoadKernelModuleRuleDescriptor.Priority,
 		}
 	}
 
@@ -93,4 +95,8 @@ func (rule *R0007LoadKernelModuleFailure) Event() tracing.GeneralEvent {
 
 func (rule *R0007LoadKernelModuleFailure) Priority() int {
 	return rule.RulePriority
+}
+
+func (rule *R0007LoadKernelModuleFailure) FixSuggestion() string {
+	return rule.FixSuggestionMsg
 }

@@ -38,6 +38,10 @@ func TestR0001ExecWhitelisted(t *testing.T) {
 		t.Errorf("Expected ruleResult since exec is not whitelisted")
 	}
 
+	if ruleResult.FixSuggestion() == "" {
+		t.Errorf("Expected fix suggestion to not be empty")
+	}
+
 	// Test with whitelisted exec
 	ruleResult = r.ProcessEvent(tracing.ExecveEventType, e, &MockAppProfileAccess{
 		Execs: []collector.ExecCalls{
