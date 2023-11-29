@@ -147,10 +147,10 @@ def rule_binding_apply_test(namespace="kubecop-test"):
 
 test_cases = [
     (basic_alert_test, "Basic alert test"),
-    #(load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test"),
-    #(creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test"),
-    #(kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test"),
-    #(rule_binding_apply_test, "Rule binding apply test"),
+    (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test"),
+    (creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test"),
+    (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test"),
+    (rule_binding_apply_test, "Rule binding apply test"),
     # (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test"),
 ]
 
