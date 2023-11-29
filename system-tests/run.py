@@ -2,7 +2,10 @@ import sys
 import requests
 import subprocess
 import time
-from promtopic import plotprom
+from promtopic import plotprom_cpu_usage, plotprom_mem
+import kill_in_the_middle
+import load_10k_alerts_no_memory
+import creation_app_profile_memory_leak
 
 alert_manager_url = "http://localhost:9093/"
 prometheus_url = "http://localhost:9090/"
@@ -124,13 +127,20 @@ def rule_binding_apply_test(namespace="kubecop-test"):
             print("Duplicate fields id-tag test failed")
             return 1
 
-    except:
+    except Exception as e:
+        print("Exception occured: %s" % e)
         return 1
+    
+    return 0
 
 
 test_cases = [
+    (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test"),
+    (creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test"),
+    (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test"),
+    (rule_binding_apply_test, "Rule binding apply test"),
     (basic_alert_test, "Basic alert test"),
-    (rule_binding_apply_test, "Rule binding apply test")
+    # (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test"),
 ]
 
 def main():
@@ -145,24 +155,32 @@ def main():
         print("Running test %s" % test_case_name)
         # Save start time in epoch
         time_start = time.time()
-        result = test_case()
+        test_result = test_case()
         # Save end time in epoch
         time_end = time.time()
-        if result == 0:
-            print("Test passed")
-        else:
-            print("Test failed")
-            return result
         # Give two minutes for prometheus to scrape the data
         print("Waiting 60 seconds for prometheus to scrape the data")
         time.sleep(60)
-        result = plotprom(test_case_name, time_start, time_end)
+        result = plotprom_cpu_usage(test_case_name, time_start, time_end)
         if result == 0:
             print("Ploting succeeded")
         else:
             print("Ploting failed")
+        # plot memory usage
+        result = plotprom_mem(test_case_name, time_start, time_end)
+        if result == 0:
+            print("Ploting memory usage succeeded")
+        else:
+            print("Ploting memory usage failed")
+        
+        if test_result == 0:
+            print("Test passed")
+        else:
+            print("Test failed")
+            return test_result
+
     sys.exit(result)
 
 
 if __name__ == "__main__":
-    main()
+    exit(main())
