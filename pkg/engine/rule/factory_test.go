@@ -17,7 +17,7 @@ func TestCreateRulesByTags(t *testing.T) {
 // Test CreateRulesByNames
 func TestCreateRulesByNames(t *testing.T) {
 	// Create a new rule
-	rules := CreateRulesByNames([]string{R0001ExecWhitelistedRuleName})
+	rules := CreateRulesByNames([]string{R0001UnexpectedProcessLaunchedRuleName})
 	// Assert r is not nil
 	if rules == nil || len(rules) != 1 {
 		t.Errorf("Expected rules to not be nil")
@@ -27,7 +27,7 @@ func TestCreateRulesByNames(t *testing.T) {
 // Test CreateRuleByName
 func TestCreateRuleByName(t *testing.T) {
 	// Create a new rule
-	rule := CreateRuleByName(R0001ExecWhitelistedRuleName)
+	rule := CreateRuleByName(R0001UnexpectedProcessLaunchedRuleName)
 	// Assert r is not nil
 	if rule == nil {
 		t.Errorf("Expected rule to not be nil")

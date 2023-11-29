@@ -2,7 +2,7 @@ package rule
 
 // List of all rules descriptions.
 var ruleDescriptions []RuleDesciptor = []RuleDesciptor{
-	R0001ExecWhitelistedRuleDescriptor,
+	R0001UnexpectedProcessLaunchedRuleDescriptor,
 	R0002UnexpectedFileAccessRuleDescriptor,
 	R0003UnexpectedSystemCallRuleDescriptor,
 	R0004UnexpectedCapabilityUsedRuleDescriptor,

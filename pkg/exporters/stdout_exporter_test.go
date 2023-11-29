@@ -50,7 +50,7 @@ func TestStdoutExporter_SendAlert(t *testing.T) {
 	exporter := InitStdoutExporter(nil)
 	assert.NotNil(t, exporter)
 
-	exporter.SendAlert(&rule.R0001ExecWhitelistedFailure{
+	exporter.SendAlert(&rule.R0001UnexpectedProcessLaunchedFailure{
 		RuleName: "testrule",
 		Err:      "Application profile is missing",
 		FailureEvent: &tracing.ExecveEvent{GeneralEvent: tracing.GeneralEvent{

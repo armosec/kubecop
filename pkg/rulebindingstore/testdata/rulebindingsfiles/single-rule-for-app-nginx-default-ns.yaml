@@ -13,4 +13,4 @@ spec:
         values:
           - nginx
   rules:
-    - ruleName: "Exec Whitelisted"
+    - ruleName: "Unexpected process launched"

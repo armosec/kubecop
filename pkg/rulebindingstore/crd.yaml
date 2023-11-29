@@ -104,7 +104,7 @@ spec:
                       type: string
                     ruleName:
                       enum:
-                      - Exec Whitelisted
+                      - Unexpected process launched
                       - Unexpected file access
                       - Unexpected system call
                       - Unexpected capability used

@@ -13,7 +13,7 @@ spec:
     matchLabels:
       app: nginx
   rules:
-    - ruleName: "Exec Whitelisted"
+    - ruleName: "Unexpected process launched"
     - ruleName: "Unexpected file access"
     - ruleName: "Unexpected system call"
     - ruleName: "Unexpected capability used"

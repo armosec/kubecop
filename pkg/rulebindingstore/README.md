@@ -32,11 +32,11 @@ spec:
         values:
           - nginx
   rules:
-    - ruleName: "Exec Whitelisted"
+    - ruleName: "Unexpected process launched"
 
 ```
 
-In the above example, we bind the rule `Exec Whitelisted` to the pods in the namespace `default`. The rule will be applied to all the pods that are labeled with `app: nginx` in the namespace `default`.
+In the above example, we bind the rule `Unexpected process launched` to the pods in the namespace `default`. The rule will be applied to all the pods that are labeled with `app: nginx` in the namespace `default`.
 
 ## how does it work?
 Once the user applies a change to a `RuntimeRuleAlertBinding` object or any container in the cluster is created/updated/deleted, the KubeCop will be notified and will update the rules that are applied to each pod. The KubeCop will then apply the rules to the pods and will generate alerts if needed.
