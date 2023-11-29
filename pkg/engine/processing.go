@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -17,16 +16,13 @@ func (engine *Engine) ProcessEvent(eventType tracing.EventType, event interface{
 	if err != nil {
 		log.Printf("Failed to convert event to a generic event: %v\n", event)
 	}
-	if eventType == tracing.ExecveEventType {
-		fmt.Printf("%v\n", e)
-	}
 
 	// Loop over the boundRules
 	for _, rule := range boundRules {
 		// TODO if no app profile and one of the rules must have it then fire alert!
 		if appProfile == nil && rule.Requirements().NeedApplicationProfile {
 			if os.Getenv("DEBUG") == "true" {
-				fmt.Printf("%v - warning missing app profile", e)
+				log.Printf("%v - warning missing app profile", e)
 			}
 			continue // TODO - check with the RuleBinding if alert should be fired or not
 		}

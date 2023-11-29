@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"syscall"
 
 	"github.com/prometheus/procfs"
@@ -38,10 +37,11 @@ type R0006ExecBinaryNotInBaseImage struct {
 }
 
 type R0006ExecBinaryNotInBaseImageFailure struct {
-	RuleName     string
-	Err          string
-	RulePriority int
-	FailureEvent *tracing.ExecveEvent
+	RuleName         string
+	Err              string
+	FixSuggestionMsg string
+	RulePriority     int
+	FailureEvent     *tracing.ExecveEvent
 }
 
 func (rule *R0006ExecBinaryNotInBaseImage) Name() string {
@@ -70,10 +70,11 @@ func (rule *R0006ExecBinaryNotInBaseImage) ProcessEvent(eventType tracing.EventT
 	}
 
 	return &R0006ExecBinaryNotInBaseImageFailure{
-		RuleName:     rule.Name(),
-		Err:          fmt.Sprintf("exec call \"%s\" \"%s\" binary is not from the base image", execEvent.PathName, strings.Join(execEvent.Args, " ")),
-		FailureEvent: execEvent,
-		RulePriority: R0006ExecBinaryNotInBaseImageRuleDescriptor.Priority,
+		RuleName:         rule.Name(),
+		Err:              fmt.Sprintf("Process image \"%s\" binary is not from the container image \"%s\"", execEvent.PathName, "<image name TBA> via PodSpec"),
+		FixSuggestionMsg: fmt.Sprintf("If this is an expected behavior it is strongly suggested to include all executables in the container image. If this is not possible you can remove the rule binding to this workload."),
+		FailureEvent:     execEvent,
+		RulePriority:     R0006ExecBinaryNotInBaseImageRuleDescriptor.Priority,
 	}
 }
 
@@ -91,8 +92,6 @@ func IsExecBinaryInUpperLayer(execEvent *tracing.ExecveEvent) bool {
 		return false
 	}
 
-	log.Printf("Checking if %s exists in %s\n", execEvent.PathName, upperLayerPath)
-
 	return fileExists(filepath.Join(upperLayerPath, execEvent.PathName))
 }
 
@@ -103,22 +102,12 @@ func findProcessByMountNamespace(execEvent *tracing.ExecveEvent) (*procfs.Proc, 
 	}
 
 	for _, proc := range procs {
-		comm, err := proc.Comm()
-		if err != nil {
-			fmt.Printf("Error reading comm for PID %d: %s\n", proc.PID, err)
-			continue
-		}
-
-		log.Printf("Checking process %d (%s)\n", proc.PID, comm)
-
 		// Check if the mount namespace ID matches the specified namespaceID
 		mountNamespaceId, err := getMountNamespaceID(proc.PID)
 		if err != nil {
-			fmt.Printf("Error reading mount namespace ID for PID %d: %s\n", proc.PID, err)
+			log.Printf("Error reading mount namespace ID for PID %d: %s\n", proc.PID, err)
 			continue
 		}
-
-		log.Printf("Comparing %d to %d\n", mountNamespaceId, execEvent.MountNsID)
 
 		if mountNamespaceId == execEvent.MountNsID {
 			return &proc, nil
@@ -185,4 +174,8 @@ func (rule *R0006ExecBinaryNotInBaseImageFailure) Event() tracing.GeneralEvent {
 
 func (rule *R0006ExecBinaryNotInBaseImageFailure) Priority() int {
 	return rule.RulePriority
+}
+
+func (rule *R0006ExecBinaryNotInBaseImageFailure) FixSuggestion() string {
+	return rule.FixSuggestionMsg
 }

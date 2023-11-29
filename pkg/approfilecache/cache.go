@@ -36,7 +36,9 @@ type ApplicationProfileK8sCache struct {
 }
 
 type ApplicationProfileAccessImpl struct {
-	containerProfile *collector.ContainerProfile
+	containerProfile    *collector.ContainerProfile
+	appProfileName      string
+	appProfileNamespace string
 }
 
 func generateApplicationProfileName(kind, workloadName string) string {
@@ -144,12 +146,22 @@ func (cache *ApplicationProfileK8sCache) GetApplicationProfileAccess(containerNa
 
 	for _, containerProfile := range applicationProfile.ApplicationProfile.Spec.Containers {
 		if containerProfile.Name == containerName {
-			return &ApplicationProfileAccessImpl{containerProfile: &containerProfile}, nil
+			return &ApplicationProfileAccessImpl{containerProfile: &containerProfile,
+				appProfileName:      applicationProfile.ApplicationProfile.Name,
+				appProfileNamespace: applicationProfile.Namespace}, nil
 		} else {
 			return nil, fmt.Errorf("container profile %v not found in application profile for container %v", containerName, containerID)
 		}
 	}
 	return nil, fmt.Errorf("container profile %v not found in application profile for container %v", containerName, containerID)
+}
+
+func (access *ApplicationProfileAccessImpl) GetName() string {
+	return access.appProfileName
+}
+
+func (access *ApplicationProfileAccessImpl) GetNamespace() string {
+	return access.appProfileNamespace
 }
 
 func (access *ApplicationProfileAccessImpl) GetExecList() (*[]collector.ExecCalls, error) {

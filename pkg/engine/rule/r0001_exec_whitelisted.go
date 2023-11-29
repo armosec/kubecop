@@ -31,10 +31,11 @@ type R0001ExecWhitelisted struct {
 }
 
 type R0001ExecWhitelistedFailure struct {
-	RuleName     string
-	Err          string
-	RulePriority int
-	FailureEvent *tracing.ExecveEvent
+	RuleName         string
+	Err              string
+	RulePriority     int
+	FixSuggestionMsg string
+	FailureEvent     *tracing.ExecveEvent
 }
 
 func (rule *R0001ExecWhitelisted) Name() string {
@@ -46,6 +47,21 @@ func CreateRuleR0001ExecWhitelisted() *R0001ExecWhitelisted {
 }
 
 func (rule *R0001ExecWhitelisted) DeleteRule() {
+}
+
+func (rule *R0001ExecWhitelisted) generatePatchCommand(event *tracing.ExecveEvent, appProfileAccess approfilecache.SingleApplicationProfileAccess) string {
+	argList := "["
+	for _, arg := range event.Args {
+		argList += "\"" + arg + "\","
+	}
+	// remove the last comma
+	if len(argList) > 1 {
+		argList = argList[:len(argList)-1]
+	}
+	argList += "]"
+	baseTemplate := "kubectl patch applicationprofile %s --namespace %s --type merge -p '{\"spec\": {\"containers\": [{\"name\": \"%s\", \"execs\": [{\"path\": \"%s\", \"args\": %s}]}]}}'"
+	return fmt.Sprintf(baseTemplate, appProfileAccess.GetName(), appProfileAccess.GetNamespace(),
+		event.ContainerName, event.PathName, argList)
 }
 
 func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
@@ -60,20 +76,22 @@ func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, even
 
 	if appProfileAccess == nil {
 		return &R0001ExecWhitelistedFailure{
-			RuleName:     rule.Name(),
-			Err:          "Application profile is missing",
-			FailureEvent: execEvent,
-			RulePriority: RulePrioritySystemIssue,
+			RuleName:         rule.Name(),
+			Err:              "Application profile is missing",
+			FailureEvent:     execEvent,
+			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod \"%s\" and add the exec call \"%s\" to the whitelist", execEvent.PodName, execEvent.PathName),
+			RulePriority:     RulePrioritySystemIssue,
 		}
 	}
 
 	appProfileExecList, err := appProfileAccess.GetExecList()
 	if err != nil || appProfileExecList == nil {
 		return &R0001ExecWhitelistedFailure{
-			RuleName:     rule.Name(),
-			Err:          "Application profile is missing",
-			FailureEvent: execEvent,
-			RulePriority: RulePrioritySystemIssue,
+			RuleName:         rule.Name(),
+			Err:              "Application profile is missing",
+			FailureEvent:     execEvent,
+			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod \"%s\" and add the exec call \"%s\" to the whitelist", execEvent.PodName, execEvent.PathName),
+			RulePriority:     RulePrioritySystemIssue,
 		}
 	}
 
@@ -84,10 +102,11 @@ func (rule *R0001ExecWhitelisted) ProcessEvent(eventType tracing.EventType, even
 	}
 
 	return &R0001ExecWhitelistedFailure{
-		RuleName:     rule.Name(),
-		Err:          fmt.Sprintf("exec call \"%s\" is not whitelisted by application profile", execEvent.PathName),
-		FailureEvent: execEvent,
-		RulePriority: R0001ExecWhitelistedRuleDescriptor.Priority,
+		RuleName:         rule.Name(),
+		Err:              fmt.Sprintf("exec call \"%s\" is not whitelisted by application profile", execEvent.PathName),
+		FailureEvent:     execEvent,
+		FixSuggestionMsg: fmt.Sprintf("If this is a valid behavior, please add the exec call \"%s\" to the whitelist in the application profile for the Pod \"%s\". You can use the following command: %s", execEvent.PathName, execEvent.PodName, rule.generatePatchCommand(execEvent, appProfileAccess)),
+		RulePriority:     R0001ExecWhitelistedRuleDescriptor.Priority,
 	}
 }
 
@@ -112,4 +131,8 @@ func (rule *R0001ExecWhitelistedFailure) Event() tracing.GeneralEvent {
 
 func (rule *R0001ExecWhitelistedFailure) Priority() int {
 	return rule.RulePriority
+}
+
+func (rule *R0001ExecWhitelistedFailure) FixSuggestion() string {
+	return rule.FixSuggestionMsg
 }

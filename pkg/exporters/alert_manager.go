@@ -51,6 +51,7 @@ func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 		Annotations: map[string]string{
 			"summary": fmt.Sprintf("Rule '%s' in '%s' namespace '%s' failed", failedRule.Name(), failedRule.Event().PodName, failedRule.Event().Namespace),
 			"message": failedRule.Error(),
+			"fix":     failedRule.FixSuggestion(),
 		},
 		Alert: models.Alert{
 			GeneratorURL: "http://github.com/armosec/kubecop",
@@ -64,6 +65,11 @@ func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 				"severity":       PriorityToStatus(failedRule.Priority()),
 				"host":           ame.Host,
 				"node_name":      ame.NodeName,
+				"pid":            fmt.Sprintf("%d", failedRule.Event().Pid),
+				"ppid":           fmt.Sprintf("%d", failedRule.Event().Ppid),
+				"comm":           failedRule.Event().Comm,
+				"uid":            fmt.Sprintf("%d", failedRule.Event().Uid),
+				"gid":            fmt.Sprintf("%d", failedRule.Event().Gid),
 			},
 		},
 	}
