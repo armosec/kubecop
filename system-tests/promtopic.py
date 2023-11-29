@@ -21,44 +21,63 @@ def execute_promql_query(prometheus_url, query, time_start, time_end, steps):
         raise Exception("Query failed")
     return results['data']['result']
 
-def plotprom(test_case_name,time_start, time_end, steps = '1s'):
+def plotprom_cpu_usage(test_case_name,time_start, time_end, steps = '1s'):
     print("Ploting test %s from %s to %s" % (test_case_name, time_start, time_end))
-    # Replace with your Prometheus URL and Query
+    
+    # Get kubecop pod name
+    pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
+    # Build query
+    query = 'sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="kubescape", pod="%s",container="kubecop"}) by (container)'%pod_name
+    
+    timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)    
+    values = [float(item) for item in values]
+    return save_plot_png(test_case_name+"_cpu", timestamps, values, metric_name='CPU Usage (ms)')
+
+def plotprom_mem(test_case_name,time_start, time_end, steps = '1s'):
+    print("Ploting test %s from %s to %s" % (test_case_name, time_start, time_end))
+    
+    # Get kubecop pod name
+    pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
+    # Build query
+    query = 'sum(container_memory_working_set_bytes{pod="%s", container="kubecop"}) by (container)'%pod_name    
+    timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)
+    # values = [int(item) for item in values]
+    return save_plot_png(test_case_name+"_mem", timestamps, values, metric_name='Memory Usage (bytes)')
+
+def save_plot_png(test_case_name, timestamps, values, metric_name):
+    plt.plot(timestamps, values)
+    plt.title(f'KubeCop {metric_name} - {test_case_name}')
+    plt.xlabel('Time (epoch)')
+    plt.ylabel(metric_name)
+
+    # Convert test case name to file name
+    filename = test_case_name.replace(' ', '_').lower()
+
+    # Save plot to an image file
+    plt.savefig('%s.png'%filename)    
+    plt.clf()
+
+    return 0
+
+def send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps = '1s'):    
+    # Get prometheus url
     prometheus_url = 'http://localhost:9090'
     if 'PROMETHEUS_URL' in os.environ:
         prometheus_url = os.environ['PROMETHEUS_URL']
-
-    # Get kubecop pod name
-    pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True)
-    query = 'sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="kubescape", pod=%s,cluster=""}) by (container)'%pod_name
 
     # Execute the query
     data = execute_promql_query(prometheus_url, query, time_start, time_end, steps)
 
     # Example of processing and plotting
     # This will vary greatly depending on the shape of your data
-    if len(data) == 0:
-        print("No data found in prometheus when looking for %s" % test_case_name)
-        return 1
-    timestamps = [datetime.fromtimestamp(item[0]).strftime("%M:%S") for item in data[1]['values']]  # Assuming the first result and it's a time series
-    values = [float(item[1]) for item in data[1]['values']]
+    assert len(data) > 0, "No data found in prometheus when looking for %s" % test_case_name
+    timestamps = [datetime.fromtimestamp(item[0]).strftime("%M:%S") for item in data[0]['values']]  # Assuming the first result and it's a time series
+    values = [item[1] for item in data[0]['values']]
+    return timestamps, values
 
-    # Plotting
-    plt.plot(timestamps, values)
-    plt.title('KubeCop CPU Usage - %s'%test_case_name)
-    plt.xlabel('Time (epoch)')
-    plt.ylabel('CPU Usage (ms)')
-
-    # Convert test case name to file name
-    filename = test_case_name.replace(' ', '_').lower()
-
-    # Save plot to an image file
-    plt.savefig('%s.png'%filename)
-
-    return 0
 
 if __name__ == "__main__":
     test_case_name = sys.argv[1]
     time_start = float(sys.argv[2])
     time_end = float(sys.argv[3])
-    plotprom(test_case_name=test_case_name, time_start=time_start, time_end=time_end)
+    plotprom_cpu_usage(test_case_name=test_case_name, time_start=time_start, time_end=time_end)
