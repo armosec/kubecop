@@ -110,6 +110,13 @@ jobs:
         name: Performance plots
         path: "*.png"
 
+    - name: Upload pprof files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: Pprof files
+        path: "*.pprof"
+
     - name: Comment on PR
       if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
       uses: actions/github-script@v3

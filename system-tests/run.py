@@ -6,6 +6,7 @@ from promtopic import plotprom_cpu_usage, plotprom_mem
 import kill_in_the_middle
 import load_10k_alerts_no_memory
 import creation_app_profile_memory_leak
+from pprof import pprof_recorder
 
 alert_manager_url = "http://localhost:9093/"
 prometheus_url = "http://localhost:9090/"
@@ -56,6 +57,8 @@ def basic_alert_test(namespace="kubecop-test"):
 
         print("Starting load on nginx pod")
 
+        pprof_recorder_obj = pprof_recorder(namespace, nginx_pod_name, 6060)
+
         # Create load on the nginx pod
         subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "system-tests/locust-deployment.yaml"])
 
@@ -64,9 +67,11 @@ def basic_alert_test(namespace="kubecop-test"):
 
         print("Waiting 300 seconds to create load")
 
-        # Wait for the alert to be fired
-        time.sleep(300)
-    except:
+        # Start recording CPU usage for 300 seconds (we will CPU load for 300 seconds)
+        pprof_recorder_obj.record(duration=300, type="cpu", filename="basic_alert_test_cpu.pprof")
+
+    except Exception as e:
+        print("Exception: ", e)
         # Delete the namespace
         subprocess.check_call(["kubectl", "delete", "namespace", namespace])
         return 1
@@ -92,7 +97,7 @@ def basic_alert_test(namespace="kubecop-test"):
 def rule_binding_apply_test(namespace="kubecop-test"):
     print("Running rule binding apply test")
 
-    try:        
+    try:
         subprocess.check_call(["kubectl", "apply", "-f", "system-tests/rule_binding_crds_files/all-valid.yaml"])
         subprocess.check_call(["kubectl", "delete", "-f", "system-tests/rule_binding_crds_files/all-valid.yaml"])
         # invalid fields
@@ -100,28 +105,28 @@ def rule_binding_apply_test(namespace="kubecop-test"):
         if proc_stat.returncode == 0:
             print("Invalid name test failed")
             return 1
-        
+
         proc_stat = subprocess.run(["kubectl", "apply", "-f", "system-tests/rule_binding_crds_files/invalid-id.yaml"], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc_stat.returncode == 0:
             print("Invalid id test failed")
             return 1
-        
+
         proc_stat = subprocess.run(["kubectl", "apply", "-f", "system-tests/rule_binding_crds_files/invalid-tag.yaml"], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc_stat.returncode == 0:
             print("Invalid tag test failed")
             return 1
-        
+
         # duplicate fields
         proc_stat = subprocess.run(["kubectl", "apply", "-f", "system-tests/rule_binding_crds_files/dup-fields-name-tag.yaml"], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc_stat.returncode == 0:
             print("Duplicate fields name-tag test failed")
             return 1
-        
+
         proc_stat = subprocess.run(["kubectl", "apply", "-f", "system-tests/rule_binding_crds_files/dup-fields-name-id.yaml"], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc_stat.returncode == 0:
             print("Duplicate fields name-id test failed")
             return 1
-        
+
         proc_stat = subprocess.run(["kubectl", "apply", "-f", "system-tests/rule_binding_crds_files/dup-fields-id-tag.yaml"], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc_stat.returncode == 0:
             print("Duplicate fields id-tag test failed")
@@ -130,16 +135,16 @@ def rule_binding_apply_test(namespace="kubecop-test"):
     except Exception as e:
         print("Exception occured: %s" % e)
         return 1
-    
+
     return 0
 
 
 test_cases = [
+    (basic_alert_test, "Basic alert test"),
     (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test"),
     (creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test"),
     (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test"),
     (rule_binding_apply_test, "Rule binding apply test"),
-    (basic_alert_test, "Basic alert test"),
     # (kill_in_the_middle.kill_pod_in_the_middle, "Kill pod in the middle test"),
 ]
 
@@ -151,6 +156,7 @@ def main():
     if len(sys.argv) > 2:
         prometheus_url = sys.argv[2]
     print("Running tests")
+    glob_result = 0
     for test_case, test_case_name in test_cases:
         print("Running test %s" % test_case_name)
         # Save start time in epoch
@@ -172,14 +178,14 @@ def main():
             print("Ploting memory usage succeeded")
         else:
             print("Ploting memory usage failed")
-        
+
         if test_result == 0:
             print("Test passed")
         else:
             print("Test failed")
-            return test_result
+            glob_result = 1
 
-    sys.exit(result)
+    sys.exit(glob_result)
 
 
 if __name__ == "__main__":
