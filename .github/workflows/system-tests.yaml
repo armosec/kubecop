@@ -2,7 +2,7 @@ name: KubeCop System Test
 
 on:
   pull_request:
-    types: [labeled, synchronize, ready_for_review]
+    types: [labeled, synchronize, ready_for_review, opened, reopened]
 
 env:
   GKE_TEST_CLUSTER: ${{ vars.GKE_TEST_CLUSTER }}
@@ -13,7 +13,11 @@ jobs:
   system-tests:
     runs-on: ubuntu-latest
     # Run on specific label or if running under act
-    if: github.event.label.name == 'requires-system-test' || github.actor == 'nektos/act'
+    if: github.event.label.name == 'requires-system-test' || contains(github.event.pull_request.labels.*.name, 'requires-system-test')|| github.actor == 'nektos/act'
+    environment: gke-cluster-env
+    concurrency:
+      group: gke-cluster-lock
+      cancel-in-progress: false
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -42,9 +46,9 @@ jobs:
         else
           echo $ACT
           echo 'K8S_TYPE=kind'  >> $GITHUB_OUTPUT
-        fi        
+        fi
 
-    - name: Set up Google Cloud      
+    - name: Set up Google Cloud
       if: ${{ steps.check-act.outputs.K8S_TYPE == 'GKE' }}
       uses: google-github-actions/setup-gcloud@v0.2.0
       with:
@@ -53,7 +57,7 @@ jobs:
 
     - name: Connect to GKE cluster
       if: ${{ steps.check-act.outputs.K8S_TYPE == 'GKE' }}
-      run: |        
+      run: |
         gcloud components install --quiet kubectl
         gcloud container clusters get-credentials ${{ vars.GKE_TEST_CLUSTER }} --zone ${{ vars.GKE_TEST_ZONE }} --project ${{ vars.GKE_TEST_PROJECT }} || echo "Failed to connect to GKE cluster"
 
@@ -84,11 +88,11 @@ jobs:
 
     - name: Install KubeCop
       run: |
-        kubectl apply -f etc/app-profile.crd.yaml -f pkg/rulebindingstore/crd.yaml
         echo "crd" >> cleanup.txt
         helm install kubecop chart/kubecop --set image.tag=$(cat test-image-tag.txt) --set image.repository=$(cat test-image-repo.txt) --set kubecop.recording.finalizationDuration=120s -f resources/system-tests/kubecop-values.yaml -n kubescape --create-namespace --wait --timeout 5m
         # Check that the kubecop pod is running
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=kubecop -n kubescape --timeout=300s
+        sleep 5
         echo "kubecop" >> cleanup.txt
 
     - name: Install python dependencies
@@ -100,6 +104,7 @@ jobs:
         ./scripts/run-system-tests.sh
 
     - name: Upload plot images
+      if: always()
       uses: actions/upload-artifact@v2
       with:
         name: Performance plots
