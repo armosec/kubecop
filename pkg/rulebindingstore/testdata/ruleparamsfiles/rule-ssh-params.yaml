@@ -1,7 +1,7 @@
 apiVersion: kubescape.io/v1
 kind: RuntimeRuleAlertBinding
 metadata:
-  name: single-rule-for-app-nginx-default-ns
+  name: single-rule-for-app-nginx-default-ns-params-ssh
 spec:
   namespaceSelector:
     matchLabels:
@@ -13,4 +13,6 @@ spec:
         values:
           - nginx
   rules:
-    - ruleName: "Unexpected process launched"
+    - ruleName: "Malicious SSH Connection"
+      parameters:
+        allowedPorts: [22, 2222]

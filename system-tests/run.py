@@ -87,7 +87,7 @@ def basic_alert_test(namespace="kubecop-test"):
         return 1
 
     alerts = filter_alerts_by_label(alerts, "alertname", "KubeCopRuleViolated")
-    alerts = filter_alerts_by_label(alerts, "rule_name", "Exec Whitelisted")
+    alerts = filter_alerts_by_label(alerts, "rule_name", "Unexpected process launched")
 
     if len(alerts) == 0:
         print("No alerts found")

@@ -6,7 +6,7 @@ spec:
   namespaceSelector:
   podSelector:
   rules:
-    - ruleName: "Exec Whitelisted"
+    - ruleName: "Unexpected process launched"
       ruleID: "R0005"
     - ruleTags:
       - "exec"
