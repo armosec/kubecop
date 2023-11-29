@@ -85,8 +85,10 @@ func CreateRuleR0008MaliciousSSHConnection() *R0008MaliciousSSHConnection {
 }
 
 func (rule *R0008MaliciousSSHConnection) SetParameters(params map[string]interface{}) {
-	if params["allowedPorts"] != nil {
-		rule.allowedPorts = params["allowedPorts"].([]uint16)
+	if allowedPorts, ok := params["allowedPorts"].([]uint16); ok {
+		rule.allowedPorts = allowedPorts
+	} else {
+		log.Printf("Failed to set parameters for rule %s, invalid type for allowedPorts\n", rule.Name())
 	}
 }
 
