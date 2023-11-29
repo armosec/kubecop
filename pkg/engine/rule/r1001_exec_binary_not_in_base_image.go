@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	R0006ID                               = "R0006"
-	R0006ExecBinaryNotInBaseImageRuleName = "Exec Binary Not In Base Image"
+	R1001ID                               = "R1001"
+	R1001ExecBinaryNotInBaseImageRuleName = "Exec Binary Not In Base Image"
 )
 
-var R0006ExecBinaryNotInBaseImageRuleDescriptor = RuleDesciptor{
-	ID:          R0006ID,
-	Name:        R0006ExecBinaryNotInBaseImageRuleName,
+var R1001ExecBinaryNotInBaseImageRuleDescriptor = RuleDesciptor{
+	ID:          R1001ID,
+	Name:        R1001ExecBinaryNotInBaseImageRuleName,
 	Description: "Detecting exec calls of binaries that are not included in the base image",
 	Tags:        []string{"exec", "malicious", "binary", "base image"},
 	Priority:    7,
@@ -29,15 +29,15 @@ var R0006ExecBinaryNotInBaseImageRuleDescriptor = RuleDesciptor{
 		NeedApplicationProfile: false,
 	},
 	RuleCreationFunc: func() Rule {
-		return CreateRuleR0006ExecBinaryNotInBaseImage()
+		return CreateRuleR1001ExecBinaryNotInBaseImage()
 	},
 }
 
-type R0006ExecBinaryNotInBaseImage struct {
+type R1001ExecBinaryNotInBaseImage struct {
 	BaseRule
 }
 
-type R0006ExecBinaryNotInBaseImageFailure struct {
+type R1001ExecBinaryNotInBaseImageFailure struct {
 	RuleName         string
 	Err              string
 	FixSuggestionMsg string
@@ -45,18 +45,18 @@ type R0006ExecBinaryNotInBaseImageFailure struct {
 	FailureEvent     *tracing.ExecveEvent
 }
 
-func (rule *R0006ExecBinaryNotInBaseImage) Name() string {
-	return R0006ExecBinaryNotInBaseImageRuleName
+func (rule *R1001ExecBinaryNotInBaseImage) Name() string {
+	return R1001ExecBinaryNotInBaseImageRuleName
 }
 
-func CreateRuleR0006ExecBinaryNotInBaseImage() *R0006ExecBinaryNotInBaseImage {
-	return &R0006ExecBinaryNotInBaseImage{}
+func CreateRuleR1001ExecBinaryNotInBaseImage() *R1001ExecBinaryNotInBaseImage {
+	return &R1001ExecBinaryNotInBaseImage{}
 }
 
-func (rule *R0006ExecBinaryNotInBaseImage) DeleteRule() {
+func (rule *R1001ExecBinaryNotInBaseImage) DeleteRule() {
 }
 
-func (rule *R0006ExecBinaryNotInBaseImage) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
+func (rule *R1001ExecBinaryNotInBaseImage) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
 	if eventType != tracing.ExecveEventType {
 		return nil
 	}
@@ -70,12 +70,12 @@ func (rule *R0006ExecBinaryNotInBaseImage) ProcessEvent(eventType tracing.EventT
 		return nil
 	}
 
-	return &R0006ExecBinaryNotInBaseImageFailure{
+	return &R1001ExecBinaryNotInBaseImageFailure{
 		RuleName:         rule.Name(),
 		Err:              fmt.Sprintf("Process image \"%s\" binary is not from the container image \"%s\"", execEvent.PathName, "<image name TBA> via PodSpec"),
 		FixSuggestionMsg: fmt.Sprintf("If this is an expected behavior it is strongly suggested to include all executables in the container image. If this is not possible you can remove the rule binding to this workload."),
 		FailureEvent:     execEvent,
-		RulePriority:     R0006ExecBinaryNotInBaseImageRuleDescriptor.Priority,
+		RulePriority:     R1001ExecBinaryNotInBaseImageRuleDescriptor.Priority,
 	}
 }
 
@@ -154,29 +154,29 @@ func fileExists(filePath string) bool {
 	return !info.IsDir()
 }
 
-func (rule *R0006ExecBinaryNotInBaseImage) Requirements() RuleRequirements {
+func (rule *R1001ExecBinaryNotInBaseImage) Requirements() RuleRequirements {
 	return RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: false,
 	}
 }
 
-func (rule *R0006ExecBinaryNotInBaseImageFailure) Name() string {
+func (rule *R1001ExecBinaryNotInBaseImageFailure) Name() string {
 	return rule.RuleName
 }
 
-func (rule *R0006ExecBinaryNotInBaseImageFailure) Error() string {
+func (rule *R1001ExecBinaryNotInBaseImageFailure) Error() string {
 	return rule.Err
 }
 
-func (rule *R0006ExecBinaryNotInBaseImageFailure) Event() tracing.GeneralEvent {
+func (rule *R1001ExecBinaryNotInBaseImageFailure) Event() tracing.GeneralEvent {
 	return rule.FailureEvent.GeneralEvent
 }
 
-func (rule *R0006ExecBinaryNotInBaseImageFailure) Priority() int {
+func (rule *R1001ExecBinaryNotInBaseImageFailure) Priority() int {
 	return rule.RulePriority
 }
 
-func (rule *R0006ExecBinaryNotInBaseImageFailure) FixSuggestion() string {
+func (rule *R1001ExecBinaryNotInBaseImageFailure) FixSuggestion() string {
 	return rule.FixSuggestionMsg
 }

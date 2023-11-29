@@ -97,38 +97,43 @@ spec:
                       - R0003
                       - R0004
                       - R0005
-                      - R0006
-                      - R0007
+                      - R1001
+                      - R1002
+                      - R1003
                       - R1000
                       type: string
                     ruleName:
                       enum:
-                      - Exec Whitelisted
+                      - Unexpected process launched
                       - Unexpected file access
                       - Unexpected system call
                       - Unexpected capability used
                       - Unexpected domain request
-                      - Exec from malicious source
-                      - Kernel Module Load
                       - Exec Binary Not In Base Image
+                      - Kernel Module Load
+                      - Malicious SSH Connection
+                      - Exec from malicious source
                       type: string
                     ruleTags:
                       items:
                         enum:
+                        - base image
+                        - binary
                         - capabilities
+                        - connection
                         - dns
                         - exec
+                        - kernel
+                        - load
+                        - malicious
+                        - module
                         - open
+                        - port
                         - signature
+                        - ssh
                         - syscall
                         - whitelisted
                         type: string
                       type: array
-                    severity:
-                      type: string
-                  type: object
-                type: array
-            type: object
-        type: object
-    served: true
-    storage: true
+    served: false
+    storage: false

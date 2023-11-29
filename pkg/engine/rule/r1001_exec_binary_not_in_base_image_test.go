@@ -6,9 +6,9 @@ import (
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
 
-func TestR0006ExecBinaryNotInBaseImage(t *testing.T) {
+func TestR1001ExecBinaryNotInBaseImage(t *testing.T) {
 	// Create a new rule
-	r := CreateRuleR0006ExecBinaryNotInBaseImage()
+	r := CreateRuleR1001ExecBinaryNotInBaseImage()
 	// Assert r is not nil
 	if r == nil {
 		t.Errorf("Expected r to not be nil")
