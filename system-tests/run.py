@@ -141,9 +141,8 @@ def rule_binding_apply_test(namespace="kubecop-test"):
     except Exception as e:
         print("Exception occured: %s" % e)
         return 1
-
+    
     return 0
-
 
 test_cases = [
     (basic_alert_test, "Basic alert test"),
