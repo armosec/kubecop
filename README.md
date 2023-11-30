@@ -2,6 +2,7 @@
 [![build](https://github.com/armosec/kubecop/actions/workflows/release.yaml/badge.svg)](https://github.com/armosec/kubecop/actions/workflows/release.yaml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/armosec/kubecop)](https://goreportcard.com/report/github.com/armosec/kubecop)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/armosec/kubecop)
+[![Twitter Follow](https://img.shields.io/twitter/follow/kubescape?style=social)](https://twitter.com/kubescape)
 
 # KubeCop 🚨🚔🚢☸️🚨
 
