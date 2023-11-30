@@ -58,9 +58,10 @@ func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 		StartsAt: strfmt.DateTime(time.Now()),
 		EndsAt:   strfmt.DateTime(time.Now().Add(time.Hour)),
 		Annotations: map[string]string{
-			"summary": fmt.Sprintf("Rule '%s' in '%s' namespace '%s' failed", failedRule.Name(), failedRule.Event().PodName, failedRule.Event().Namespace),
-			"message": failedRule.Error(),
-			"fix":     failedRule.FixSuggestion(),
+			"summary":     fmt.Sprintf("Rule '%s' in '%s' namespace '%s' failed", failedRule.Name(), failedRule.Event().PodName, failedRule.Event().Namespace),
+			"message":     failedRule.Error(),
+			"description": failedRule.Error(),
+			"fix":         failedRule.FixSuggestion(),
 		},
 		Alert: models.Alert{
 			GeneratorURL: strfmt.URI(sourceUrl),
