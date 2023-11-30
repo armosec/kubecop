@@ -131,8 +131,8 @@ func (rule *R1004ExecFromMount) isPathContained(targetpath, basepath string) boo
 
 func (rule *R1004ExecFromMount) Requirements() RuleRequirements {
 	return RuleRequirements{
-		EventTypes:             []tracing.EventType{tracing.OpenEventType},
-		NeedApplicationProfile: true,
+		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
+		NeedApplicationProfile: false,
 	}
 }
 
