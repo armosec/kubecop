@@ -144,7 +144,6 @@ def rule_binding_apply_test(namespace="kubecop-test"):
 
     return 0
 
-
 test_cases = [
     (basic_alert_test, "Basic alert test"),
     (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test"),
