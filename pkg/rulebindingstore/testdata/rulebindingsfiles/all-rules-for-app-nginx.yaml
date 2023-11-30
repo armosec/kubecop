@@ -17,3 +17,4 @@ spec:
     - ruleName: "Exec Binary Not In Base Image"
     - ruleName: "Malicious SSH Connection"
     - ruleName: "Kubernetes Client Executed"
+    - ruleName: "Exec from mount"

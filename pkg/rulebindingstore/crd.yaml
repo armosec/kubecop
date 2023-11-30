@@ -101,6 +101,7 @@ spec:
                       - R1001
                       - R1002
                       - R1003
+                      - R1004
                       - R1005
                       type: string
                     ruleName:
@@ -115,6 +116,7 @@ spec:
                       - Kernel Module Load
                       - Malicious SSH Connection
                       - Kubernetes Client Executed
+                      - Exec from mount
                       type: string
                     ruleTags:
                       items:
@@ -129,6 +131,7 @@ spec:
                         - load
                         - malicious
                         - module
+                        - mount
                         - open
                         - port
                         - signature
