@@ -64,4 +64,24 @@ func TestR1005KubernetesClientExecuted(t *testing.T) {
 		t.Errorf("Expected ruleResult since exec is a k8s client")
 		return
 	}
+
+	event4 := &tracing.NetworkEvent{
+		GeneralEvent: tracing.GeneralEvent{
+			ContainerID: "test",
+			PodName:     "test",
+			Namespace:   "test",
+			Timestamp:   0,
+		},
+		PacketType:  "OUTGOING",
+		Protocol:    "TCP",
+		Port:        443,
+		DstEndpoint: "1.1.1.1",
+	}
+
+	ruleResult = r.ProcessEvent(tracing.NetworkEventType, event4, nil, &EngineAccessMock{})
+	if ruleResult == nil {
+		t.Errorf("Expected ruleResult since network event dst is kube api server")
+		return
+	}
+
 }
