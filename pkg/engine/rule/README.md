@@ -10,3 +10,4 @@
 | R1002 | Kernel Module Load | Detecting Kernel Module Load. | [syscall kernel module load] | 7 | false |
 | R1003 | Malicious SSH Connection | Detecting ssh connection to disallowed port | [ssh connection port malicious] | 7 | false |
 | R1004 | Exec from mount | Detecting exec calls from mounted paths. | [exec mount] | 5 | false |
+| R1005 | Kubernetes Client Executed | Detecting exececution of kubernetes client | [exec malicious] | 9 | false |
