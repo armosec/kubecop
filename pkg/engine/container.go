@@ -84,7 +84,7 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			}
 		}
 
-		podSpec, err := fetchPodSpec(engine.k8sClientset, event.PodName, event.Namespace)
+		podSpec, err := engine.fetchPodSpec(event.PodName, event.Namespace)
 		if err != nil {
 			log.Printf("Failed to get pod spec for pod %s/%s: %v\n", event.Namespace, event.PodName, err)
 			return
@@ -157,15 +157,6 @@ func (engine *Engine) GetPodSpec(podName, namespace, containerID string) (*corev
 	}
 
 	return podSpec.PodSpec, nil
-}
-
-func fetchPodSpec(clientset ClientSetInterface, podName, namespace string) (*corev1.PodSpec, error) {
-	pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	return &pod.Spec, nil
 }
 
 func GetRequiredEventsFromRules(rules []rule.Rule) []tracing.EventType {

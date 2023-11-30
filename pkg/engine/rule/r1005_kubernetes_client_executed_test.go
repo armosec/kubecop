@@ -28,19 +28,40 @@ func TestR1005KubernetesClientExecuted(t *testing.T) {
 	ruleResult := r.ProcessEvent(tracing.ExecveEventType, e, nil, &EngineAccessMock{})
 	if ruleResult != nil {
 		t.Errorf("Expected ruleResult to be nil since test is not a k8s client")
+		return
 	}
 
-	e.PathName = "kubectl"
-
-	ruleResult = r.ProcessEvent(tracing.ExecveEventType, e, nil, &EngineAccessMock{})
-	if ruleResult == nil {
-		t.Errorf("Expected ruleResult since exec is a k8s client")
+	event2 := &tracing.ExecveEvent{
+		GeneralEvent: tracing.GeneralEvent{
+			ContainerID: "test",
+			PodName:     "test",
+			Namespace:   "test",
+			Timestamp:   0,
+		},
+		PathName: "kubectl",
+		Args:     []string{"test"},
 	}
 
-	e.PathName = "/a/b/c/kubectl"
-
-	ruleResult = r.ProcessEvent(tracing.ExecveEventType, e, nil, &EngineAccessMock{})
+	ruleResult = r.ProcessEvent(tracing.ExecveEventType, event2, nil, &EngineAccessMock{})
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult since exec is a k8s client")
+		return
+	}
+
+	event3 := &tracing.ExecveEvent{
+		GeneralEvent: tracing.GeneralEvent{
+			ContainerID: "test",
+			PodName:     "test",
+			Namespace:   "test",
+			Timestamp:   0,
+		},
+		PathName: "/a/b/c/kubectl",
+		Args:     []string{"test"},
+	}
+
+	ruleResult = r.ProcessEvent(tracing.ExecveEventType, event3, nil, &EngineAccessMock{})
+	if ruleResult == nil {
+		t.Errorf("Expected ruleResult since exec is a k8s client")
+		return
 	}
 }
