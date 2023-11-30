@@ -32,6 +32,7 @@ jobs:
         file: ./Containerfile
         push: true
         tags: quay.io/armosec/kubecop:${{ env.TAG_NAME }}
+        platforms: linux/amd64,linux/arm64
 
   create-release:
     needs: build-and-push
