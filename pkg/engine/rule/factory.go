@@ -2,13 +2,14 @@ package rule
 
 // List of all rules descriptions.
 var ruleDescriptions []RuleDesciptor = []RuleDesciptor{
-	R0001ExecWhitelistedRuleDescriptor,
+	R0001UnexpectedProcessLaunchedRuleDescriptor,
 	R0002UnexpectedFileAccessRuleDescriptor,
 	R0003UnexpectedSystemCallRuleDescriptor,
 	R0004UnexpectedCapabilityUsedRuleDescriptor,
 	R0005UnexpectedDomainRequestRuleDescriptor,
-	R0006ExecBinaryNotInBaseImageRuleDescriptor,
-	R0007LoadKernelModuleRuleDescriptor,
+	R1001ExecBinaryNotInBaseImageRuleDescriptor,
+	R1002LoadKernelModuleRuleDescriptor,
+	R1003MaliciousSSHConnectionRuleDescriptor,
 	R1000ExecFromMaliciousSourceDescriptor,
 }
 

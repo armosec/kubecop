@@ -29,9 +29,8 @@ type Engine struct {
 	pollLoopRunning       bool
 	pollLoopCancelChannel chan struct{}
 	promCollector         *prometheusMetric
-	// TODO: change the signature of this function to support in parameters and custom priority
-	getRulesForPodFunc func(podName, namespace string) ([]rulebindingstore.RuntimeAlertRuleBindingRule, error)
-	nodeName           string
+	getRulesForPodFunc    func(podName, namespace string) ([]rulebindingstore.RuntimeAlertRuleBindingRule, error)
+	nodeName              string
 }
 
 func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.ApplicationProfileCache, tracer *tracing.Tracer, workerPoolWidth int, nodeName string) *Engine {

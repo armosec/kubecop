@@ -43,7 +43,7 @@ func (engine *Engine) submitEventForProcessing(containerId string, eventType tra
 		appProfile, err := engine.applicationProfileCache.GetApplicationProfileAccess(e.ContainerName, e.ContainerID)
 		if err != nil {
 			if os.Getenv("DEBUG") == "true" {
-				fmt.Printf("%v - error getting app profile: %v\n", e, err)
+				log.Printf("%v - error getting app profile: %v\n", e, err)
 			}
 		}
 

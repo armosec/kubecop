@@ -23,7 +23,7 @@ func TestAssociateRulesWithContainerInCache(t *testing.T) {
 		// Return some mock rule parameters
 		return []rulebindingstore.RuntimeAlertRuleBindingRule{
 			{
-				RuleName: rule.R0001ExecWhitelistedRuleDescriptor.Name,
+				RuleName: rule.R0001UnexpectedProcessLaunchedRuleDescriptor.Name,
 			},
 			{
 				RuleID: rule.R0002UnexpectedFileAccessRuleDescriptor.ID,
@@ -66,7 +66,7 @@ func TestAssociateRulesWithContainerInCache(t *testing.T) {
 
 	// Check the bound rules
 	expectedRuleDescs := []rule.Rule{
-		rule.CreateRuleByName(rule.R0001ExecWhitelistedRuleDescriptor.Name),
+		rule.CreateRuleByName(rule.R0001UnexpectedProcessLaunchedRuleDescriptor.Name),
 		rule.CreateRuleByID(rule.R0002UnexpectedFileAccessRuleDescriptor.ID),
 	}
 	expectedRuleDescs = append(expectedRuleDescs, rule.CreateRulesByTags(rule.R0003UnexpectedSystemCallRuleDescriptor.Tags)...)

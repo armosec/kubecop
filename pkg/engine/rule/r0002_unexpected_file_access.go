@@ -2,6 +2,10 @@ package rule
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strings"
+	"sync"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -28,13 +32,19 @@ var R0002UnexpectedFileAccessRuleDescriptor = RuleDesciptor{
 }
 
 type R0002UnexpectedFileAccess struct {
+	BaseRule
+	shouldIgnoreMounts bool
+	// Map of container ID to mount paths
+	mutex                   sync.RWMutex
+	containerIdToMountPaths map[string][]string
 }
 
 type R0002UnexpectedFileAccessFailure struct {
-	RuleName     string
-	RulePriority int
-	Err          string
-	FailureEvent *tracing.OpenEvent
+	RuleName         string
+	RulePriority     int
+	Err              string
+	FixSuggestionMsg string
+	FailureEvent     *tracing.OpenEvent
 }
 
 func (rule *R0002UnexpectedFileAccess) Name() string {
@@ -42,10 +52,32 @@ func (rule *R0002UnexpectedFileAccess) Name() string {
 }
 
 func CreateRuleR0002UnexpectedFileAccess() *R0002UnexpectedFileAccess {
-	return &R0002UnexpectedFileAccess{}
+	return &R0002UnexpectedFileAccess{
+		containerIdToMountPaths: map[string][]string{},
+		shouldIgnoreMounts:      false,
+	}
+}
+
+func (rule *R0002UnexpectedFileAccess) SetParameters(parameters map[string]interface{}) {
+	rule.BaseRule.SetParameters(parameters)
+	rule.shouldIgnoreMounts = fmt.Sprintf("%v", rule.GetParameters()["ignoreMounts"]) == "true"
 }
 
 func (rule *R0002UnexpectedFileAccess) DeleteRule() {
+}
+
+func (rule *R0002UnexpectedFileAccess) generatePatchCommand(event *tracing.OpenEvent, appProfileAccess approfilecache.SingleApplicationProfileAccess) string {
+	flagList := "["
+	for _, arg := range event.Flags {
+		flagList += "\"" + arg + "\","
+	}
+	// remove the last comma
+	if len(flagList) > 1 {
+		flagList = flagList[:len(flagList)-1]
+	}
+	baseTemplate := "kubectl patch applicationprofile %s --namespace %s --type merge -p '{\"spec\": {\"containers\": [{\"name\": \"%s\", \"opens\": [{\"path\": \"%s\", \"flags\": %s}]}]}}'"
+	return fmt.Sprintf(baseTemplate, appProfileAccess.GetName(), appProfileAccess.GetNamespace(),
+		event.ContainerName, event.PathName, flagList)
 }
 
 func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
@@ -58,22 +90,50 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 		return nil
 	}
 
+	if rule.shouldIgnoreMounts {
+		rule.mutex.RLock()
+		mounts, ok := rule.containerIdToMountPaths[openEvent.ContainerID]
+		rule.mutex.RUnlock()
+		if !ok {
+			err := rule.setMountPaths(openEvent.PodName, openEvent.Namespace, openEvent.ContainerID, openEvent.ContainerName, engineAccess)
+			if err != nil {
+				log.Printf("Failed to set mount paths: %v", err)
+				return nil
+			}
+			rule.mutex.RLock()
+			mounts = rule.containerIdToMountPaths[openEvent.ContainerID]
+			rule.mutex.RUnlock()
+		}
+
+		for _, mount := range mounts {
+			contained := isPathContained(mount, openEvent.PathName)
+			if contained {
+				if os.Getenv("DEBUG") == "true" {
+					log.Printf("Path %s is mounted in pod %s/%s - Skipping check", openEvent.PathName, openEvent.Namespace, openEvent.PodName)
+				}
+				return nil
+			}
+		}
+	}
+
 	if appProfileAccess == nil {
 		return &R0002UnexpectedFileAccessFailure{
-			RuleName:     rule.Name(),
-			Err:          "Application profile is missing",
-			FailureEvent: openEvent,
-			RulePriority: RulePrioritySystemIssue,
+			RuleName:         rule.Name(),
+			Err:              "Application profile is missing",
+			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod %s", openEvent.PodName),
+			FailureEvent:     openEvent,
+			RulePriority:     RulePrioritySystemIssue,
 		}
 	}
 
 	appProfileOpenList, err := appProfileAccess.GetOpenList()
 	if err != nil || appProfileOpenList == nil {
 		return &R0002UnexpectedFileAccessFailure{
-			RuleName:     rule.Name(),
-			Err:          "Application profile is missing",
-			FailureEvent: openEvent,
-			RulePriority: RulePrioritySystemIssue,
+			RuleName:         rule.Name(),
+			Err:              "Application profile is missing",
+			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod %s", openEvent.PodName),
+			FailureEvent:     openEvent,
+			RulePriority:     RulePrioritySystemIssue,
 		}
 	}
 
@@ -96,11 +156,38 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 	}
 
 	return &R0002UnexpectedFileAccessFailure{
-		RuleName:     rule.Name(),
-		Err:          fmt.Sprintf("Unexpected file access: %s with flags %v", openEvent.PathName, openEvent.Flags),
-		FailureEvent: openEvent,
-		RulePriority: R0002UnexpectedFileAccessRuleDescriptor.Priority,
+		RuleName:         rule.Name(),
+		Err:              fmt.Sprintf("Unexpected file access: %s with flags %v", openEvent.PathName, openEvent.Flags),
+		FixSuggestionMsg: fmt.Sprintf("If this is a valid behavior, please add the open call \"%s\" to the whitelist in the application profile for the Pod \"%s\". You can use the following command: %s", openEvent.PathName, openEvent.PodName, rule.generatePatchCommand(openEvent, appProfileAccess)),
+		FailureEvent:     openEvent,
+		RulePriority:     R0002UnexpectedFileAccessRuleDescriptor.Priority,
 	}
+}
+
+func (rule *R0002UnexpectedFileAccess) setMountPaths(podName string, namespace string, containerID string, containerName string, engineAccess EngineAccess) error {
+	podSpec, err := engineAccess.GetPodSpec(podName, namespace, containerID)
+	if err != nil {
+		return fmt.Errorf("failed to get pod spec: %v", err)
+	}
+
+	mountPaths := []string{}
+	for _, container := range podSpec.Containers {
+		if container.Name == containerName {
+			for _, volumeMount := range container.VolumeMounts {
+				mountPaths = append(mountPaths, volumeMount.MountPath)
+			}
+		}
+	}
+
+	rule.mutex.Lock()
+	defer rule.mutex.Unlock()
+	rule.containerIdToMountPaths[containerID] = mountPaths
+
+	return nil
+}
+
+func isPathContained(basepath, targetpath string) bool {
+	return strings.HasPrefix(targetpath, basepath)
 }
 
 func (rule *R0002UnexpectedFileAccess) Requirements() RuleRequirements {
@@ -124,4 +211,8 @@ func (rule *R0002UnexpectedFileAccessFailure) Event() tracing.GeneralEvent {
 
 func (rule *R0002UnexpectedFileAccessFailure) Priority() int {
 	return rule.RulePriority
+}
+
+func (rule *R0002UnexpectedFileAccessFailure) FixSuggestion() string {
+	return rule.FixSuggestionMsg
 }

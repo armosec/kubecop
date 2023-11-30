@@ -45,15 +45,25 @@ func InitAlertManagerExporter(alertmanagerURL string) *AlertManagerExporter {
 }
 
 func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
+	sourceUrl := fmt.Sprintf("https://armosec.github.io/kubecop/alertviewer/?AlertMessage=%s&AlertRuleName=%s&AlertFix=%s&AlertNamespace=%s&AlertPod=%s&AlertContainer=%s&AlertProcess=%s",
+		failedRule.Error(),
+		failedRule.Name(),
+		failedRule.FixSuggestion(),
+		failedRule.Event().Namespace,
+		failedRule.Event().PodName,
+		failedRule.Event().ContainerName,
+		fmt.Sprintf("%s (%d)", failedRule.Event().Comm, failedRule.Event().Pid),
+	)
 	myAlert := models.PostableAlert{
 		StartsAt: strfmt.DateTime(time.Now()),
 		EndsAt:   strfmt.DateTime(time.Now().Add(time.Hour)),
 		Annotations: map[string]string{
 			"summary": fmt.Sprintf("Rule '%s' in '%s' namespace '%s' failed", failedRule.Name(), failedRule.Event().PodName, failedRule.Event().Namespace),
 			"message": failedRule.Error(),
+			"fix":     failedRule.FixSuggestion(),
 		},
 		Alert: models.Alert{
-			GeneratorURL: "http://github.com/armosec/kubecop",
+			GeneratorURL: strfmt.URI(sourceUrl),
 			Labels: map[string]string{
 				"alertname":      "KubeCopRuleViolated",
 				"rule_name":      failedRule.Name(),
@@ -64,6 +74,11 @@ func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 				"severity":       PriorityToStatus(failedRule.Priority()),
 				"host":           ame.Host,
 				"node_name":      ame.NodeName,
+				"pid":            fmt.Sprintf("%d", failedRule.Event().Pid),
+				"ppid":           fmt.Sprintf("%d", failedRule.Event().Ppid),
+				"comm":           failedRule.Event().Comm,
+				"uid":            fmt.Sprintf("%d", failedRule.Event().Uid),
+				"gid":            fmt.Sprintf("%d", failedRule.Event().Gid),
 			},
 		},
 	}

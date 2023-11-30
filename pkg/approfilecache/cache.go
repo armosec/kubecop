@@ -16,7 +16,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-type ApplicationProfileChacheEntry struct {
+type ApplicationProfileCacheEntry struct {
 	ApplicationProfile *collector.ApplicationProfile
 	WorkloadName       string
 	WorkloadKind       string
@@ -31,20 +31,18 @@ type ApplicationProfileK8sCache struct {
 	k8sConfig     *rest.Config
 	dynamicClient *dynamic.DynamicClient
 
-	cache                  map[string]*ApplicationProfileChacheEntry
+	cache                  map[string]*ApplicationProfileCacheEntry
 	informerControlChannel chan struct{}
 }
 
 type ApplicationProfileAccessImpl struct {
-	containerProfile *collector.ContainerProfile
+	containerProfile    *collector.ContainerProfile
+	appProfileName      string
+	appProfileNamespace string
 }
 
 func generateApplicationProfileName(kind, workloadName string) string {
 	return strings.ToLower(kind) + "-" + workloadName
-}
-
-func generateCachedApplicationProfileKey(namespace, kind, workloadName string) string {
-	return namespace + "-" + kind + "-" + workloadName
 }
 
 // Helper function to convert interface to ApplicationProfile
@@ -68,7 +66,7 @@ func NewApplicationProfileK8sCache(k8sConfig *rest.Config) (*ApplicationProfileK
 	if err != nil {
 		return nil, err
 	}
-	cache := make(map[string]*ApplicationProfileChacheEntry)
+	cache := make(map[string]*ApplicationProfileCacheEntry)
 	controlChannel := make(chan struct{})
 	newApplicationCache := ApplicationProfileK8sCache{k8sConfig: k8sConfig, dynamicClient: dynamicClient, cache: cache, informerControlChannel: controlChannel}
 	newApplicationCache.StartController()
@@ -100,7 +98,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 	if err != nil {
 		return err
 	}
-	cache.cache[containerID] = &ApplicationProfileChacheEntry{
+	cache.cache[containerID] = &ApplicationProfileCacheEntry{
 		ApplicationProfile: applicationProfile,
 		WorkloadName:       workloadName,
 		WorkloadKind:       kind,
@@ -114,7 +112,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 }
 
 func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace, kind, workloadName, ownerKind, ownerName, containerName, containerID string, acceptPartial bool) error {
-	cache.cache[containerID] = &ApplicationProfileChacheEntry{
+	cache.cache[containerID] = &ApplicationProfileCacheEntry{
 		ApplicationProfile: nil,
 		WorkloadName:       workloadName,
 		WorkloadKind:       kind,
@@ -144,12 +142,22 @@ func (cache *ApplicationProfileK8sCache) GetApplicationProfileAccess(containerNa
 
 	for _, containerProfile := range applicationProfile.ApplicationProfile.Spec.Containers {
 		if containerProfile.Name == containerName {
-			return &ApplicationProfileAccessImpl{containerProfile: &containerProfile}, nil
+			return &ApplicationProfileAccessImpl{containerProfile: &containerProfile,
+				appProfileName:      applicationProfile.ApplicationProfile.Name,
+				appProfileNamespace: applicationProfile.Namespace}, nil
 		} else {
 			return nil, fmt.Errorf("container profile %v not found in application profile for container %v", containerName, containerID)
 		}
 	}
 	return nil, fmt.Errorf("container profile %v not found in application profile for container %v", containerName, containerID)
+}
+
+func (access *ApplicationProfileAccessImpl) GetName() string {
+	return access.appProfileName
+}
+
+func (access *ApplicationProfileAccessImpl) GetNamespace() string {
+	return access.appProfileNamespace
 }
 
 func (access *ApplicationProfileAccessImpl) GetExecList() (*[]collector.ExecCalls, error) {

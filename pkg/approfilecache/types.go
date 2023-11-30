@@ -5,6 +5,10 @@ import (
 )
 
 type SingleApplicationProfileAccess interface {
+	// Get application profile name
+	GetName() string
+	// Get application profile namespace
+	GetNamespace() string
 	// Get exec list
 	GetExecList() (*[]collector.ExecCalls, error)
 	// Get open list

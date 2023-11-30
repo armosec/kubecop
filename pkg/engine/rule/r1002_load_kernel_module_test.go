@@ -7,9 +7,9 @@ import (
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
 
-func TestR0007LoadKernelModule(t *testing.T) {
+func TestR1002LoadKernelModule(t *testing.T) {
 	// Create a new rule
-	r := CreateRuleR0007LoadKernelModule()
+	r := CreateRuleR1002LoadKernelModule()
 	// Assert r is not nil
 	if r == nil {
 		t.Errorf("Expected r to not be nil")

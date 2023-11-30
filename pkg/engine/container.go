@@ -192,23 +192,34 @@ func (engine *Engine) associateRulesWithContainerInCache(contEntry containerEntr
 	ruleDescs := make([]rule.Rule, 0, len(ruleParamsSlc))
 	for _, ruleParams := range ruleParamsSlc {
 		if ruleParams.RuleName != "" {
-			rulrDesc := rule.CreateRuleByName(ruleParams.RuleName)
-			if rulrDesc != nil {
-				ruleDescs = append(ruleDescs, rulrDesc)
+			ruleDesc := rule.CreateRuleByName(ruleParams.RuleName)
+			if ruleDesc != nil {
+				if ruleParams.Parameters != nil {
+					ruleDesc.SetParameters(ruleParams.Parameters)
+				}
+				ruleDescs = append(ruleDescs, ruleDesc)
 			}
 			continue
 		}
 		if ruleParams.RuleID != "" {
-			rulrDesc := rule.CreateRuleByID(ruleParams.RuleID)
-			if rulrDesc != nil {
-				ruleDescs = append(ruleDescs, rulrDesc)
+			ruleDesc := rule.CreateRuleByID(ruleParams.RuleID)
+			if ruleDesc != nil {
+				if ruleParams.Parameters != nil {
+					ruleDesc.SetParameters(ruleParams.Parameters)
+				}
+				ruleDescs = append(ruleDescs, ruleDesc)
 			}
 			continue
 		}
 		if len(ruleParams.RuleTags) > 0 {
-			rulrDesc := rule.CreateRulesByTags(ruleParams.RuleTags)
-			if rulrDesc != nil {
-				ruleDescs = append(ruleDescs, rulrDesc...)
+			ruleTagsDescs := rule.CreateRulesByTags(ruleParams.RuleTags)
+			if ruleDescs != nil {
+				for _, ruleDesc := range ruleTagsDescs {
+					if ruleParams.Parameters != nil {
+						ruleDesc.SetParameters(ruleParams.Parameters)
+					}
+				}
+				ruleDescs = append(ruleDescs, ruleTagsDescs...)
 			}
 			continue
 		}
