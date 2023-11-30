@@ -89,7 +89,7 @@ jobs:
     - name: Install KubeCop
       run: |
         echo "crd" >> cleanup.txt
-        helm install kubecop chart/kubecop --set image.tag=$(cat test-image-tag.txt) --set image.repository=$(cat test-image-repo.txt) --set kubecop.recording.finalizationDuration=120s -f resources/system-tests/kubecop-values.yaml -n kubescape --create-namespace --wait --timeout 5m
+        helm upgrade --install kubecop chart/kubecop --set image.tag=$(cat test-image-tag.txt) --set image.repository=$(cat test-image-repo.txt) --set kubecop.recording.finalizationDuration=120s -f resources/system-tests/kubecop-values.yaml -n kubescape --create-namespace --wait --timeout 5m --debug
         # Check that the kubecop pod is running
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=kubecop -n kubescape --timeout=300s
         sleep 5
