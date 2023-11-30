@@ -24,7 +24,7 @@ var R1000ExecFromMaliciousSourceDescriptor = RuleDesciptor{
 		NeedApplicationProfile: false,
 	},
 	RuleCreationFunc: func() Rule {
-		return CreateRuleR0001UnexpectedProcessLaunched()
+		return CreateRuleR1005KubernetesClientExecution()
 	},
 }
 
