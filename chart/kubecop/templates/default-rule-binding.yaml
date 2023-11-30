@@ -11,7 +11,7 @@ spec:
         operator: "NotIn"
         values:
         - "kube-system"
-        - "kube-public
+        - "kube-public"
         - "kube-node-lease"
         - "kubeconfig"
   podSelector:
