@@ -97,10 +97,11 @@ spec:
                       - R0003
                       - R0004
                       - R0005
+                      - R1000
                       - R1001
                       - R1002
                       - R1003
-                      - R1000
+                      - R1004
                       type: string
                     ruleName:
                       enum:
@@ -109,10 +110,11 @@ spec:
                       - Unexpected system call
                       - Unexpected capability used
                       - Unexpected domain request
+                      - Exec from malicious source
                       - Exec Binary Not In Base Image
                       - Kernel Module Load
                       - Malicious SSH Connection
-                      - Exec from malicious source
+                      - Exec from mount
                       type: string
                     ruleTags:
                       items:
@@ -127,13 +129,15 @@ spec:
                         - load
                         - malicious
                         - module
+                        - mount
                         - open
                         - port
                         - signature
                         - ssh
                         - syscall
                         - whitelisted
-                        type: string
-                      type: array
+    served: false
+    storage: false
+ray
     served: false
     storage: false
