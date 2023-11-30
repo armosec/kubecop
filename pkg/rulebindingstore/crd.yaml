@@ -102,6 +102,7 @@ spec:
                       - R1002
                       - R1003
                       - R1004
+                      - R1005
                       type: string
                     ruleName:
                       enum:
@@ -114,6 +115,7 @@ spec:
                       - Exec Binary Not In Base Image
                       - Kernel Module Load
                       - Malicious SSH Connection
+                      - Kubernetes Client Executed
                       - Exec from mount
                       type: string
                     ruleTags:
@@ -138,6 +140,6 @@ spec:
                         - whitelisted
     served: false
     storage: false
-ray
+                      type: array
     served: false
     storage: false

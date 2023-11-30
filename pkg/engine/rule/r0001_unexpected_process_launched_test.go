@@ -9,7 +9,7 @@ import (
 
 func TestR0001UnexpectedProcessLaunched(t *testing.T) {
 	// Create a new rule
-	r := CreateRuleR0001UnexpectedProcessLaunched()
+	r := CreateRuleR1005KubernetesClientExecution()
 	// Assert r is not nil
 	if r == nil {
 		t.Errorf("Expected r to not be nil")

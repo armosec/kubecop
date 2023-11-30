@@ -73,7 +73,7 @@ func (rule *R1001ExecBinaryNotInBaseImage) ProcessEvent(eventType tracing.EventT
 	return &R1001ExecBinaryNotInBaseImageFailure{
 		RuleName:         rule.Name(),
 		Err:              fmt.Sprintf("Process image \"%s\" binary is not from the container image \"%s\"", execEvent.PathName, "<image name TBA> via PodSpec"),
-		FixSuggestionMsg: fmt.Sprintf("If this is an expected behavior it is strongly suggested to include all executables in the container image. If this is not possible you can remove the rule binding to this workload."),
+		FixSuggestionMsg: "If this is an expected behavior it is strongly suggested to include all executables in the container image. If this is not possible you can remove the rule binding to this workload.",
 		FailureEvent:     execEvent,
 		RulePriority:     R1001ExecBinaryNotInBaseImageRuleDescriptor.Priority,
 	}
