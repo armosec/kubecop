@@ -6,14 +6,14 @@ metadata:
 spec:
   namespaceSelector:
   # exclude K8s system namespaces
-  - matchExpressions:
-    - key: "kubernetes.io/metadata.name"
-      operator: "NotIn"
-      values:
-      - "kube-system"
-      - "kube-public
-      - "kube-node-lease"
-      - "kubeconfig"
+    matchExpressions:
+      - key: "kubernetes.io/metadata.name"
+        operator: "NotIn"
+        values:
+        - "kube-system"
+        - "kube-public
+        - "kube-node-lease"
+        - "kubeconfig"
   podSelector:
   rules:
     - ruleName: "Unexpected process launched"
