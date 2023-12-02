@@ -98,6 +98,11 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 	if err != nil {
 		return err
 	}
+	if applicationProfile.GetAnnotations()["kapprofiler.kubescape.io/final"] != "true" {
+		// The application profile is not final, return an error
+		return fmt.Errorf("application profile %s is not final", applicationProfile.GetName())
+	}
+
 	cache.cache[containerID] = &ApplicationProfileCacheEntry{
 		ApplicationProfile: applicationProfile,
 		WorkloadName:       workloadName,
