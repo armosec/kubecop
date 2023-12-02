@@ -105,7 +105,7 @@ func (rule *R0005UnexpectedDomainRequest) ProcessEvent(eventType tracing.EventTy
 				domainEvent.PodName,
 				rule.generatePatchCommand(domainEvent, appProfileAccess)),
 			FailureEvent: domainEvent,
-			RulePriority: RulePrioritySystemIssue,
+			RulePriority: RulePriorityMed,
 		}
 	}
 
