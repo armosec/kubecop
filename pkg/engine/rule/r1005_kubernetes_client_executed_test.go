@@ -28,19 +28,60 @@ func TestR1005KubernetesClientExecuted(t *testing.T) {
 	ruleResult := r.ProcessEvent(tracing.ExecveEventType, e, nil, &EngineAccessMock{})
 	if ruleResult != nil {
 		t.Errorf("Expected ruleResult to be nil since test is not a k8s client")
+		return
 	}
 
-	e.PathName = "kubectl"
+	event2 := &tracing.ExecveEvent{
+		GeneralEvent: tracing.GeneralEvent{
+			ContainerID: "test",
+			PodName:     "test",
+			Namespace:   "test",
+			Timestamp:   0,
+		},
+		PathName: "kubectl",
+		Args:     []string{"test"},
+	}
 
-	ruleResult = r.ProcessEvent(tracing.ExecveEventType, e, nil, &EngineAccessMock{})
+	ruleResult = r.ProcessEvent(tracing.ExecveEventType, event2, nil, &EngineAccessMock{})
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult since exec is a k8s client")
+		return
 	}
 
-	e.PathName = "/a/b/c/kubectl"
+	event3 := &tracing.ExecveEvent{
+		GeneralEvent: tracing.GeneralEvent{
+			ContainerID: "test",
+			PodName:     "test",
+			Namespace:   "test",
+			Timestamp:   0,
+		},
+		PathName: "/a/b/c/kubectl",
+		Args:     []string{"test"},
+	}
 
-	ruleResult = r.ProcessEvent(tracing.ExecveEventType, e, nil, &EngineAccessMock{})
+	ruleResult = r.ProcessEvent(tracing.ExecveEventType, event3, nil, &EngineAccessMock{})
 	if ruleResult == nil {
 		t.Errorf("Expected ruleResult since exec is a k8s client")
+		return
 	}
+
+	event4 := &tracing.NetworkEvent{
+		GeneralEvent: tracing.GeneralEvent{
+			ContainerID: "test",
+			PodName:     "test",
+			Namespace:   "test",
+			Timestamp:   0,
+		},
+		PacketType:  "OUTGOING",
+		Protocol:    "TCP",
+		Port:        443,
+		DstEndpoint: "1.1.1.1",
+	}
+
+	ruleResult = r.ProcessEvent(tracing.NetworkEventType, event4, nil, &EngineAccessMock{})
+	if ruleResult == nil {
+		t.Errorf("Expected ruleResult since network event dst is kube api server")
+		return
+	}
+
 }

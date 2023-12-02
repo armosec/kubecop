@@ -24,11 +24,12 @@ var R1000ExecFromMaliciousSourceDescriptor = RuleDesciptor{
 		NeedApplicationProfile: false,
 	},
 	RuleCreationFunc: func() Rule {
-		return CreateRuleR1005KubernetesClientExecution()
+		return CreateRuleR1000ExecFromMaliciousSource()
 	},
 }
 
 type R1000ExecFromMaliciousSource struct {
+	BaseRule
 }
 
 type R1000ExecFromMaliciousSourceFailure struct {

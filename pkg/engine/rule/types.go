@@ -6,4 +6,5 @@ import (
 
 type EngineAccess interface {
 	GetPodSpec(podName, namespace, containerID string) (*corev1.PodSpec, error)
+	GetApiServerIpAddress() (string, error)
 }

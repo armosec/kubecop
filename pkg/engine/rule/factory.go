@@ -11,7 +11,7 @@ var ruleDescriptions []RuleDesciptor = []RuleDesciptor{
 	R1001ExecBinaryNotInBaseImageRuleDescriptor,
 	R1002LoadKernelModuleRuleDescriptor,
 	R1003MaliciousSSHConnectionRuleDescriptor,
-  R1004ExecFromMountRuleDescriptor,
+	R1004ExecFromMountRuleDescriptor,
 	R1005KubernetesClientExecutedDescriptor,
 }
 

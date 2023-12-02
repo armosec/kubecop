@@ -23,7 +23,7 @@ var R0001UnexpectedProcessLaunchedRuleDescriptor = RuleDesciptor{
 		NeedApplicationProfile: true,
 	},
 	RuleCreationFunc: func() Rule {
-		return CreateRuleR1005KubernetesClientExecution()
+		return CreateRuleR0001UnexpectedProcessLaunched()
 	},
 }
 
@@ -43,7 +43,7 @@ func (rule *R0001UnexpectedProcessLaunched) Name() string {
 	return R0001UnexpectedProcessLaunchedRuleName
 }
 
-func CreateRuleR1005KubernetesClientExecution() *R0001UnexpectedProcessLaunched {
+func CreateRuleR0001UnexpectedProcessLaunched() *R0001UnexpectedProcessLaunched {
 	return &R0001UnexpectedProcessLaunched{}
 }
 

@@ -31,6 +31,10 @@ func (e *EngineAccessMock) GetPodSpec(podName, namespace, containerID string) (*
 	return &podSpec, nil
 }
 
+func (e *EngineAccessMock) GetApiServerIpAddress() (string, error) {
+	return "1.1.1.1", nil
+}
+
 type MockAppProfileAccess struct {
 	Execs        []collector.ExecCalls
 	OpenCalls    []collector.OpenCalls
