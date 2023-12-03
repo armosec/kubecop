@@ -119,6 +119,7 @@ spec:
                       - Kubernetes Client Executed
                       - Exec from mount
                       - Unshare System Call usage
+                      - memfd_create System Call usage
                       type: string
                     ruleTags:
                       items:
@@ -133,6 +134,8 @@ spec:
                         - mount
                         - ssh
                         - escape
+                        - memory
+                        - malicious
                         type: string
                       type: array
                     severity:
