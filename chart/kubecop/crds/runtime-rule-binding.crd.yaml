@@ -104,6 +104,7 @@ spec:
                       - R1004
                       - R1005
                       - R1006
+                      - R1007
                       type: string
                     ruleName:
                       enum:
@@ -119,6 +120,7 @@ spec:
                       - Kubernetes Client Executed
                       - Exec from mount
                       - Unshare System Call usage
+                      - Crypto Miners
                       type: string
                     ruleTags:
                       items:
@@ -133,6 +135,7 @@ spec:
                         - mount
                         - ssh
                         - escape
+                        - crypto
                         type: string
                       type: array
                     severity:
