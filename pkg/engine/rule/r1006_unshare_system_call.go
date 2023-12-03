@@ -15,7 +15,7 @@ const (
 var R1006UnshareSyscallRuleDescriptor = RuleDesciptor{
 	ID:          R1006ID,
 	Name:        R1006UnshareSyscallRuleName,
-	Description: "Detecting Unshare System Call usage.",
+	Description: "Detecting Unshare System Call usage, which can be used to escape container.",
 	Tags:        []string{"syscall", "escape", "unshare"},
 	Priority:    RulePriorityHigh,
 	Requirements: RuleRequirements{
