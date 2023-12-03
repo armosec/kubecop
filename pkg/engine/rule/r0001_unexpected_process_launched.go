@@ -17,7 +17,7 @@ var R0001UnexpectedProcessLaunchedRuleDescriptor = RuleDesciptor{
 	Name:        R0001UnexpectedProcessLaunchedRuleName,
 	Description: "Detecting exec calls that are not whitelisted by application profile",
 	Tags:        []string{"exec", "whitelisted"},
-	Priority:    7,
+	Priority:    RulePriorityCritical,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: true,
@@ -81,7 +81,7 @@ func (rule *R0001UnexpectedProcessLaunched) ProcessEvent(eventType tracing.Event
 			Err:              "Application profile is missing",
 			FailureEvent:     execEvent,
 			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod \"%s\" and add the exec call \"%s\" to the whitelist", execEvent.PodName, execEvent.PathName),
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0001UnexpectedProcessLaunchedRuleDescriptor.Priority,
 		}
 	}
 
@@ -92,7 +92,7 @@ func (rule *R0001UnexpectedProcessLaunched) ProcessEvent(eventType tracing.Event
 			Err:              "Application profile is missing",
 			FailureEvent:     execEvent,
 			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod \"%s\" and add the exec call \"%s\" to the whitelist", execEvent.PodName, execEvent.PathName),
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0001UnexpectedProcessLaunchedRuleDescriptor.Priority,
 		}
 	}
 

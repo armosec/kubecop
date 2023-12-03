@@ -17,7 +17,7 @@ var R0004UnexpectedCapabilityUsedRuleDescriptor = RuleDesciptor{
 	Name:        R0004UnexpectedCapabilityUsedRuleName,
 	Description: "Detecting unexpected capabilities that are not whitelisted by application profile. Every unexpected capability is identified in context of a syscall and will be alerted only once per container.",
 	Tags:        []string{"capabilities", "whitelisted"},
-	Priority:    8,
+	Priority:    RulePriorityHigh,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.CapabilitiesEventType},
 		NeedApplicationProfile: true,
@@ -72,7 +72,7 @@ func (rule *R0004UnexpectedCapabilityUsed) ProcessEvent(eventType tracing.EventT
 			Err:              "Application profile is missing",
 			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod %s", capEvent.PodName),
 			FailureEvent:     capEvent,
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0004UnexpectedCapabilityUsedRuleDescriptor.Priority,
 		}
 	}
 
@@ -83,7 +83,7 @@ func (rule *R0004UnexpectedCapabilityUsed) ProcessEvent(eventType tracing.EventT
 			Err:              "Application profile is missing",
 			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod %s", capEvent.PodName),
 			FailureEvent:     capEvent,
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0004UnexpectedCapabilityUsedRuleDescriptor.Priority,
 		}
 	}
 

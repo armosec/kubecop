@@ -46,7 +46,7 @@ var R1003MaliciousSSHConnectionRuleDescriptor = RuleDesciptor{
 	Name:        R1003MaliciousSSHConnectionRuleName,
 	Description: "Detecting ssh connection to disallowed port",
 	Tags:        []string{"ssh", "connection", "port", "malicious"},
-	Priority:    7,
+	Priority:    RulePriorityHigh,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.OpenEventType, tracing.NetworkEventType},
 		NeedApplicationProfile: false,
