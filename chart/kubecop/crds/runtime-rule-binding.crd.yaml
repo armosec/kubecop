@@ -103,6 +103,7 @@ spec:
                       - R1003
                       - R1004
                       - R1005
+                      - R1006
                       type: string
                     ruleName:
                       enum:
@@ -117,6 +118,7 @@ spec:
                       - Malicious SSH Connection
                       - Kubernetes Client Executed
                       - Exec from mount
+                      - Unshare System Call usage
                       type: string
                     ruleTags:
                       items:
@@ -130,6 +132,7 @@ spec:
                         - whitelisted
                         - mount
                         - ssh
+                        - escape
                         type: string
                       type: array
                     severity:
