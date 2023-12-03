@@ -13,6 +13,7 @@ var ruleDescriptions []RuleDesciptor = []RuleDesciptor{
 	R1003MaliciousSSHConnectionRuleDescriptor,
 	R1004ExecFromMountRuleDescriptor,
 	R1005KubernetesClientExecutedDescriptor,
+	R1006UnshareSyscallRuleDescriptor,
 }
 
 func GetAllRuleDescriptors() []RuleDesciptor {
