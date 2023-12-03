@@ -23,7 +23,7 @@ var R1001ExecBinaryNotInBaseImageRuleDescriptor = RuleDesciptor{
 	Name:        R1001ExecBinaryNotInBaseImageRuleName,
 	Description: "Detecting exec calls of binaries that are not included in the base image",
 	Tags:        []string{"exec", "malicious", "binary", "base image"},
-	Priority:    9,
+	Priority:    RulePriorityCritical,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: false,
@@ -147,7 +147,9 @@ func getOverlayMountPoint(process *procfs.Proc) (string, error) {
 func fileExists(filePath string) bool {
 	info, err := os.Stat(filepath.Join("/host", filePath))
 	if os.IsNotExist(err) {
-		log.Printf("File %s does not exist %s \n", filePath, err)
+		if os.Getenv("DEBUG") == "true" {
+			log.Printf("File %s does not exist %s \n", filePath, err)
+		}
 		return false
 	}
 

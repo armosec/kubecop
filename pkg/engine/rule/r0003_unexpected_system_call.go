@@ -19,7 +19,7 @@ var R0003UnexpectedSystemCallRuleDescriptor = RuleDesciptor{
 	Name:        R0003UnexpectedSystemCallRuleName,
 	Description: "Detecting unexpected system calls that are not whitelisted by application profile. Every unexpected system call will be alerted only once.",
 	Tags:        []string{"syscall", "whitelisted"},
-	Priority:    7,
+	Priority:    RulePriorityMed,
 	Requirements: RuleRequirements{
 		EventTypes: []tracing.EventType{
 			tracing.SyscallEventType,
@@ -81,7 +81,7 @@ func (rule *R0003UnexpectedSystemCall) ProcessEvent(eventType tracing.EventType,
 			Err:              "Application profile is missing",
 			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod %s", syscallEvent.PodName),
 			FailureEvent:     syscallEvent,
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0003UnexpectedSystemCallRuleDescriptor.Priority,
 		}
 	}
 
@@ -92,7 +92,7 @@ func (rule *R0003UnexpectedSystemCall) ProcessEvent(eventType tracing.EventType,
 			Err:              "Application profile is missing (missing syscall list))",
 			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod %s", syscallEvent.PodName),
 			FailureEvent:     syscallEvent,
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0003UnexpectedSystemCallRuleDescriptor.Priority,
 		}
 	}
 

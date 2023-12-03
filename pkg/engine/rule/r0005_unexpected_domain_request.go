@@ -17,7 +17,7 @@ var R0005UnexpectedDomainRequestRuleDescriptor = RuleDesciptor{
 	Name:        R0005UnexpectedDomainRequestRuleName,
 	Description: "Detecting unexpected domain requests that are not whitelisted by application profile.",
 	Tags:        []string{"dns", "whitelisted"},
-	Priority:    6,
+	Priority:    RulePriorityMed,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.DnsEventType},
 		NeedApplicationProfile: true,
@@ -72,7 +72,7 @@ func (rule *R0005UnexpectedDomainRequest) ProcessEvent(eventType tracing.EventTy
 			Err:              "Application profile is missing",
 			FixSuggestionMsg: fmt.Sprintf("Create an application profile with the domain %s", domainEvent.DnsName),
 			FailureEvent:     domainEvent,
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0005UnexpectedDomainRequestRuleDescriptor.Priority,
 		}
 	}
 
@@ -83,7 +83,7 @@ func (rule *R0005UnexpectedDomainRequest) ProcessEvent(eventType tracing.EventTy
 			Err:              "Application profile is missing",
 			FixSuggestionMsg: fmt.Sprintf("Create an application profile with the domain %s", domainEvent.DnsName),
 			FailureEvent:     domainEvent,
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0005UnexpectedDomainRequestRuleDescriptor.Priority,
 		}
 	}
 
@@ -105,7 +105,7 @@ func (rule *R0005UnexpectedDomainRequest) ProcessEvent(eventType tracing.EventTy
 				domainEvent.PodName,
 				rule.generatePatchCommand(domainEvent, appProfileAccess)),
 			FailureEvent: domainEvent,
-			RulePriority: RulePriorityMed,
+			RulePriority: R0005UnexpectedDomainRequestRuleDescriptor.Priority,
 		}
 	}
 

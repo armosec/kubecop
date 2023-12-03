@@ -21,7 +21,7 @@ var R0002UnexpectedFileAccessRuleDescriptor = RuleDesciptor{
 	Name:        R0002UnexpectedFileAccessRuleName,
 	Description: "Detecting file access that are not whitelisted by application profile. File access is defined by the combination of path and flags",
 	Tags:        []string{"open", "whitelisted"},
-	Priority:    5,
+	Priority:    RulePriorityMed,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.OpenEventType},
 		NeedApplicationProfile: true,
@@ -122,7 +122,7 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 			Err:              "Application profile is missing",
 			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod %s", openEvent.PodName),
 			FailureEvent:     openEvent,
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0002UnexpectedFileAccessRuleDescriptor.Priority,
 		}
 	}
 
@@ -133,7 +133,7 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 			Err:              "Application profile is missing",
 			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod %s", openEvent.PodName),
 			FailureEvent:     openEvent,
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0002UnexpectedFileAccessRuleDescriptor.Priority,
 		}
 	}
 

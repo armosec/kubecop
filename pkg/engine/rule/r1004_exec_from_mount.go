@@ -21,7 +21,7 @@ var R1004ExecFromMountRuleDescriptor = RuleDesciptor{
 	Name:        R1004ExecFromMountRuleName,
 	Description: "Detecting exec calls from mounted paths.",
 	Tags:        []string{"exec", "mount"},
-	Priority:    5,
+	Priority:    RulePriorityMed,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: false,

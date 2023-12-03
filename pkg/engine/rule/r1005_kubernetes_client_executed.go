@@ -39,7 +39,7 @@ var R1005KubernetesClientExecutedDescriptor = RuleDesciptor{
 	ID:          R1005ID,
 	Name:        R1005KubernetesClientExecutedRuleName,
 	Description: "Detecting exececution of kubernetes client",
-	Priority:    9,
+	Priority:    RulePriorityCritical,
 	Tags:        []string{"exec", "malicious"},
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType, tracing.NetworkEventType},
