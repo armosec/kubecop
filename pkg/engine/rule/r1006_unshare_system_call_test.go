@@ -29,7 +29,7 @@ func TestR1006UnshareSyscall(t *testing.T) {
 	ruleResult := r.ProcessEvent(tracing.SyscallEventType, e, nil, nil)
 	if ruleResult != nil {
 		fmt.Printf("ruleResult: %v\n", ruleResult)
-		t.Errorf("Expected ruleResult to be nil since syscall is not init_module")
+		t.Errorf("Expected ruleResult to be nil since syscall is not unshare")
 		return
 	}
 
