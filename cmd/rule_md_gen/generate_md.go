@@ -49,7 +49,7 @@ func fillListsInCRD(idsList []string, namesList []string, tagsList []string) {
 		}
 	}
 
-	crdFilePath := "pkg/rulebindingstore/crd.yaml"
+	crdFilePath := "chart/kubecop/crds/runtime-rule-binding.crd.yaml"
 	crdFile, err := os.OpenFile(filepath.Join(gitRoot, crdFilePath), os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Printf("Error opening CRD file: %v\n", err)
