@@ -12,3 +12,4 @@
 | R1004 | Exec from mount | Detecting exec calls from mounted paths. | [exec mount] | 5 | false |
 | R1005 | Kubernetes Client Executed | Detecting exececution of kubernetes client | [exec malicious] | 10 | false |
 | R1006 | Unshare System Call usage | Detecting Unshare System Call usage. | [syscall escape unshare] | 8 | false |
+| R1007 | Crypto Miners | Detecting Crypto Miners. | [network crypto miners malicious] | 8 | false |

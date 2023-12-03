@@ -14,6 +14,7 @@ var ruleDescriptions []RuleDesciptor = []RuleDesciptor{
 	R1004ExecFromMountRuleDescriptor,
 	R1005KubernetesClientExecutedDescriptor,
 	R1006UnshareSyscallRuleDescriptor,
+	R1007CryptoMinersRuleDescriptor,
 }
 
 func GetAllRuleDescriptors() []RuleDesciptor {
