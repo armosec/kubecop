@@ -147,7 +147,9 @@ func getOverlayMountPoint(process *procfs.Proc) (string, error) {
 func fileExists(filePath string) bool {
 	info, err := os.Stat(filepath.Join("/host", filePath))
 	if os.IsNotExist(err) {
-		log.Printf("File %s does not exist %s \n", filePath, err)
+		if os.Getenv("DEBUG") == "true" {
+			log.Printf("File %s does not exist %s \n", filePath, err)
+		}
 		return false
 	}
 
