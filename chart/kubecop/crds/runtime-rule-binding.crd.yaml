@@ -104,6 +104,7 @@ spec:
                       - R1004
                       - R1005
                       - R1006
+                      - R1007
                       type: string
                     ruleName:
                       enum:
