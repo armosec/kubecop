@@ -12,3 +12,4 @@
 | R1004 | Exec from mount | Detecting exec calls from mounted paths. | [exec mount] | 5 | false |
 | R1005 | Kubernetes Client Executed | Detecting exececution of kubernetes client | [exec malicious] | 10 | false |
 | R1006 | Unshare System Call usage | Detecting Unshare System Call usage. | [syscall escape unshare] | 8 | false |
+| R1007 | memfd_create System Call usage | Detecting memfd_create System Call usage, which can used to execute code in memory without creating a file on disk. | [syscall memory malicious memfd_create] | 8 | false |

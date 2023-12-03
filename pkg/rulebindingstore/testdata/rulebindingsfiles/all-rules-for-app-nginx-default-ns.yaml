@@ -25,3 +25,4 @@ spec:
     - ruleName: "Kubernetes Client Executed"
     - ruleName: "Exec from mount"
     - ruleName: "Unshare System Call usage"
+    - ruleName: "memfd_create System Call usage"
