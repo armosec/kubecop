@@ -16,3 +16,4 @@ spec:
     - ruleName: "Unexpected file access"
       parameters:
         ignoreMounts: true
+        ignorePrefixes: ["/proc"]
