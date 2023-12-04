@@ -65,3 +65,4 @@ am-values.yaml
 *.gz
 /single-trace
 *.pprof
+/subprojects
