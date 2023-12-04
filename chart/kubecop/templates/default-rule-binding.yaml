@@ -20,10 +20,11 @@ spec:
     - ruleName: "Unexpected file access"
       parameters:
         ignoreMounts: true
-        ignorePrefixes: ["/proc", "/run/secrets/kubernetes.io/serviceaccount"]
+        ignorePrefixes: ["/proc", "/run/secrets/kubernetes.io/serviceaccount", "/var/run/secrets/kubernetes.io/serviceaccount"]
     - ruleName: "Unexpected system call"
     - ruleName: "Unexpected capability used"
     - ruleName: "Unexpected domain request"
+    - ruleName: "Unexpected Service Account Token Access"
     - ruleName: "Exec from malicious source"
     - ruleName: "Kernel Module Load"
     - ruleName: "Exec Binary Not In Base Image"
