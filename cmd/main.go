@@ -151,6 +151,7 @@ func main() {
 		FinalizeTime:   uint64(FinalizationDurationInSeconds),
 		K8sConfig:      k8sConfig,
 		RecordStrategy: collector.RecordStrategyOnlyIfNotExists,
+		NodeName:       NodeName,
 	}
 	cm, err := collector.StartCollectorManager(collectorManagerConfig)
 	if err != nil {
