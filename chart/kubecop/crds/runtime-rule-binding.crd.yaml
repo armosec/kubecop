@@ -120,7 +120,7 @@ spec:
                       - Kubernetes Client Executed
                       - Exec from mount
                       - Unshare System Call usage
-                      - Crypto Miners
+                      - Crypto Miners port detected
                       type: string
                     ruleTags:
                       items:
