@@ -145,11 +145,12 @@ func main() {
 
 	// Start the collector manager
 	collectorManagerConfig := &collector.CollectorManagerConfig{
-		EventSink:    eventSink,
-		Tracer:       tracer,
-		Interval:     uint64(SamplingIntervalInSeconds),
-		FinalizeTime: uint64(FinalizationDurationInSeconds),
-		K8sConfig:    k8sConfig,
+		EventSink:      eventSink,
+		Tracer:         tracer,
+		Interval:       uint64(SamplingIntervalInSeconds),
+		FinalizeTime:   uint64(FinalizationDurationInSeconds),
+		K8sConfig:      k8sConfig,
+		RecordStrategy: collector.RecordStrategyOnlyIfNotExists,
 	}
 	cm, err := collector.StartCollectorManager(collectorManagerConfig)
 	if err != nil {
