@@ -13,7 +13,7 @@ import (
 
 const (
 	R1007ID                   = "R1007"
-	R1007CryptoMinersRuleName = "Crypto Miners"
+	R1007CryptoMinersRuleName = "Crypto Miners port detected"
 )
 
 var CommonlyUsedCryptoMinersPorts = []uint16{
@@ -23,7 +23,7 @@ var CommonlyUsedCryptoMinersPorts = []uint16{
 var R1007CryptoMinersRuleDescriptor = RuleDesciptor{
 	ID:          R1007ID,
 	Name:        R1007CryptoMinersRuleName,
-	Description: "Detecting Crypto Miners.",
+	Description: "Detecting Crypto Miners by port.",
 	Tags:        []string{"network", "crypto", "miners", "malicious"},
 	Priority:    RulePriorityHigh,
 	Requirements: RuleRequirements{
@@ -73,7 +73,7 @@ func (rule *R1007CryptoMiners) ProcessEvent(eventType tracing.EventType, event i
 	if networkEvent.Protocol == "TCP" && networkEvent.PacketType == "OUTGOING" && slices.Contains(CommonlyUsedCryptoMinersPorts, networkEvent.Port) {
 		return &R1007CryptoMinersFailure{
 			RuleName:         rule.Name(),
-			Err:              "Possible Crypto Miner detected",
+			Err:              "Possible Crypto Miner port detected",
 			FailureEvent:     networkEvent,
 			FixSuggestionMsg: "If this is a legitimate action, please consider removing this workload from the binding of this rule.",
 			RulePriority:     R1007CryptoMinersRuleDescriptor.Priority,
