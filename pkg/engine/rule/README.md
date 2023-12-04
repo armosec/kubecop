@@ -5,6 +5,7 @@
 | R0003 | Unexpected system call | Detecting unexpected system calls that are not whitelisted by application profile. Every unexpected system call will be alerted only once. | [syscall whitelisted] | 5 | true |
 | R0004 | Unexpected capability used | Detecting unexpected capabilities that are not whitelisted by application profile. Every unexpected capability is identified in context of a syscall and will be alerted only once per container. | [capabilities whitelisted] | 8 | true |
 | R0005 | Unexpected domain request | Detecting unexpected domain requests that are not whitelisted by application profile. | [dns whitelisted] | 5 | true |
+| R0006 | Unexpected service account token access | Detecting unexpected service account token access that are not whitelisted by application profile. | [token malicious whitelisted] | 8 | true |
 | R1000 | Exec from malicious source | Detecting exec calls that are from malicious source like: /dev/shm, /run, /var/run, /proc/self | [exec signature] | 10 | false |
 | R1001 | Exec Binary Not In Base Image | Detecting exec calls of binaries that are not included in the base image | [exec malicious binary base image] | 10 | false |
 | R1002 | Kernel Module Load | Detecting Kernel Module Load. | [syscall kernel module load] | 10 | false |
