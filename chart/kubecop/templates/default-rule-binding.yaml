@@ -15,6 +15,11 @@ spec:
         - "kube-node-lease"
         - "kubeconfig"
   podSelector:
+    matchExpressions:
+      - key: "app.kubernetes.io/name"
+        operator: "NotIn"
+        values:
+        - {{ include "..name" . }}
   rules:
     - ruleName: "Unexpected process launched"
     - ruleName: "Unexpected file access"
