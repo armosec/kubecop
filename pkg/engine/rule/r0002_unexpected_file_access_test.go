@@ -85,7 +85,7 @@ func TestR0002UnexpectedFileAccess(t *testing.T) {
 
 	// Test with ignored prefix
 	e.PathName = "/var/test1"
-	ignorePrefixes := []string{"/var"}
+	ignorePrefixes := []interface{}{"/var"}
 	r.SetParameters(map[string]interface{}{"ignoreMounts": false, "ignorePrefixes": ignorePrefixes})
 	ruleResult = r.ProcessEvent(tracing.OpenEventType, e, &MockAppProfileAccess{
 		OpenCalls: []collector.OpenCalls{

@@ -31,6 +31,7 @@ var R1006UnshareSyscallRuleDescriptor = RuleDesciptor{
 
 type R1006UnshareSyscall struct {
 	BaseRule
+	aleadyNotified bool
 }
 
 type R1006UnshareSyscallFailure struct {
@@ -46,13 +47,17 @@ func (rule *R1006UnshareSyscall) Name() string {
 }
 
 func CreateRuleR1006UnshareSyscall() *R1006UnshareSyscall {
-	return &R1006UnshareSyscall{}
+	return &R1006UnshareSyscall{aleadyNotified: false}
 }
 
 func (rule *R1006UnshareSyscall) DeleteRule() {
 }
 
 func (rule *R1006UnshareSyscall) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
+	if rule.aleadyNotified {
+		return nil
+	}
+
 	if eventType != tracing.SyscallEventType {
 		return nil
 	}
@@ -62,6 +67,7 @@ func (rule *R1006UnshareSyscall) ProcessEvent(eventType tracing.EventType, event
 		return nil
 	}
 	if slices.Contains(syscallEvent.Syscalls, "unshare") {
+		rule.aleadyNotified = true
 		return &R1006UnshareSyscallFailure{
 			RuleName:         rule.Name(),
 			Err:              "Unshare System Call usage",
