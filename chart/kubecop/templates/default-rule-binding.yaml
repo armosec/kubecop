@@ -30,11 +30,11 @@ spec:
     - ruleName: "Unexpected capability used"
     - ruleName: "Unexpected domain request"
     - ruleName: "Unexpected Service Account Token Access"
+    - ruleName: "Kubernetes Client Executed"
     - ruleName: "Exec from malicious source"
     - ruleName: "Kernel Module Load"
     - ruleName: "Exec Binary Not In Base Image"
     - ruleName: "Malicious SSH Connection"
-    - ruleName: "Kubernetes Client Executed"
     - ruleName: "Unshare System Call usage"
     - ruleName: "Crypto Miners port detected"
 

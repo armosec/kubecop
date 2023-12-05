@@ -36,11 +36,12 @@ func (e *EngineAccessMock) GetApiServerIpAddress() (string, error) {
 }
 
 type MockAppProfileAccess struct {
-	Execs        []collector.ExecCalls
-	OpenCalls    []collector.OpenCalls
-	Syscalls     []string
-	Capabilities []collector.CapabilitiesCalls
-	Dns          []collector.DnsCalls
+	Execs           []collector.ExecCalls
+	OpenCalls       []collector.OpenCalls
+	Syscalls        []string
+	Capabilities    []collector.CapabilitiesCalls
+	NetworkActivity collector.NetworkActivity
+	Dns             []collector.DnsCalls
 }
 
 func (m *MockAppProfileAccess) GetName() string {
@@ -60,7 +61,7 @@ func (m *MockAppProfileAccess) GetOpenList() (*[]collector.OpenCalls, error) {
 }
 
 func (m *MockAppProfileAccess) GetNetworkActivity() (*collector.NetworkActivity, error) {
-	return nil, nil
+	return &m.NetworkActivity, nil
 }
 
 func (m *MockAppProfileAccess) GetSystemCalls() ([]string, error) {

@@ -8,12 +8,12 @@ var ruleDescriptions []RuleDesciptor = []RuleDesciptor{
 	R0004UnexpectedCapabilityUsedRuleDescriptor,
 	R0005UnexpectedDomainRequestRuleDescriptor,
 	R0006UnexpectedServiceAccountTokenAccessRuleDescriptor,
+	R0007KubernetesClientExecutedDescriptor,
 	R1000ExecFromMaliciousSourceDescriptor,
 	R1001ExecBinaryNotInBaseImageRuleDescriptor,
 	R1002LoadKernelModuleRuleDescriptor,
 	R1003MaliciousSSHConnectionRuleDescriptor,
 	R1004ExecFromMountRuleDescriptor,
-	R1005KubernetesClientExecutedDescriptor,
 	R1006UnshareSyscallRuleDescriptor,
 	R1007CryptoMinersRuleDescriptor,
 }
