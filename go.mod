@@ -7,7 +7,7 @@ require (
 	github.com/gammazero/workerpool v1.1.3
 	github.com/go-openapi/strfmt v0.21.7
 	github.com/inspektor-gadget/inspektor-gadget v0.23.0
-	github.com/kubescape/kapprofiler v0.0.27
+	github.com/kubescape/kapprofiler v0.0.28
 	github.com/prometheus/alertmanager v0.26.0
 	github.com/prometheus/client_golang v1.17.0
 	github.com/stretchr/testify v1.8.4
@@ -18,10 +18,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
-require (
-	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
-	github.com/morikuni/aec v1.0.0 // indirect
-)
+require github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 
 require (
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
