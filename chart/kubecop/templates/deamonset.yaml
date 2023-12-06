@@ -68,7 +68,6 @@ spec:
           - name: SYSLOG_PROTOCOL
             value: {{ .Values.kubecop.syslog.protocol }}
           {{- end }}
-          {{- end }}
           {{- if .Values.kubecop.pprofserver.enabled  }}
           - name: _PPROF_SERVER
             value: "true"
