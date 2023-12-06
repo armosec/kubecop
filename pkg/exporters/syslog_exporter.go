@@ -49,13 +49,67 @@ func (se *SyslogExporter) SendAlert(failedRule rule.RuleFailure) {
 		Timestamp: time.Unix(failedRule.Event().Timestamp, 0),
 		Hostname:  failedRule.Event().PodName,
 		AppName:   failedRule.Event().ContainerName,
-		Message: []byte(fmt.Sprintf(
-			"Rule: %v Priority: %v Error: %v Fix Suggestion: %v Event: %v",
-			failedRule.Name(),
-			failedRule.Priority(),
-			failedRule.Error(),
-			failedRule.FixSuggestion(),
-			failedRule.Event())),
+		ProcessID: fmt.Sprintf("%d", failedRule.Event().Pid),
+		StructuredData: []rfc5424.StructuredData{
+			{
+				ID: "kubecop - General Event",
+				Parameters: []rfc5424.SDParam{
+					{
+						Name:  "rule",
+						Value: failedRule.Name(),
+					},
+					{
+						Name:  "priority",
+						Value: fmt.Sprintf("%d", failedRule.Priority()),
+					},
+					{
+						Name:  "error",
+						Value: failedRule.Error(),
+					},
+					{
+						Name:  "fix_suggestion",
+						Value: failedRule.FixSuggestion(),
+					},
+					{
+						Name:  "ppid",
+						Value: fmt.Sprintf("%d", failedRule.Event().Ppid),
+					},
+					{
+						Name:  "comm",
+						Value: failedRule.Event().Comm,
+					},
+					{
+						Name:  "uid",
+						Value: fmt.Sprintf("%d", failedRule.Event().Uid),
+					},
+					{
+						Name:  "gid",
+						Value: fmt.Sprintf("%d", failedRule.Event().Gid),
+					},
+					{
+						Name:  "namespace",
+						Value: failedRule.Event().Namespace,
+					},
+					{
+						Name:  "pod_name",
+						Value: failedRule.Event().PodName,
+					},
+					{
+						Name:  "container_name",
+						Value: failedRule.Event().ContainerName,
+					},
+					{
+						Name:  "container_id",
+						Value: failedRule.Event().ContainerID,
+					},
+					{
+						Name:  "cwd",
+						Value: failedRule.Event().Cwd,
+					},
+				},
+			},
+		},
+		Message: []byte(failedRule.Error()),
 	}
 
 	_, err := message.WriteTo(se.writer)
