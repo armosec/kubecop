@@ -19,6 +19,7 @@ To disable the STD OUT exporter, set the following environment variable:
 
 ### SYSLOG
 The SYSLOG exporter is used to send the alerts to a syslog server. This exporter is disabled by default.
+NOTE: The SYSLOG messages format is RFC 5424.
 To enable the SYSLOG exporter, set the following environment variables:
 - `SYSLOG_HOST`: The host of the syslog server. Example: `localhost:514`
 - `SYSLOG_PROTOCOL`: The protocol of the syslog server. Example: `tcp` or `udp`

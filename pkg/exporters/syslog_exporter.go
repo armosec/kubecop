@@ -1,9 +1,13 @@
 package exporters
 
 import (
+	"fmt"
 	"log"
 	"log/syslog"
 	"os"
+	"time"
+
+	"github.com/crewjam/rfc5424"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
 )
@@ -22,6 +26,7 @@ func InitSyslogExporter(syslogHost string) *SyslogExporter {
 		}
 	}
 
+	// Set default protocol to UDP
 	if os.Getenv("SYSLOG_PROTOCOL") == "" {
 		os.Setenv("SYSLOG_PROTOCOL", "udp")
 	}
@@ -31,14 +36,29 @@ func InitSyslogExporter(syslogHost string) *SyslogExporter {
 		log.Printf("failed to initialize syslog exporter: %v", err)
 		return nil
 	}
+
 	return &SyslogExporter{
 		writer: writer,
 	}
 }
 
-// SendAlert sends an alert to syslog
+// SendAlert sends an alert to syslog (RFC 5424) - https://tools.ietf.org/html/rfc5424
 func (se *SyslogExporter) SendAlert(failedRule rule.RuleFailure) {
-	err := se.writer.Err(failedRule.Error())
+	message := rfc5424.Message{
+		Priority:  rfc5424.Error,
+		Timestamp: time.Unix(failedRule.Event().Timestamp, 0),
+		Hostname:  failedRule.Event().PodName,
+		AppName:   failedRule.Event().ContainerName,
+		Message: []byte(fmt.Sprintf(
+			"Rule: %v Priority: %v Error: %v Fix Suggestion: %v Event: %v",
+			failedRule.Name(),
+			failedRule.Priority(),
+			failedRule.Error(),
+			failedRule.FixSuggestion(),
+			failedRule.Event())),
+	}
+
+	_, err := message.WriteTo(se.writer)
 	if err != nil {
 		log.Printf("failed to send alert to syslog: %v", err)
 	}
