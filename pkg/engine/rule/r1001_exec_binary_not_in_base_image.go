@@ -106,7 +106,9 @@ func findProcessByMountNamespace(execEvent *tracing.ExecveEvent) (*procfs.Proc, 
 		// Check if the mount namespace ID matches the specified namespaceID
 		mountNamespaceId, err := getMountNamespaceID(proc.PID)
 		if err != nil {
-			log.Printf("Error reading mount namespace ID for PID %d: %s\n", proc.PID, err)
+			if os.Getenv("DEBUG") == "true" {
+				log.Printf("Error reading mount namespace ID for PID %d: %s\n", proc.PID, err)
+			}
 			continue
 		}
 

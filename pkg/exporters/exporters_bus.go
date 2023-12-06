@@ -9,6 +9,7 @@ import (
 type ExportersConfig struct {
 	StdoutExporter          *bool  `yaml:"stdoutExporter"`
 	AlertManagerExporterURL string `yaml:"alertManagerExporterURL"`
+	SyslogExporter          string `yaml:"syslogExporterURL"`
 }
 
 // this file will contain the single point of contact for all exporters
@@ -29,6 +30,11 @@ func InitExporters(exportersConfig ExportersConfig) {
 	if stdoutExp != nil {
 		exporters = append(exporters, stdoutExp)
 	}
+	syslogExp := InitSyslogExporter(exportersConfig.SyslogExporter)
+	if syslogExp != nil {
+		exporters = append(exporters, syslogExp)
+	}
+
 	if len(exporters) == 0 {
 		panic("no exporters were initialized")
 	}
