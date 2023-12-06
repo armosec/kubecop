@@ -21,7 +21,7 @@ kubecop:
   syslog:
     enabled: false
     endpoint: "localhost:514"
-    protocol: "tcp"
+    protocol: "udp"
   prometheusExporter:
     enabled: false
   pprofserver:
