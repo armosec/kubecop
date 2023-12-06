@@ -132,7 +132,7 @@ func main() {
 	//////////////////////////////////////////////////////////////////////////////
 	// Fire up the recording subsystem
 
-	eventSink, err := eventsink.NewEventSink("", false)
+	eventSink, err := eventsink.NewEventSink("", true)
 	if err != nil {
 		log.Fatalf("Failed to create event sink: %v\n", err)
 	}

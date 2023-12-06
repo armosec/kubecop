@@ -6,6 +6,7 @@ package exporters
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -90,13 +91,11 @@ func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 	params := alert.NewPostAlertsParams().WithContext(context.Background()).WithAlerts(models.PostableAlerts{&myAlert})
 	isOK, err := ame.client.Alert.PostAlerts(params)
 	if err != nil {
-		fmt.Println("Error sending alert:", err)
+		log.Println("Error sending alert:", err)
 		return
 	}
 	if isOK == nil {
-		fmt.Println("Alert was not sent successfully")
+		log.Println("Alert was not sent successfully")
 		return
 	}
-
-	fmt.Printf("Alert sent successfully: %v\n", isOK)
 }
