@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ping-app
+  labels:
+    app: ping-app
+spec:
+  containers:
+  - name: ping-app
+    image: docker.io/library/ping-app:latest # Replace with quay.io/armosec/ping-app:latest
+    imagePullPolicy: IfNotPresent
+    ports:
+    - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ping-app
+  labels:
+    app: ping-app
+spec:
+  selector:
+    app: ping-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: ping-app-role
+rules:
+- apiGroups: [""]
+  resources: ["*"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: default
+  name: ping-app-role-binding
+subjects:
+- kind: ServiceAccount
+  name: "default"
+  namespace: default
+roleRef:
+  kind: Role
+  name: ping-app-role
+  apiGroup: rbac.authorization.k8s.io
