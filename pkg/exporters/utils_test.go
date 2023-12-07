@@ -34,7 +34,7 @@ func TestPriorityToStatus(t *testing.T) {
 		},
 		{
 			name:     "critical",
-			priority: rule.RulePriorityCrical,
+			priority: rule.RulePriorityCritical,
 			want:     "critical",
 		},
 		{
@@ -59,7 +59,7 @@ func TestPriorityToStatus(t *testing.T) {
 		},
 		{
 			name:     "high2",
-			priority: rule.RulePriorityCrical - 1,
+			priority: rule.RulePriorityCritical - 1,
 			want:     "high",
 		},
 	}

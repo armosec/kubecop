@@ -6,6 +6,7 @@ package exporters
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -54,13 +55,16 @@ func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 		failedRule.Event().ContainerName,
 		fmt.Sprintf("%s (%d)", failedRule.Event().Comm, failedRule.Event().Pid),
 	)
+	summary := fmt.Sprintf("Rule '%s' in '%s' namespace '%s' failed", failedRule.Name(), failedRule.Event().PodName, failedRule.Event().Namespace)
 	myAlert := models.PostableAlert{
 		StartsAt: strfmt.DateTime(time.Now()),
 		EndsAt:   strfmt.DateTime(time.Now().Add(time.Hour)),
 		Annotations: map[string]string{
-			"summary": fmt.Sprintf("Rule '%s' in '%s' namespace '%s' failed", failedRule.Name(), failedRule.Event().PodName, failedRule.Event().Namespace),
-			"message": failedRule.Error(),
-			"fix":     failedRule.FixSuggestion(),
+			"title":       summary,
+			"summary":     summary,
+			"message":     failedRule.Error(),
+			"description": failedRule.Error(),
+			"fix":         failedRule.FixSuggestion(),
 		},
 		Alert: models.Alert{
 			GeneratorURL: strfmt.URI(sourceUrl),
@@ -87,13 +91,11 @@ func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 	params := alert.NewPostAlertsParams().WithContext(context.Background()).WithAlerts(models.PostableAlerts{&myAlert})
 	isOK, err := ame.client.Alert.PostAlerts(params)
 	if err != nil {
-		fmt.Println("Error sending alert:", err)
+		log.Println("Error sending alert:", err)
 		return
 	}
 	if isOK == nil {
-		fmt.Println("Alert was not sent successfully")
+		log.Println("Alert was not sent successfully")
 		return
 	}
-
-	fmt.Printf("Alert sent successfully: %v\n", isOK)
 }

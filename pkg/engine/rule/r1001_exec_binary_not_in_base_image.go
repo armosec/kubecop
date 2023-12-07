@@ -23,7 +23,7 @@ var R1001ExecBinaryNotInBaseImageRuleDescriptor = RuleDesciptor{
 	Name:        R1001ExecBinaryNotInBaseImageRuleName,
 	Description: "Detecting exec calls of binaries that are not included in the base image",
 	Tags:        []string{"exec", "malicious", "binary", "base image"},
-	Priority:    7,
+	Priority:    RulePriorityCritical,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: false,
@@ -73,7 +73,7 @@ func (rule *R1001ExecBinaryNotInBaseImage) ProcessEvent(eventType tracing.EventT
 	return &R1001ExecBinaryNotInBaseImageFailure{
 		RuleName:         rule.Name(),
 		Err:              fmt.Sprintf("Process image \"%s\" binary is not from the container image \"%s\"", execEvent.PathName, "<image name TBA> via PodSpec"),
-		FixSuggestionMsg: fmt.Sprintf("If this is an expected behavior it is strongly suggested to include all executables in the container image. If this is not possible you can remove the rule binding to this workload."),
+		FixSuggestionMsg: "If this is an expected behavior it is strongly suggested to include all executables in the container image. If this is not possible you can remove the rule binding to this workload.",
 		FailureEvent:     execEvent,
 		RulePriority:     R1001ExecBinaryNotInBaseImageRuleDescriptor.Priority,
 	}
@@ -147,7 +147,9 @@ func getOverlayMountPoint(process *procfs.Proc) (string, error) {
 func fileExists(filePath string) bool {
 	info, err := os.Stat(filepath.Join("/host", filePath))
 	if os.IsNotExist(err) {
-		log.Printf("File %s does not exist %s \n", filePath, err)
+		if os.Getenv("DEBUG") == "true" {
+			log.Printf("File %s does not exist %s \n", filePath, err)
+		}
 		return false
 	}
 

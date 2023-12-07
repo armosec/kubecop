@@ -12,7 +12,7 @@ const (
 	RulePriorityLow         = 1
 	RulePriorityMed         = 5
 	RulePriorityHigh        = 8
-	RulePriorityCrical      = 10
+	RulePriorityCritical    = 10
 	RulePrioritySystemIssue = 1000
 )
 

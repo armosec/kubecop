@@ -17,18 +17,19 @@ var R1000ExecFromMaliciousSourceDescriptor = RuleDesciptor{
 	ID:          R1000ID,
 	Name:        R1000ExecFromMaliciousSourceRuleName,
 	Description: "Detecting exec calls that are from malicious source like: /dev/shm, /run, /var/run, /proc/self",
-	Priority:    9,
+	Priority:    RulePriorityCritical,
 	Tags:        []string{"exec", "signature"},
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.ExecveEventType},
 		NeedApplicationProfile: false,
 	},
 	RuleCreationFunc: func() Rule {
-		return CreateRuleR0001UnexpectedProcessLaunched()
+		return CreateRuleR1000ExecFromMaliciousSource()
 	},
 }
 
 type R1000ExecFromMaliciousSource struct {
+	BaseRule
 }
 
 type R1000ExecFromMaliciousSourceFailure struct {

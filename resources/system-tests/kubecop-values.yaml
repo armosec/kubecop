@@ -3,6 +3,9 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 kubecop:
+  recording:
+    samplingInterval: 60s
+    finalizationDuration: 120s
   alertmanager:
     enabled: true
     endpoint: "alertmanager-operated.monitoring.svc.cluster.local:9093"

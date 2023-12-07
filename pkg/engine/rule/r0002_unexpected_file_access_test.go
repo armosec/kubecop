@@ -82,4 +82,21 @@ func TestR0002UnexpectedFileAccess(t *testing.T) {
 	if ruleResult != nil {
 		t.Errorf("Expected ruleResult to be nil since file is mounted")
 	}
+
+	// Test with ignored prefix
+	e.PathName = "/var/test1"
+	ignorePrefixes := []interface{}{"/var"}
+	r.SetParameters(map[string]interface{}{"ignoreMounts": false, "ignorePrefixes": ignorePrefixes})
+	ruleResult = r.ProcessEvent(tracing.OpenEventType, e, &MockAppProfileAccess{
+		OpenCalls: []collector.OpenCalls{
+			{
+				Path:  "/test",
+				Flags: []string{"O_RDONLY"},
+			},
+		},
+	}, &EngineAccessMock{})
+	if ruleResult != nil {
+		t.Errorf("Expected ruleResult to be nil since file is ignored")
+	}
+
 }

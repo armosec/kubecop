@@ -15,13 +15,27 @@ spec:
         - "kube-node-lease"
         - "kubeconfig"
   podSelector:
+    matchExpressions:
+      - key: "app.kubernetes.io/name"
+        operator: "NotIn"
+        values:
+        - {{ include "..name" . }}
   rules:
     - ruleName: "Unexpected process launched"
     - ruleName: "Unexpected file access"
+      parameters:
+        ignoreMounts: true
+        ignorePrefixes: ["/proc", "/run/secrets/kubernetes.io/serviceaccount", "/var/run/secrets/kubernetes.io/serviceaccount"]
     - ruleName: "Unexpected system call"
     - ruleName: "Unexpected capability used"
     - ruleName: "Unexpected domain request"
+    - ruleName: "Unexpected Service Account Token Access"
+    - ruleName: "Kubernetes Client Executed"
     - ruleName: "Exec from malicious source"
     - ruleName: "Kernel Module Load"
     - ruleName: "Exec Binary Not In Base Image"
+    - ruleName: "Malicious SSH Connection"
+    - ruleName: "Unshare System Call usage"
+    - ruleName: "Crypto Miners port detected"
+
 {{- end }}

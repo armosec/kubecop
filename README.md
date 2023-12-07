@@ -1,3 +1,9 @@
+[![Version](https://img.shields.io/github/v/release/armosec/kubecop)](https://github.com/armosec/kubecop/releases)
+[![build](https://github.com/armosec/kubecop/actions/workflows/release.yaml/badge.svg)](https://github.com/armosec/kubecop/actions/workflows/release.yaml/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/armosec/kubecop)](https://goreportcard.com/report/github.com/armosec/kubecop)
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/armosec/kubecop)
+[![Twitter Follow](https://img.shields.io/twitter/follow/kubescape?style=social)](https://twitter.com/kubescape)
+
 # KubeCop 🚨🚔🚢☸️🚨
 
 KubeCop is a KDR - Kubernetes Detection and Response tool. It is designed to be a simple, low-footprint, easy-to-use, and effective tool for detecting and responding to threats in your Kubernetes cluster at runtime.

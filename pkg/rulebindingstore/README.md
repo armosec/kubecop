@@ -13,7 +13,7 @@ Each `rule` in the list contains the following fields:
 ## Example
 The first step is to apply the `RuntimeRuleAlertBinding` CRD to the cluster:
 ```bash
-kubectl apply -f pkg/rulebindingstore/crd.yaml
+kubectl apply -f chart/kubecop/crds/runtime-rule-binding.crd.yaml
 ```
 The second step is to create the `RuntimeRuleAlertBinding` object:
 ```yaml

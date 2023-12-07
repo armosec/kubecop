@@ -21,7 +21,7 @@ var R0002UnexpectedFileAccessRuleDescriptor = RuleDesciptor{
 	Name:        R0002UnexpectedFileAccessRuleName,
 	Description: "Detecting file access that are not whitelisted by application profile. File access is defined by the combination of path and flags",
 	Tags:        []string{"open", "whitelisted"},
-	Priority:    5,
+	Priority:    RulePriorityMed,
 	Requirements: RuleRequirements{
 		EventTypes:             []tracing.EventType{tracing.OpenEventType},
 		NeedApplicationProfile: true,
@@ -34,6 +34,7 @@ var R0002UnexpectedFileAccessRuleDescriptor = RuleDesciptor{
 type R0002UnexpectedFileAccess struct {
 	BaseRule
 	shouldIgnoreMounts bool
+	ignorePrefixes     []string
 	// Map of container ID to mount paths
 	mutex                   sync.RWMutex
 	containerIdToMountPaths map[string][]string
@@ -55,12 +56,41 @@ func CreateRuleR0002UnexpectedFileAccess() *R0002UnexpectedFileAccess {
 	return &R0002UnexpectedFileAccess{
 		containerIdToMountPaths: map[string][]string{},
 		shouldIgnoreMounts:      false,
+		ignorePrefixes:          []string{},
 	}
+}
+
+func interfaceToStringSlice(val interface{}) ([]string, bool) {
+	sliceOfInterfaces, ok := val.([]interface{})
+	if ok {
+		sliceOfStrings := []string{}
+		for _, interfaceVal := range sliceOfInterfaces {
+			sliceOfStrings = append(sliceOfStrings, fmt.Sprintf("%v", interfaceVal))
+		}
+		return sliceOfStrings, true
+	}
+	return nil, false
 }
 
 func (rule *R0002UnexpectedFileAccess) SetParameters(parameters map[string]interface{}) {
 	rule.BaseRule.SetParameters(parameters)
+
 	rule.shouldIgnoreMounts = fmt.Sprintf("%v", rule.GetParameters()["ignoreMounts"]) == "true"
+
+	ignorePrefixesInterface := rule.GetParameters()["ignorePrefixes"]
+	if ignorePrefixesInterface == nil {
+		return
+	}
+
+	ignorePrefixes, ok := interfaceToStringSlice(ignorePrefixesInterface)
+	if ok {
+		for _, prefix := range ignorePrefixes {
+			rule.ignorePrefixes = append(rule.ignorePrefixes, fmt.Sprintf("%v", prefix))
+		}
+	} else {
+		log.Printf("Failed to convert ignorePrefixes to []string")
+	}
+
 }
 
 func (rule *R0002UnexpectedFileAccess) DeleteRule() {
@@ -88,6 +118,16 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 	openEvent, ok := event.(*tracing.OpenEvent)
 	if !ok {
 		return nil
+	}
+
+	// Check if path is ignored
+	for _, prefix := range rule.ignorePrefixes {
+		if strings.HasPrefix(openEvent.PathName, prefix) {
+			if os.Getenv("DEBUG") == "true" {
+				log.Printf("Path %s is ignored - Skipping check", openEvent.PathName)
+			}
+			return nil
+		}
 	}
 
 	if rule.shouldIgnoreMounts {
@@ -122,7 +162,7 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 			Err:              "Application profile is missing",
 			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod %s", openEvent.PodName),
 			FailureEvent:     openEvent,
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0002UnexpectedFileAccessRuleDescriptor.Priority,
 		}
 	}
 
@@ -133,7 +173,7 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 			Err:              "Application profile is missing",
 			FixSuggestionMsg: fmt.Sprintf("Please create an application profile for the Pod %s", openEvent.PodName),
 			FailureEvent:     openEvent,
-			RulePriority:     RulePrioritySystemIssue,
+			RulePriority:     R0002UnexpectedFileAccessRuleDescriptor.Priority,
 		}
 	}
 

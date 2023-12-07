@@ -17,7 +17,7 @@ var R1002LoadKernelModuleRuleDescriptor = RuleDesciptor{
 	Name:        R1002LoadKernelModuleRuleName,
 	Description: "Detecting Kernel Module Load.",
 	Tags:        []string{"syscall", "kernel", "module", "load"},
-	Priority:    7,
+	Priority:    RulePriorityCritical,
 	Requirements: RuleRequirements{
 		EventTypes: []tracing.EventType{
 			tracing.SyscallEventType,

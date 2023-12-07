@@ -12,7 +12,7 @@ func PriorityToStatus(priority int) string {
 		return "medium"
 	case rule.RulePriorityHigh:
 		return "high"
-	case rule.RulePriorityCrical:
+	case rule.RulePriorityCritical:
 		return "critical"
 	case rule.RulePrioritySystemIssue:
 		return "system_issue"
@@ -21,7 +21,7 @@ func PriorityToStatus(priority int) string {
 			return "low"
 		} else if priority < rule.RulePriorityHigh {
 			return "medium"
-		} else if priority < rule.RulePriorityCrical {
+		} else if priority < rule.RulePriorityCritical {
 			return "high"
 		}
 		return "unknown"
