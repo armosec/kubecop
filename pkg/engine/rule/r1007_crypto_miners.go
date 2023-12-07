@@ -109,3 +109,7 @@ func (rule *R1007CryptoMinersFailure) Priority() int {
 func (rule *R1007CryptoMinersFailure) FixSuggestion() string {
 	return rule.FixSuggestionMsg
 }
+
+func (rule *R1007CryptoMiners) Action() Action {
+	return KillPodAction
+}
