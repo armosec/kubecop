@@ -22,6 +22,8 @@ kubecop:
     enabled: false
   pprofserver:
     enabled: false
+  response:
+    enabled: false
 
 serviceAccount:
   # Specifies whether a service account should be created

@@ -74,6 +74,10 @@ spec:
           - name: FINALIZATION_DURATION
             value: "{{ .Values.kubecop.recording.finalizationDuration }}"
           {{- end }}
+          {{- if .Values.kubecop.response.enabled  }}
+          - name: RESPONSE_ENABLED
+            value: "true"
+          {{- end }}
         volumeMounts:
         - name: host
           mountPath: /host
