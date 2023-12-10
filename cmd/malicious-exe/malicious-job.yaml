@@ -9,8 +9,6 @@ spec:
       - name: kubecop-malicious-app
         image: quay.io/armosec/kubecop:malicious-app
         env:
-          - name: WAIT_FOR_SIGTERM
-            value: "true"
           - name: WAIT_BEFORE_START
             value: "120"
       restartPolicy: Never
