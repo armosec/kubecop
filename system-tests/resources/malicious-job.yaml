@@ -4,6 +4,9 @@ metadata:
   name: kubecop-malicious-app-job
 spec:
   template:
+    metadata:
+      labels:
+        app: kubecop-malicious-app
     spec:
       containers:
       - name: kubecop-malicious-app

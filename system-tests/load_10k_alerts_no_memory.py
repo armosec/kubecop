@@ -3,13 +3,17 @@ import time
 
 from promtopic import save_plot_png, send_promql_query_to_prom
 from pprof import pprof_recorder
+from kubernetes_wrappers import Namespace
 
-def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
+def load_10k_alerts_no_memory_leak(test_framework):
     print("Running load 10k alerts no memory leak test")
 
+    # Create a namespace
+    ns = Namespace(name=None)
+
+    namespace = ns.name
+
     try:
-        # create the namespace
-        subprocess.check_call(["kubectl", "create", "namespace", namespace])
         #  Install nginx profile in kubernetes by applying the nginx profile yaml
         subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "dev/nginx/nginx-app-profile.yaml"])
         # Install nginx in kubernetes by applying the nginx deployment yaml with pre-creating profile for the nginx pod
