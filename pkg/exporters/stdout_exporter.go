@@ -28,5 +28,5 @@ func InitStdoutExporter(useStdout *bool) *StdoutExporter {
 func (exporter *StdoutExporter) SendAlert(failedRule rule.RuleFailure) {
 
 	exporter.logger.Error(failedRule.Name(), slog.Int("severity", failedRule.Priority()),
-		slog.String("message", failedRule.Error()), slog.Any("event", failedRule.Event))
+		slog.String("message", failedRule.Error()), slog.Any("event", failedRule.Event()))
 }
