@@ -7,7 +7,7 @@ def kill_process_in_the_middle(test_framework):
 
     # Create a namespace
     ns = Namespace(name=None)
-    namespace = ns.name
+    namespace = ns.name()
 
 
     # we want to kill the application before the kaprofile creation is complete

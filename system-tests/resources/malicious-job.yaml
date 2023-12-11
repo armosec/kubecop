@@ -10,13 +10,13 @@ spec:
     spec:
       containers:
       - name: kubecop-malicious-app
-        image: quay.io/armosec/kubecop:malicious-app
+        image: quay.io/armosec/kubecop:malicious-app-v1
         imagePullPolicy: Always
         env:
           - name: WAIT_FOR_SIGTERM
             value: "true"
           - name: WAIT_BEFORE_START
-            value: "120"
+            value: "2s"
         volumeMounts:
           - mountPath: /podmount
             name: mount-for-alert

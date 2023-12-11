@@ -9,7 +9,7 @@ def install_app_no_application_profile_no_leak(test_framework):
 
     # Create a namespace
     ns = Namespace(name=None)
-    namespace = ns.name
+    namespace = ns.name()
 
     try:
         time_start = time.time()
