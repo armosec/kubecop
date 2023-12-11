@@ -16,5 +16,11 @@ spec:
             value: "true"
           - name: WAIT_BEFORE_START
             value: "120"
+        volumeMounts:
+          - mountPath: /podmount
+            name: mount-for-alert
       restartPolicy: Never
+      volumes:
+      - name: mount-for-alert
+        emptyDir: {}
   backoffLimit: 1

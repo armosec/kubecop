@@ -80,6 +80,16 @@ func runAllMaliciousBehaviors() error {
 		}
 	}
 
+	// Trigger crypto mining (R1003)
+	// Open a file for writing in the name of known_hosts
+	fmt.Println("Opening known_hosts for writing...")
+	file, err = os.OpenFile("known_hosts", os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Printf("Failed to open file: %v\n", err)
+	} else {
+		defer file.Close()
+	}
+
 	// Trigger unexpected DNS access (R0005)
 	// Make an HTTP request
 	fmt.Println("Making HTTP request to google.com...")
@@ -150,9 +160,6 @@ func runAllMaliciousBehaviors() error {
 		fmt.Printf("Failed to call init_module system call: %v\n", err)
 	}
 
-	// Trigger crypto mining (R1003)
-	// @amit - add ssh rule trigger
-
 	// Trigger Exec from mount (R1004)
 	// Copy the kubectl binary to /podmount
 	fmt.Println("Copying kubectl to /podmount...")
@@ -163,11 +170,26 @@ func runAllMaliciousBehaviors() error {
 		// Call execve on the file
 		fmt.Println("Calling kubectl on /podmount/kubectl...")
 
-		runKubectl("/podmount/kubectl", "get", "secrets")
+		out, err := runKubectl("/podmount/kubectl", "get", "secrets")
+		if err != nil {
+			fmt.Printf("Failed to call kubectl on /podmount/kubectl: %v\n", err)
+
+		}
+		if out != "" {
+			fmt.Print(out)
+		}
 	}
 
 	// Trigger crypto mining (R1007)
-	// @amit - add crypto mining rule trigger
+	// Do a TCP connect to stratum+tcp://xmr.pool.minergate.com:45700
+	fmt.Println("Connecting to stratum+tcp://xmr.pool.minergate.com:45700...")
+	conn, err := net.Dial("tcp", "xmr.pool.minergate.com:45700")
+	if err != nil {
+		fmt.Printf("Failed to connect to stratum+tcp://xmr.pool.minergate.com:45700: %v\n", err)
+	} else {
+		// Close the connection
+		conn.Close()
+	}
 
 	return nil
 }
