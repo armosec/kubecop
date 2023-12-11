@@ -43,9 +43,9 @@ def get_active_alerts(alertmanager_url):
 TEST_CONFIG_STOP_ALL_ON_FAILURE = 'stop_all_on_failure'
 
 test_cases = [
-    (all_alerts_from_malicious_app, "All alerts from malicious app test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
     (basic_alert_test, "Basic alert test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
     (rule_binding_apply_test, "Rule binding apply test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
+    (all_alerts_from_malicious_app, "All alerts from malicious app test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
     (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
     (creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
     (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),

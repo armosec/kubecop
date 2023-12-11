@@ -1,5 +1,6 @@
 from kubernetes_wrappers import Namespace, Workload, KubernetesObjects
 import os
+import time
 
 def basic_alert_test(test_framework):
     print("Running basic alert test")
@@ -19,6 +20,9 @@ def basic_alert_test(test_framework):
 
         # Exec into the nginx pod and create a file in the /tmp directory
         workload.exec_into_pod(command=["touch", "/tmp/nginx-test"])
+
+        # Wait for the alert to be signaled
+        time.sleep(5)
 
         # Get all the alert for the namespace
         alerts = test_framework.get_alerts(namespace=ns)
