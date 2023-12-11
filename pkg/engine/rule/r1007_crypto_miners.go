@@ -17,7 +17,8 @@ const (
 )
 
 var CommonlyUsedCryptoMinersPorts = []uint16{
-	3333, // Monero (XMR) - Stratum mining protocol (TCP).
+	3333,  // Monero (XMR) - Stratum mining protocol (TCP).
+	45700, // Monero (XMR) - Stratum mining protocol (TCP). (tratum+tcp://xmr.pool.minergate.com)
 }
 
 var R1007CryptoMinersRuleDescriptor = RuleDesciptor{
