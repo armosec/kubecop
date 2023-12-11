@@ -23,26 +23,42 @@ def execute_promql_query(prometheus_url, query, time_start, time_end, steps):
 
 def plotprom_cpu_usage(test_case_name,time_start, time_end, steps = '1s'):
     print("Ploting test %s from %s to %s" % (test_case_name, time_start, time_end))
-    
-    # Get kubecop pod name
-    pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
+
+    try:
+        # Get kubecop pod name
+        pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
+        # Build query
+        query = 'sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="kubescape", pod="%s",container="kubecop"}) by (container)'%pod_name
+
+        timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)
+        values = [float(item) for item in values]
+        return save_plot_png(test_case_name+"_cpu", timestamps, values, metric_name='CPU Usage (ms)')
+    except Exception as e:
+        print("Exception: ", e)
+        return 1
+
+def get_average_cpu_usage(pod_name, time_start, time_end):
     # Build query
-    query = 'sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="kubescape", pod="%s",container="kubecop"}) by (container)'%pod_name
-    
-    timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)    
+    query ='avg by(cpu, instance) (irate(container_cpu_usage_seconds_total{pod="%s"}[5m]))' % pod_name
+    timestamps, values = send_promql_query_to_prom("get_average_cpu_usage", query, time_start, time_end)
+    # Calculate average
     values = [float(item) for item in values]
-    return save_plot_png(test_case_name+"_cpu", timestamps, values, metric_name='CPU Usage (ms)')
+    return sum(values)/len(values)
 
 def plotprom_mem(test_case_name,time_start, time_end, steps = '1s'):
     print("Ploting test %s from %s to %s" % (test_case_name, time_start, time_end))
-    
-    # Get kubecop pod name
-    pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
-    # Build query
-    query = 'sum(container_memory_working_set_bytes{pod="%s", container="kubecop"}) by (container)'%pod_name    
-    timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)
-    # values = [int(item) for item in values]
-    return save_plot_png(test_case_name+"_mem", timestamps, values, metric_name='Memory Usage (bytes)')
+
+    try:
+        # Get kubecop pod name
+        pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
+        # Build query
+        query = 'sum(container_memory_working_set_bytes{pod="%s", container="kubecop"}) by (container)'%pod_name
+        timestamps, values = send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps)
+        # values = [int(item) for item in values]
+        return save_plot_png(test_case_name+"_mem", timestamps, values, metric_name='Memory Usage (bytes)')
+    except Exception as e:
+        print("Exception: ", e)
+        return 1
 
 def save_plot_png(test_case_name, timestamps, values, metric_name):
     plt.plot(timestamps, values)
@@ -54,12 +70,12 @@ def save_plot_png(test_case_name, timestamps, values, metric_name):
     filename = test_case_name.replace(' ', '_').lower()
 
     # Save plot to an image file
-    plt.savefig('%s.png'%filename)    
+    plt.savefig('%s.png'%filename)
     plt.clf()
 
     return 0
 
-def send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps = '1s'):    
+def send_promql_query_to_prom(test_case_name, query, time_start, time_end, steps = '1s'):
     # Get prometheus url
     prometheus_url = 'http://localhost:9090'
     if 'PROMETHEUS_URL' in os.environ:
