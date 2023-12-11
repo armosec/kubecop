@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kubecop-malicious-app-job
+spec:
+  template:
+    metadata:
+      labels:
+        app: kubecop-malicious-app
+    spec:
+      containers:
+      - name: kubecop-malicious-app
+        image: quay.io/armosec/kubecop:malicious-app-v1
+        imagePullPolicy: Always
+        env:
+          - name: WAIT_FOR_SIGTERM
+            value: "true"
+          - name: WAIT_BEFORE_START
+            value: "2s"
+        volumeMounts:
+          - mountPath: /podmount
+            name: mount-for-alert
+      restartPolicy: Never
+      volumes:
+      - name: mount-for-alert
+        emptyDir: {}
+  backoffLimit: 1

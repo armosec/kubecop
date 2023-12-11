@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bash-sleep-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bash-sleep
+  template:
+    metadata:
+      labels:
+        app: bash-sleep
+    spec:
+      containers:
+      - name: bash-container
+        image: bash
+        command: ["sh", "-c", "sleep 1; exit 1"]
