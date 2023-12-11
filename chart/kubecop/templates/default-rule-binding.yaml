@@ -37,5 +37,6 @@ spec:
     - ruleName: "Malicious SSH Connection"
     - ruleName: "Unshare System Call usage"
     - ruleName: "Crypto Miners port detected"
+    - ruleName: "Exec from mount"
 
 {{- end }}
