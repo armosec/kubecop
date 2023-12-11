@@ -4,7 +4,7 @@ import os
 import requests
 import subprocess
 import time
-from promtopic import plotprom_cpu_usage, plotprom_mem
+from promtopic import plotprom_cpu_usage, plotprom_mem, get_average_cpu_usage
 
 # Test cases imports
 import kill_in_the_middle
@@ -13,6 +13,7 @@ import creation_app_profile_memory_leak
 from basic_alert_tests import basic_alert_test
 from rule_binding_apply_test import rule_binding_apply_test
 from all_alerts_from_malicious_app import all_alerts_from_malicious_app
+from basic_load_activities import basic_load_activities
 
 
 alert_manager_url = "http://localhost:9093/"
@@ -43,9 +44,10 @@ def get_active_alerts(alertmanager_url):
 TEST_CONFIG_STOP_ALL_ON_FAILURE = 'stop_all_on_failure'
 
 test_cases = [
+    (all_alerts_from_malicious_app, "All alerts from malicious app test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
     (basic_alert_test, "Basic alert test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
     (rule_binding_apply_test, "Rule binding apply test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
-    (all_alerts_from_malicious_app, "All alerts from malicious app test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
+    (basic_load_activities, "Basic load activities test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
     (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
     (creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
     (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
@@ -71,6 +73,11 @@ class TestFramework:
         alerts = filter_alerts_by_label(alerts, "namespace", namespace.name())
 
         return alerts
+
+    def get_average_cpu_usage(self, namespace, workload, time_start, time_end):
+        # Get kubecop pod name
+        pod_name = subprocess.check_output(["kubectl", "-n", namespace, "get", "pods", "-l", "app.kubernetes.io/name=%s"%workload, "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
+        return get_average_cpu_usage(pod_name, time_start, time_end)
 
 def main():
     global alert_manager_url

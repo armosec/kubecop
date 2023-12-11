@@ -37,6 +37,14 @@ def plotprom_cpu_usage(test_case_name,time_start, time_end, steps = '1s'):
         print("Exception: ", e)
         return 1
 
+def get_average_cpu_usage(pod_name, time_start, time_end):
+    # Build query
+    query ='avg by(cpu, instance) (irate(container_cpu_usage_seconds_total{pod="%s"}[5m]))' % pod_name
+    timestamps, values = send_promql_query_to_prom("get_average_cpu_usage", query, time_start, time_end)
+    # Calculate average
+    values = [float(item) for item in values]
+    return sum(values)/len(values)
+
 def plotprom_mem(test_case_name,time_start, time_end, steps = '1s'):
     print("Ploting test %s from %s to %s" % (test_case_name, time_start, time_end))
 
