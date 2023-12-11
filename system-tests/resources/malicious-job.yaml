@@ -11,6 +11,7 @@ spec:
       containers:
       - name: kubecop-malicious-app
         image: quay.io/armosec/kubecop:malicious-app
+        imagePullPolicy: Always
         env:
           - name: WAIT_FOR_SIGTERM
             value: "true"
