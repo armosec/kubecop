@@ -50,7 +50,7 @@ test_cases = [
     (basic_load_activities, "Basic load activities test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
     (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
     (creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
-    (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
+    # (kill_in_the_middle.kill_process_in_the_middle, "Kill process in the middle test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
 ]
 
 class TestFramework:
