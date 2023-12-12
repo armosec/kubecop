@@ -16,7 +16,7 @@ type prometheusMetric struct {
 	alertCounter          prometheus.Counter
 }
 
-func CreatePrometheusMetric() *prometheusMetric {
+func createPrometheusMetric() *prometheusMetric {
 	ebpfExecCounter := prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "kubecop_exec_counter",
 		Help: "The total number of exec events received from the eBPF probe",
@@ -80,7 +80,7 @@ func CreatePrometheusMetric() *prometheusMetric {
 	}
 }
 
-func (p *prometheusMetric) Destroy() {
+func (p *prometheusMetric) destroy() {
 	prometheus.Unregister(p.ebpfExecCounter)
 	prometheus.Unregister(p.ebpfOpenCounter)
 	prometheus.Unregister(p.ebpfNetworkCounter)
@@ -91,7 +91,7 @@ func (p *prometheusMetric) Destroy() {
 	prometheus.Unregister(p.alertCounter)
 }
 
-func (p *prometheusMetric) ReportEbpfEvent(eventType tracing.EventType) {
+func (p *prometheusMetric) reportEbpfEvent(eventType tracing.EventType) {
 	switch eventType {
 	case tracing.ExecveEventType:
 		p.ebpfExecCounter.Inc()
@@ -108,10 +108,10 @@ func (p *prometheusMetric) ReportEbpfEvent(eventType tracing.EventType) {
 	}
 }
 
-func (p *prometheusMetric) ReportRuleProcessed(ruleID string) {
+func (p *prometheusMetric) reportRuleProcessed(ruleID string) {
 	p.ruleCounter.Inc()
 }
 
-func (p *prometheusMetric) ReportRuleAlereted(ruleID string) {
+func (p *prometheusMetric) reportRuleAlereted(ruleID string) {
 	p.alertCounter.Inc()
 }
