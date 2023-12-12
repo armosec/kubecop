@@ -35,8 +35,8 @@ func (engine *Engine) ProcessEvent(eventType tracing.EventType, event interface{
 				}
 			}
 			exporters.SendAlert(ruleFailure)
-			engine.promCollector.ReportRuleAlereted(boundedRule.Name())
+			engine.promCollector.reportRuleAlereted(rule.Name())
 		}
-		engine.promCollector.ReportRuleProcessed(boundedRule.Name())
+		engine.promCollector.reportRuleProcessed(rule.Name())
 	}
 }
