@@ -33,6 +33,8 @@ type ApplicationProfileK8sCache struct {
 
 	cache                  map[string]*ApplicationProfileCacheEntry
 	informerControlChannel chan struct{}
+
+	promCollector *prometheusMetric
 }
 
 type ApplicationProfileAccessImpl struct {
@@ -68,13 +70,14 @@ func NewApplicationProfileK8sCache(k8sConfig *rest.Config) (*ApplicationProfileK
 	}
 	cache := make(map[string]*ApplicationProfileCacheEntry)
 	controlChannel := make(chan struct{})
-	newApplicationCache := ApplicationProfileK8sCache{k8sConfig: k8sConfig, dynamicClient: dynamicClient, cache: cache, informerControlChannel: controlChannel}
+	newApplicationCache := ApplicationProfileK8sCache{k8sConfig: k8sConfig, dynamicClient: dynamicClient, cache: cache, informerControlChannel: controlChannel, promCollector: createPrometheusMetric()}
 	newApplicationCache.StartController()
 	return &newApplicationCache, nil
 }
 
 func (cache *ApplicationProfileK8sCache) Destroy() {
 	close(cache.informerControlChannel)
+	cache.promCollector.destroy()
 }
 
 func (cache *ApplicationProfileK8sCache) HasApplicationProfile(namespace, kind, workloadName, containerName string) bool {
@@ -190,19 +193,21 @@ func (access *ApplicationProfileAccessImpl) GetDNS() (*[]collector.DnsCalls, err
 }
 
 func (c *ApplicationProfileK8sCache) StartController() {
-
 	// Initialize factory and informer
 	informer := dynamicinformer.NewFilteredDynamicSharedInformerFactory(c.dynamicClient, 0, metav1.NamespaceAll, nil).ForResource(collector.AppProfileGvr).Informer()
 
 	// Add event handlers to informer
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) { // Called when an ApplicationProfile is added
+			c.promCollector.reportApplicationProfileCreated()
 			c.handleApplicationProfile(obj)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) { // Called when an ApplicationProfile is updated
+			c.promCollector.reportApplicationProfileUpdated()
 			c.handleApplicationProfile(newObj)
 		},
 		DeleteFunc: func(obj interface{}) { // Called when an ApplicationProfile is deleted
+			c.promCollector.reportApplicationProfileDeleted()
 			c.handleDeleteApplicationProfile(obj)
 		},
 	})
