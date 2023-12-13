@@ -70,7 +70,13 @@ func NewApplicationProfileK8sCache(k8sConfig *rest.Config) (*ApplicationProfileK
 	}
 	cache := make(map[string]*ApplicationProfileCacheEntry)
 	controlChannel := make(chan struct{})
-	newApplicationCache := ApplicationProfileK8sCache{k8sConfig: k8sConfig, dynamicClient: dynamicClient, cache: cache, informerControlChannel: controlChannel, promCollector: createPrometheusMetric()}
+	newApplicationCache := ApplicationProfileK8sCache{
+		k8sConfig:              k8sConfig,
+		dynamicClient:          dynamicClient,
+		cache:                  cache,
+		informerControlChannel: controlChannel,
+		promCollector:          createPrometheusMetric(),
+	}
 	newApplicationCache.StartController()
 	return &newApplicationCache, nil
 }
@@ -101,7 +107,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 	if err != nil {
 		return err
 	}
-	if applicationProfile.GetAnnotations()["kapprofiler.kubescape.io/final"] != "true" {
+	if applicationProfile.GetLabels()["kapprofiler.kubescape.io/final"] != "true" {
 		// The application profile is not final, return an error
 		return fmt.Errorf("application profile %s is not final", applicationProfile.GetName())
 	}
@@ -194,7 +200,9 @@ func (access *ApplicationProfileAccessImpl) GetDNS() (*[]collector.DnsCalls, err
 
 func (c *ApplicationProfileK8sCache) StartController() {
 	// Initialize factory and informer
-	informer := dynamicinformer.NewFilteredDynamicSharedInformerFactory(c.dynamicClient, 0, metav1.NamespaceAll, nil).ForResource(collector.AppProfileGvr).Informer()
+	informer := dynamicinformer.NewFilteredDynamicSharedInformerFactory(c.dynamicClient, 0, metav1.NamespaceAll, func(lo *metav1.ListOptions) {
+		lo.LabelSelector = "kapprofiler.kubescape.io/final=true"
+	}).ForResource(collector.AppProfileGvr).Informer()
 
 	// Add event handlers to informer
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -223,8 +231,8 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj interface{}) {
 		return
 	}
 
-	partial := appProfile.GetAnnotations()["kapprofiler.kubescape.io/partial"] == "true"
-	final := appProfile.GetAnnotations()["kapprofiler.kubescape.io/final"] == "true"
+	partial := appProfile.GetLabels()["kapprofiler.kubescape.io/partial"] == "true"
+	final := appProfile.GetLabels()["kapprofiler.kubescape.io/final"] == "true"
 
 	// Check if the application profile is final or partial, if not then skip it
 	if !final {
