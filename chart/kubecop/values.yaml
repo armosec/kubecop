@@ -47,6 +47,8 @@ securityContext:
       - SYS_ADMIN
       - NET_ADMIN
 
+securityContextNormal: {}
+
 resources:
   limits:
     cpu: 500m
