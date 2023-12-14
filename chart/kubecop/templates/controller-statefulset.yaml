@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "..fullname" . }}-controller
+  labels:
+    {{- include "..labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "..fullname" . }}-controller
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "..selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "..selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "..serviceAccountName" . }}
+      securityContext:
+          {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: kubecop-controller
+        terminationMessagePolicy: FallbackToLogsOnError
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+        - --mode-controller
+        securityContext:
+          {{- toYaml .Values.securityContextNormal | nindent 12 }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name

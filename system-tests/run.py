@@ -14,6 +14,7 @@ from basic_alert_tests import basic_alert_test
 from rule_binding_apply_test import rule_binding_apply_test
 from all_alerts_from_malicious_app import all_alerts_from_malicious_app
 from basic_load_activities import basic_load_activities
+from finalization_alert_test import finalization_alert_test
 
 
 alert_manager_url = "http://localhost:9093/"
@@ -44,9 +45,10 @@ def get_active_alerts(alertmanager_url):
 TEST_CONFIG_STOP_ALL_ON_FAILURE = 'stop_all_on_failure'
 
 test_cases = [
-    (all_alerts_from_malicious_app, "All alerts from malicious app test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
     (basic_alert_test, "Basic alert test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
     (rule_binding_apply_test, "Rule binding apply test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
+    (finalization_alert_test, "Finalization alert test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
+    (all_alerts_from_malicious_app, "All alerts from malicious app test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: True}),
     (basic_load_activities, "Basic load activities test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
     (load_10k_alerts_no_memory.load_10k_alerts_no_memory_leak, "Load 10k alerts no memory leak test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),
     (creation_app_profile_memory_leak.install_app_no_application_profile_no_leak, "Install app no application profile no leak test", {TEST_CONFIG_STOP_ALL_ON_FAILURE: False}),

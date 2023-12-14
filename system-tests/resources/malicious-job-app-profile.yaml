@@ -2,7 +2,7 @@ apiVersion: kubescape.io/v1
 kind: ApplicationProfile
 metadata:
   name: job-kubecop-malicious-app-job
-  annotations:
+  labels:
     kapprofiler.kubescape.io/final: "true"
 spec:
   containers:
