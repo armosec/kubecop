@@ -29,7 +29,7 @@ close-shell:
 	cat cop_pids.txt | xargs kill -15
 
 deploy-dev-pod:
-	kubectl apply -f etc/app-profile.crd.yaml
+	kubectl apply -f chart/kubecop/crds/app-profile.crd.yaml -f chart/kubecop/crds/runtime-rule-binding.crd.yaml
 	kubectl apply -f dev/devpod.yaml
 
 build: $(BINARY_NAME)
@@ -48,4 +48,4 @@ validate-crd:
 
 all: $(BINARY_NAME)
 
-.PHONY: clean all install deploy-dev-pod test open-shell build validate-crd 
+.PHONY: clean all install deploy-dev-pod test open-shell build validate-crd
