@@ -18,6 +18,10 @@ kubecop:
   alertmanager:
     enabled: false
     endpoint: "localhost:9093"
+  syslog:
+    enabled: false
+    endpoint: "localhost:514"
+    protocol: "udp"
   prometheusExporter:
     enabled: false
   pprofserver:

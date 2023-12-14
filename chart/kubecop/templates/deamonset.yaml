@@ -66,6 +66,12 @@ spec:
           - name: ALERTMANAGER_URL
             value: {{ .Values.kubecop.alertmanager.endpoint }}
           {{- end }}
+          {{- if .Values.kubecop.syslog.enabled  }}
+          - name: SYSLOG_HOST
+            value: {{ .Values.kubecop.syslog.endpoint }}
+          - name: SYSLOG_PROTOCOL
+            value: {{ .Values.kubecop.syslog.protocol }}
+          {{- end }}
           {{- if .Values.kubecop.pprofserver.enabled  }}
           - name: _PPROF_SERVER
             value: "true"
