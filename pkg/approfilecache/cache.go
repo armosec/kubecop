@@ -2,7 +2,6 @@ package approfilecache
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/kubescape/kapprofiler/pkg/watcher"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 )
@@ -47,20 +47,13 @@ func generateApplicationProfileName(kind, workloadName string) string {
 	return strings.ToLower(kind) + "-" + workloadName
 }
 
-// Helper function to convert interface to ApplicationProfile
-func getApplicationProfileFromObj(obj interface{}) (*collector.ApplicationProfile, error) {
-	typedObj := obj.(*unstructured.Unstructured)
-	bytes, err := typedObj.MarshalJSON()
+func getApplicationProfileFromUnstructured(typedObj *unstructured.Unstructured) (*collector.ApplicationProfile, error) {
+	var applicationProfileObj collector.ApplicationProfile
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(typedObj.Object, &applicationProfileObj)
 	if err != nil {
 		return &collector.ApplicationProfile{}, err
 	}
-
-	var applicationProfileObj *collector.ApplicationProfile
-	err = json.Unmarshal(bytes, &applicationProfileObj)
-	if err != nil {
-		return applicationProfileObj, err
-	}
-	return applicationProfileObj, nil
+	return &applicationProfileObj, nil
 }
 
 func NewApplicationProfileK8sCache(k8sConfig *rest.Config) (*ApplicationProfileK8sCache, error) {
@@ -73,7 +66,7 @@ func NewApplicationProfileK8sCache(k8sConfig *rest.Config) (*ApplicationProfileK
 		k8sConfig:                 k8sConfig,
 		dynamicClient:             dynamicClient,
 		cache:                     cache,
-		applicationProfileWatcher: watcher.NewWatcher(dynamicClient),
+		applicationProfileWatcher: watcher.NewWatcher(dynamicClient, false), // No need to pre-list the application profiles since the container start will look for them
 		promCollector:             createPrometheusMetric(),
 	}
 	newApplicationCache.StartController()
@@ -104,7 +97,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 		}
 		ownerLevel = false
 	}
-	applicationProfile, err := getApplicationProfileFromObj(appProfile)
+	applicationProfile, err := getApplicationProfileFromUnstructured(appProfile)
 	if err != nil {
 		return err
 	}
@@ -227,15 +220,11 @@ func (c *ApplicationProfileK8sCache) StartController() {
 	}
 }
 
-func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj *unstructured.Unstructured) {
-	appProfile, err := getApplicationProfileFromObj(obj)
-	if err != nil {
-		log.Printf("Failed to get application profile from object: %v\n", err)
-		return
-	}
+func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstructured *unstructured.Unstructured) {
+	partial := appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/partial"] == "true"
+	final := appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/final"] == "true"
 
-	partial := appProfile.GetLabels()["kapprofiler.kubescape.io/partial"] == "true"
-	final := appProfile.GetLabels()["kapprofiler.kubescape.io/final"] == "true"
+	log.Printf("APCache: Handling application profile %s/%s, partial: %v, final: %v\n", appProfileUnstructured.GetNamespace(), appProfileUnstructured.GetName(), partial, final)
 
 	// Check if the application profile is final or partial, if not then skip it
 	if !final {
@@ -243,27 +232,28 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj *unstructured.
 	}
 
 	// Convert the application profile name to kind and workload name
-	kind, workloadName := strings.Split(appProfile.GetName(), "-")[0], strings.SplitN(appProfile.GetName(), "-", 2)[1]
+	kind, workloadName := strings.Split(appProfileUnstructured.GetName(), "-")[0], strings.SplitN(appProfileUnstructured.GetName(), "-", 2)[1]
 
 	// Add the application profile to the cache
 
 	// Loop over the application profile cache entries and check if there is an entry for the same workload
 	for _, cacheEntry := range c.cache {
-		if cacheEntry.Namespace == appProfile.GetNamespace() {
+		if cacheEntry.Namespace == appProfileUnstructured.GetNamespace() {
 			if !cacheEntry.AcceptPartial && partial {
 				// Skip the partial application profile becuase we expect a final one
 				continue
 			}
-			if cacheEntry.WorkloadName == workloadName && cacheEntry.WorkloadKind == kind {
+			if (cacheEntry.WorkloadName == workloadName && cacheEntry.WorkloadKind == kind) ||
+				(cacheEntry.OwnerName == workloadName && cacheEntry.OwnerKind == kind) {
+				appProfile, err := getApplicationProfileFromUnstructured(appProfileUnstructured)
+				if err != nil {
+					log.Printf("Failed to get application profile from object: %v\n", err)
+					return
+				}
+
 				// Update the cache entry
 				cacheEntry.ApplicationProfile = appProfile
 				cacheEntry.OwnerLevelProfile = false
-				continue
-			}
-			if cacheEntry.OwnerName == workloadName && cacheEntry.OwnerKind == kind {
-				// Update the cache entry
-				cacheEntry.ApplicationProfile = appProfile
-				cacheEntry.OwnerLevelProfile = true
 				continue
 			}
 		}
@@ -271,7 +261,7 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(obj *unstructured.
 }
 
 func (c *ApplicationProfileK8sCache) handleDeleteApplicationProfile(obj *unstructured.Unstructured) {
-	appProfile, err := getApplicationProfileFromObj(obj)
+	appProfile, err := getApplicationProfileFromUnstructured(obj)
 	if err != nil {
 		log.Printf("Failed to get application profile from object: %v\n", err)
 		return
