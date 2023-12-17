@@ -26,6 +26,10 @@ kubecop:
     enabled: false
   pprofserver:
     enabled: false
+  partialProfiles: # If enabled, application profiles won't be enriched with the following prefixes and mounts.
+    enabled: true
+    ignoreMounts: "true"
+    ignorePrefixes: "/proc,/var/lib/elasticsearch,/tmp"
 
 serviceAccount:
   # Specifies whether a service account should be created
