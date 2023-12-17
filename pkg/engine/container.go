@@ -121,11 +121,7 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			}
 		}
 		for neededEvent := range neededEvents {
-			//log.Printf("Starting to trace container %s/%s/%s/%s for event %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, neededEvent)
 			_ = engine.tracer.StartTraceContainer(event.NsMntId, event.Pid, neededEvent)
-			//if err != nil {
-			// log.Printf("Failed to enable event %v for container %s/%s/%s/%s: %v\n", neededEvent, event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
-			//}
 		}
 
 	} else if event.Activity == tracing.ContainerActivityEventStop {
@@ -137,16 +133,15 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			// Stop tracing the container
 			for _, eventInUse := range eventsInUse {
 				_ = engine.tracer.StopTraceContainer(event.NsMntId, event.Pid, eventInUse)
-				//if err != nil {
-				// log.Printf("Failed to disable event %v for container %s/%s/%s: %v\n", eventInUse, event.Namespace, event.PodName, event.ContainerName, err)
-				//}
 			}
 
 			// Remove the container from the cache
 			deleteContainerDetails(event.ContainerID)
 
 			// Remove the container from the cache
+			containerIdToDetailsCacheLock.Lock()
 			delete(containerIdToDetailsCache, event.ContainerID)
+			containerIdToDetailsCacheLock.Unlock()
 		}()
 	}
 }
@@ -261,6 +256,8 @@ func (engine *Engine) GetRulesForEvent(event *tracing.GeneralEvent) []rule.Rule 
 }
 
 func (engine *Engine) IsContainerIDInCache(containerID string) bool {
+	containerIdToDetailsCacheLock.RLock()
+	defer containerIdToDetailsCacheLock.RUnlock()
 	_, ok := containerIdToDetailsCache[containerID]
 	return ok
 }
