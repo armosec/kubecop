@@ -76,6 +76,17 @@ spec:
           - name: _PPROF_SERVER
             value: "true"
           {{- end }}
+          {{- if not .Values.kubecop.partialProfiles.enabled  }}
+          - name: OPEN_IGNORE_MOUNTS
+            value: "false"
+          - name: OPEN_IGNORE_PREFIXES
+            value: ""
+          {{- else }}
+          - name: OPEN_IGNORE_MOUNTS
+            value: "{{ .Values.kubecop.partialProfiles.ignoreMounts }}"
+          - name: OPEN_IGNORE_PREFIXES
+            value: "{{ .Values.kubecop.partialProfiles.ignorePrefixes }}"
+          {{- end }}
           {{- if .Values.kubecop.recording.samplingInterval  }}
           - name: SAMPLING_INTERVAL
             value: "{{ .Values.kubecop.recording.samplingInterval }}"

@@ -130,7 +130,9 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 
 	} else if event.Activity == tracing.ContainerActivityEventStop {
 		go func() {
+			containerIdToDetailsCacheLock.RLock()
 			eventsInUse := GetRequiredEventsFromRules(containerIdToDetailsCache[event.ContainerID].BoundRules)
+			containerIdToDetailsCacheLock.RUnlock()
 
 			// Stop tracing the container
 			for _, eventInUse := range eventsInUse {
@@ -154,6 +156,8 @@ func (engine *Engine) GetPodSpec(podName, namespace, containerID string) (*corev
 		return nil, fmt.Errorf("podName or namespace is empty")
 	}
 
+	containerIdToDetailsCacheLock.RLock()
+	defer containerIdToDetailsCacheLock.RUnlock()
 	podSpec, ok := containerIdToDetailsCache[containerID]
 	if !ok {
 		return nil, fmt.Errorf("containerID not found in cache")
