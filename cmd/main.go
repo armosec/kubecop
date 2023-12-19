@@ -33,6 +33,7 @@ import (
 var NodeName string
 var k8sConfig *rest.Config
 var FinalizationDurationInSeconds int64 = 120
+var FinalizationJitterInSeconds int64 = 30
 var SamplingIntervalInSeconds int64 = 60
 
 func checkKubernetesConnection() (*rest.Config, error) {
@@ -91,6 +92,15 @@ func serviceInitNChecks(modeEbpf bool) error {
 			return fmt.Errorf("FINALIZATION_DURATION environment variable is not in format <number><unit> like 20s, 5m, 1h")
 		} else {
 			FinalizationDurationInSeconds = int64(finalizationTimeInt)
+		}
+	}
+
+	// Get finalization jitter from environment variable
+	if finalizationJitter := os.Getenv("FINALIZATION_JITTER"); finalizationJitter != "" {
+		if finalizationJitterInt, err := parseTimeToSeconds(finalizationJitter); err != nil {
+			return fmt.Errorf("FINALIZATION_JITTER environment variable is not in format <number><unit> like 20s, 5m, 1h")
+		} else {
+			FinalizationJitterInSeconds = int64(finalizationJitterInt)
 		}
 	}
 
@@ -176,6 +186,7 @@ func main() {
 			Tracer:         tracer,
 			Interval:       uint64(SamplingIntervalInSeconds),
 			FinalizeTime:   uint64(FinalizationDurationInSeconds),
+			FinalizeJitter: uint64(FinalizationJitterInSeconds),
 			K8sConfig:      k8sConfig,
 			RecordStrategy: collector.RecordStrategyOnlyIfNotExists,
 			NodeName:       NodeName,
