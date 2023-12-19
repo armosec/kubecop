@@ -15,6 +15,7 @@ kubecop:
   recording:
     samplingInterval: 60s
     finalizationDuration: 900s
+    finalizationJitter: 120s
   alertmanager:
     enabled: false
     endpoint: "localhost:9093"
@@ -29,7 +30,7 @@ kubecop:
   partialProfiles: # If enabled, application profiles won't be enriched with the following prefixes and mounts.
     enabled: true
     ignoreMounts: "true"
-    ignorePrefixes: "/proc,/var/lib/elasticsearch,/tmp"
+    ignorePrefixes: "/proc,/tmp"
 
 serviceAccount:
   # Specifies whether a service account should be created
