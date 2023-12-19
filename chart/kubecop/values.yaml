@@ -15,7 +15,7 @@ kubecop:
   recording:
     samplingInterval: 60s
     finalizationDuration: 900s
-    finalizationJitter: 60s
+    finalizationJitter: 120s
   alertmanager:
     enabled: false
     endpoint: "localhost:9093"
