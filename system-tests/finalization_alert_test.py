@@ -15,8 +15,8 @@ def finalization_alert_test(test_framework):
         # Wait for the workload to be ready
         workload.wait_for_ready(timeout=120)
 
-        # Wait for 150 seconds to allow the profiling process to end and do finalization
-        time.sleep(150)
+        # Wait for 185 seconds to allow the profiling process to end and do finalization
+        time.sleep(185)
 
         # Exec into the nginx pod and create a file in the /tmp directory
         workload.exec_into_pod(command=["touch", "/tmp/nginx-test"])
