@@ -63,10 +63,12 @@ func checkKubernetesConnection() (*rest.Config, error) {
 	return config, nil
 }
 
-func serviceInitNChecks() error {
+func serviceInitNChecks(modeEbpf bool) error {
 	// Raise the rlimit for memlock to the maximum allowed (eBPF needs it)
-	if err := rlimit.RemoveMemlock(); err != nil {
-		return err
+	if modeEbpf {
+		if err := rlimit.RemoveMemlock(); err != nil {
+			return err
+		}
 	}
 
 	// Check Kubernetes cluster connection
@@ -105,6 +107,30 @@ func serviceInitNChecks() error {
 }
 
 func main() {
+	// Parse command line arguments to check which mode to run in
+	controllerMode := false
+	nodeAgentMode := false
+	for _, arg := range os.Args[1:] {
+		switch arg {
+		case "--mode-controller":
+			// Run in controller mode
+			controllerMode = true
+			log.Printf("Running in controller mode")
+		case "--mode-node-agent":
+			// Run in node agent mode
+			nodeAgentMode = true
+			log.Printf("Running in node agent mode")
+		default:
+			log.Fatalf("Unknown command line argument: %s", arg)
+		}
+	}
+
+	if !controllerMode && !nodeAgentMode {
+		controllerMode = true
+		nodeAgentMode = true
+		log.Printf("Running in both controller and node agent mode")
+	}
+
 	// Start the pprof server if _PPROF_SERVER environment variable is set
 	if os.Getenv("_PPROF_SERVER") != "" {
 		go func() {
@@ -113,97 +139,102 @@ func main() {
 	}
 
 	// Initialize the service backend
-	if err := serviceInitNChecks(); err != nil {
+	if err := serviceInitNChecks(nodeAgentMode); err != nil {
 		log.Fatalf("Failed to initialize service: %v\n", err)
 	}
 
-	// TODO: support exporters config from file/crd
-	exporters.InitExporters(exporters.ExportersConfig{})
+	if nodeAgentMode {
+		// TODO: support exporters config from file/crd
+		exporters.InitExporters(exporters.ExportersConfig{})
 
-	// Create tracer (without sink for now)
-	tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
-	// Create application profile cache
-	appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(k8sConfig)
-	if err != nil {
-		log.Fatalf("Failed to create application profile cache: %v\n", err)
+		// Create tracer (without sink for now)
+		tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
+		// Create application profile cache
+		appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(k8sConfig)
+		if err != nil {
+			log.Fatalf("Failed to create application profile cache: %v\n", err)
+		}
+		defer appProfileCache.Destroy()
+
+		//////////////////////////////////////////////////////////////////////////////
+		// Fire up the recording subsystem
+
+		eventSink, err := eventsink.NewEventSink("", true)
+		if err != nil {
+			log.Fatalf("Failed to create event sink: %v\n", err)
+		}
+
+		// Start the event sink
+		if err := eventSink.Start(); err != nil {
+			log.Fatalf("Failed to start event sink: %v\n", err)
+		}
+		defer eventSink.Stop()
+
+		// Start the collector manager
+		collectorManagerConfig := &collector.CollectorManagerConfig{
+			EventSink:      eventSink,
+			Tracer:         tracer,
+			Interval:       uint64(SamplingIntervalInSeconds),
+			FinalizeTime:   uint64(FinalizationDurationInSeconds),
+			K8sConfig:      k8sConfig,
+			RecordStrategy: collector.RecordStrategyOnlyIfNotExists,
+			NodeName:       NodeName,
+		}
+		cm, err := collector.StartCollectorManager(collectorManagerConfig)
+		if err != nil {
+			log.Fatalf("Failed to start collector manager: %v\n", err)
+		}
+		defer cm.StopCollectorManager()
+
+		//////////////////////////////////////////////////////////////////////////////
+		// Recording subsystem is ready, start the rule engine
+
+		// Create Kubernetes clientset from the configuration
+		clientset, err := kubernetes.NewForConfig(k8sConfig)
+		if err != nil {
+			log.Fatalf("Failed to create Kubernetes client: %v\n", err)
+		}
+		dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+		if err != nil {
+			log.Fatalf("Failed to create Kubernetes dynamic client: %v\n", err)
+		}
+
+		// Create the "Rule Engine" and start it
+		engine := engine.NewEngine(clientset, appProfileCache, tracer, 4, NodeName)
+
+		// Create the rule binding store and start it
+		ruleBindingStore, err := rulebindingstore.NewRuleBindingK8sStore(dynamicClient, clientset.CoreV1(), NodeName)
+		if err != nil {
+			log.Fatalf("Failed to create rule binding store: %v\n", err)
+		}
+		defer ruleBindingStore.Destroy()
+		// set mutual callbacks between engine and rulebindingstore
+		engine.SetGetRulesForPodFunc(ruleBindingStore.GetRulesForPod)
+		ruleBindingStore.SetRuleBindingChangedHandlers([]rulebindingstore.RuleBindingChangedHandler{engine.OnRuleBindingChanged})
+
+		// Add the engine to the tracer
+		tracer.AddContainerActivityListener(engine)
+		defer tracer.RemoveContainerActivityListener(engine)
+
+		tracer.AddEventSink(engine)
+		defer tracer.RemoveEventSink(engine)
+		tracer.AddEventSink(eventSink)
+		defer tracer.RemoveEventSink(eventSink)
+
+		// Start the tracer
+		if err := tracer.Start(); err != nil {
+			log.Fatalf("Failed to start tracer: %v\n", err)
+		}
+		defer tracer.Stop()
+		log.Printf("Tracer started")
 	}
-	defer appProfileCache.Destroy()
 
-	//////////////////////////////////////////////////////////////////////////////
-	// Fire up the recording subsystem
-
-	eventSink, err := eventsink.NewEventSink("", true)
-	if err != nil {
-		log.Fatalf("Failed to create event sink: %v\n", err)
+	if controllerMode {
+		// Last but not least, start the reconciler controller
+		appProfileReconcilerController := reconcilercontroller.NewController(k8sConfig)
+		appProfileReconcilerController.StartController()
+		defer appProfileReconcilerController.StopController()
 	}
-
-	// Start the event sink
-	if err := eventSink.Start(); err != nil {
-		log.Fatalf("Failed to start event sink: %v\n", err)
-	}
-	defer eventSink.Stop()
-
-	// Start the collector manager
-	collectorManagerConfig := &collector.CollectorManagerConfig{
-		EventSink:      eventSink,
-		Tracer:         tracer,
-		Interval:       uint64(SamplingIntervalInSeconds),
-		FinalizeTime:   uint64(FinalizationDurationInSeconds),
-		K8sConfig:      k8sConfig,
-		RecordStrategy: collector.RecordStrategyOnlyIfNotExists,
-		NodeName:       NodeName,
-	}
-	cm, err := collector.StartCollectorManager(collectorManagerConfig)
-	if err != nil {
-		log.Fatalf("Failed to start collector manager: %v\n", err)
-	}
-	defer cm.StopCollectorManager()
-
-	// Last but not least, start the reconciler controller
-	appProfileReconcilerController := reconcilercontroller.NewController(k8sConfig)
-	appProfileReconcilerController.StartController()
-	defer appProfileReconcilerController.StopController()
-
-	//////////////////////////////////////////////////////////////////////////////
-	// Recording subsystem is ready, start the rule engine
-
-	// Create Kubernetes clientset from the configuration
-	clientset, err := kubernetes.NewForConfig(k8sConfig)
-	if err != nil {
-		log.Fatalf("Failed to create Kubernetes client: %v\n", err)
-	}
-	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
-	if err != nil {
-		log.Fatalf("Failed to create Kubernetes dynamic client: %v\n", err)
-	}
-
-	// Create the "Rule Engine" and start it
-	engine := engine.NewEngine(clientset, appProfileCache, tracer, 4, NodeName)
-
-	// Create the rule binding store and start it
-	ruleBindingStore, err := rulebindingstore.NewRuleBindingK8sStore(dynamicClient, clientset.CoreV1(), NodeName)
-	if err != nil {
-		log.Fatalf("Failed to create rule binding store: %v\n", err)
-	}
-	defer ruleBindingStore.Destroy()
-	// set mutual callbacks between engine and rulebindingstore
-	engine.SetGetRulesForPodFunc(ruleBindingStore.GetRulesForPod)
-	ruleBindingStore.SetRuleBindingChangedHandlers([]rulebindingstore.RuleBindingChangedHandler{engine.OnRuleBindingChanged})
-
-	// Add the engine to the tracer
-	tracer.AddContainerActivityListener(engine)
-	defer tracer.RemoveContainerActivityListener(engine)
-
-	tracer.AddEventSink(engine)
-	defer tracer.RemoveEventSink(engine)
-	tracer.AddEventSink(eventSink)
-	defer tracer.RemoveEventSink(eventSink)
-
-	// Start the tracer
-	if err := tracer.Start(); err != nil {
-		log.Fatalf("Failed to start tracer: %v\n", err)
-	}
-	log.Printf("Tracer started")
 
 	// Start prometheus metrics server
 	go func() {
@@ -216,11 +247,6 @@ func main() {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 	<-shutdown
 	log.Println("Shutting down...")
-
-	// Stop HTTP server
-
-	// Stop the tracer
-	tracer.Stop()
 
 	// Exit with success
 	os.Exit(0)

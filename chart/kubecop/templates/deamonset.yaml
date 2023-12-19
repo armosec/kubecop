@@ -41,12 +41,16 @@ spec:
         terminationMessagePolicy: FallbackToLogsOnError
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+        - --mode-node-agent
         ports:
         - containerPort: 9090
           name: http-metrics
           protocol: TCP
         securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
         env:
           - name: NODE_NAME
             valueFrom:
@@ -62,9 +66,26 @@ spec:
           - name: ALERTMANAGER_URL
             value: {{ .Values.kubecop.alertmanager.endpoint }}
           {{- end }}
+          {{- if .Values.kubecop.syslog.enabled  }}
+          - name: SYSLOG_HOST
+            value: {{ .Values.kubecop.syslog.endpoint }}
+          - name: SYSLOG_PROTOCOL
+            value: {{ .Values.kubecop.syslog.protocol }}
+          {{- end }}
           {{- if .Values.kubecop.pprofserver.enabled  }}
           - name: _PPROF_SERVER
             value: "true"
+          {{- end }}
+          {{- if not .Values.kubecop.partialProfiles.enabled  }}
+          - name: OPEN_IGNORE_MOUNTS
+            value: "false"
+          - name: OPEN_IGNORE_PREFIXES
+            value: ""
+          {{- else }}
+          - name: OPEN_IGNORE_MOUNTS
+            value: "{{ .Values.kubecop.partialProfiles.ignoreMounts }}"
+          - name: OPEN_IGNORE_PREFIXES
+            value: "{{ .Values.kubecop.partialProfiles.ignorePrefixes }}"
           {{- end }}
           {{- if .Values.kubecop.recording.samplingInterval  }}
           - name: SAMPLING_INTERVAL

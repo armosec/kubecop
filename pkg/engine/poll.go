@@ -52,8 +52,6 @@ func (engine *Engine) Poll() {
 				for containerId, containerDetails := range getcontainerIdToDetailsCacheCopy() {
 					syscalls, err := engine.tracer.PeekSyscallInContainer(containerDetails.NsMntId)
 					if err != nil {
-						// Disabled the log for now, it's too noisy (running containers and during shutdown this prints a lot)
-						// log.Printf("Failed to peek syscalls in container %s: %v\n", containerId, err)
 						continue
 					}
 					// Generate events for the syscalls and process them in the engine

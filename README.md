@@ -32,7 +32,7 @@ KubeCop leverages advanced eBPF (extended Berkeley Packet Filter) technology for
 
 ### Anomaly-based detection
 
-A standout feature of KubeCop is its anomaly detection mechanism, which is grounded in application profiling. During a default learning period of 15 minutes (customizable by users), KubeCop monitors applications for the aforementioned activities, subsequently building a detailed application profile. This profile, stored as a Kubernetes Custom Resource (CR), serves as a benchmark for normal behavior. Once the learning phase concludes and the profile is established, KubeCop validates application events coming from eBPF for deviations from this norm, triggering alerts upon detecting anomalies.
+A standout feature of KubeCop is its anomaly detection mechanism, which is grounded in application profiling. During a default learning period of 15 minutes (customizable by users, for production environments suggested to use at least 12 hours), KubeCop monitors applications for the aforementioned activities, subsequently building a detailed application profile. This profile, stored as a Kubernetes Custom Resource (CR), serves as a benchmark for normal behavior. Once the learning phase concludes and the profile is established, KubeCop validates application events coming from eBPF for deviations from this norm, triggering alerts upon detecting anomalies.
 
 ### Signature-based detection
 
@@ -52,60 +52,68 @@ KubeCop deployment is installed and managed using Helm.
 
 ### Installation
 
+
+#### Basic installation
+
 To install KubeCop on your Kubernetes cluster, do the following steps:
 
 ```bash
 git clone https://github.com/armosec/kubecop.git && cd kubecop
 # Assuming AlertManager is running in service  "alertmanager-operated" in namespace "monitoring"
-helm install kubecop chart/kubecop -n kubescape --create-namespace --set kubecop.alertmanager.enabled=true --set kubecop.alertmanager.endpoint="alertmanager-operated.monitoring.svc.cluster.local:9093"
+helm install kubecop chart/kubecop -n kubescape --create-namespace
 ```
-
-You can change the "learning period" using the `kubecop.recording.finalizationDuration` Helm parameters (example values are "30s", "5m" or "1h").
 
 You should be getting alerts after the learning period ends. Try `kubectl exec` on one of the Pods after the learning period!
 
+#### Advanced parameter configurations
 
+##### Finalization
+
+The parameter `kubecop.recording.finalizationDuration` controls the learning period of the baseline behavior of workloads. The default setting is 15 minutes, but this is not a good value for production environments only for testing. For production environments we suggest at least 12 hour learning period (sometimes even 24 hours to cover daily recurring tasks) and set this to `12h`
+
+##### Exporters
+
+Exporters are the mechanisms in the system to send alerts to external endpoints from KubeCop engine.
+
+They can be enabled with Helm (Stdout is on by default)
+
+Currently supported:
+* Alert manager
+    * Enable: `kubecop.alertmanager.enabled`
+    * Endpoint: `kubecop.alertmanager.endpoint` (example `localhost:9093`)
+* Syslog (RFC 5424)
+    * Enable: `kubecop.syslog.enabled`
+    * Endpoint: `kubecop.syslog.endpoint` (example `localhost:514`)
+    * Protocol: `kubecop.syslog.protocol` (example `udp`)
+* Stdout (printing alerts to log)
+
+
+Read more about them [here](/pkg/exporters/README.md)
+
+#### Metrics export
+
+KubeCop can export internal metrics to Prometheus. Internal metrics include:
+
+* Number of alerts sent
+* Number of events processed (exec, open, etc.)
+* Number of application profile changes
+
+These metrics can be useful to understand the load on the system how it behaves.
+
+You can enable the exported with `kubecop.prometheusExporter.enabled=true`.
+
+#### Bindings
+
+KubeCop applies alert rules on Kubernetes workloads based on rule-binding configuration.
+
+Rule-binding are simple objects (CRDs) very similar to existing Kubernetes binding objects like `RoleBinding` or `AdmissionPolicyBinding`. They have two major parts:
+* Matching (to which object the rules are applied to)
+* Rule list (what rules to apply to these objects)
+
+The default Helm installation comes with a basic rule-binding object called `all-rules-all-pods` which effectively applies all the existing rules to all Pods except `kube-system` namespace and KubeCop itself.
+
+The bindings should be adjusted according to the alert settings fitting the deployments.
 
 ### Requirements
 
 KubeCop supports Linux nodes only (since it is eBPF based), it also requires `CAP_SYS_ADMIN` capability (but not `privilged:true`).
-
-## Development setup
-> **Note:** make sure to configure the [exportes](pkg/exporters/README.md) before running the KubeCop.
-
-Clone this repository then do the following:
-```bash
-make deploy-dev-pod # Deploying dev pod on your cluster
-make install        # Build and deploy the binaries (installing them in the dev Pod)
-make open-shell     # Open a shell on the development Pods
-```
-
-To test it, in a different shell install the application profile for Nginx and deploy Nginx
-```bash
-kubectl apply -f dev/nginx/nginx-app-profile.yaml -f dev/nginx/nginx-deployment.yaml
-```
-
-and now open a shell on the Nginx Pod which will trigger un-whitelisted alert in the KubeCop
-```bash
-kubectl exec -it $(kubectl get pods -l app=nginx -o=jsonpath='{.items[0].metadata.name}') -- sh
-```
-
-you should get this on the KubeCop console:
-```
-&{nginx ad5d83bb20617b086ec8ec384ac76976d2ac4aa39d8380f2ae3b0080d205edc5 nginx-deployment-cbdccf466-jhvb7 default 1699770928201031673 0} - Alert exec call "/bin/sh" is not whitelisted by application profile```
-
-## Tear down
-```bash
-make close-shell    # Close the shell on the development Pods
-```
-
-## Getting pprof samples from KubeCop
-
-Run KubeCop with `_PPROF_SERVER=enable` (env variable)
-
-Then pull the sample file and see results with these commands:
-```bash
-curl http://<KubeCopIP>:6060/debug/pprof/profile?seconds=120 -o pprof.pd.gz
-go tool pprof -http=:8082 pprof.pd.gz
-```
-

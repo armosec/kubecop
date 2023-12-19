@@ -40,7 +40,7 @@ func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.A
 		k8sClientset:            k8sClientset,
 		eventProcessingPool:     workerPool,
 		tracer:                  tracer,
-		promCollector:           CreatePrometheusMetric(),
+		promCollector:           createPrometheusMetric(),
 		nodeName:                nodeName,
 	}
 	log.Print("Engine created")
@@ -55,5 +55,5 @@ func (e *Engine) SetGetRulesForPodFunc(getRulesForPodFunc func(podName, namespac
 func (e *Engine) Delete() {
 	e.StopPullComponent()
 	e.eventProcessingPool.StopWait()
-	e.promCollector.Destroy()
+	e.promCollector.destroy()
 }
