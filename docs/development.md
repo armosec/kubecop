@@ -15,6 +15,10 @@ make open-shell     # Open a shell on the development Pods
 
 In the shell, you can run the `kubecop` binary. This gives an agile environment to work and test.
 
+```bash
+$ kubecop
+```
+
 
 To test KubeCop, in a different shell, install the application profile for Nginx and deploy Nginx
 ```bash

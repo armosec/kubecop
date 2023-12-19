@@ -60,13 +60,12 @@ To install KubeCop on your Kubernetes cluster, do the following steps:
 ```bash
 git clone https://github.com/armosec/kubecop.git && cd kubecop
 # Assuming AlertManager is running in service  "alertmanager-operated" in namespace "monitoring"
-helm install kubecop chart/kubecop -n kubescape --create-namespace --set kubecop.alertmanager.enabled=true --set kubecop.alertmanager.endpoint="alertmanager-operated.monitoring.svc.cluster.local:9093"
+helm install kubecop chart/kubecop -n kubescape --create-namespace
 ```
 
 You should be getting alerts after the learning period ends. Try `kubectl exec` on one of the Pods after the learning period!
 
 #### Advanced parameter configurations
-
 
 ##### Finalization
 
@@ -90,6 +89,18 @@ Currently supported:
 
 
 Read more about them [here](/pkg/exporters/README.md)
+
+#### Metrics export
+
+KubeCop can export internal metrics to Prometheus. Internal metrics include:
+
+* Number of alerts sent
+* Number of events processed (exec, open, etc.)
+* Number of application profile changes
+
+These metrics can be useful to understand the load on the system how it behaves.
+
+You can enable the exported with `kubecop.prometheusExporter.enabled=true`.
 
 #### Bindings
 
