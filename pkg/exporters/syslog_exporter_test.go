@@ -19,7 +19,7 @@ func setupServer() *syslog.Server {
 	server := syslog.NewServer()
 	server.SetFormat(syslog.Automatic)
 	server.SetHandler(handler)
-	if err := server.ListenUDP("0.0.0.0:514"); err != nil {
+	if err := server.ListenUDP("0.0.0.0:40000"); err != nil { // Due to permission issues, we can't listen on port 514 on the CI.
 		log.Printf("failed to listen on UDP: %v", err)
 		os.Exit(1)
 	}
@@ -52,7 +52,7 @@ func TestSyslogExporter(t *testing.T) {
 	defer server.Kill()
 
 	// Set up environment variables for the exporter
-	syslogHost := "127.0.0.1:514"
+	syslogHost := "127.0.0.1:40000"
 	os.Setenv("SYSLOG_HOST", syslogHost)
 	os.Setenv("SYSLOG_PROTOCOL", "udp")
 
