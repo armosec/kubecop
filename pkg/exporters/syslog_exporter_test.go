@@ -20,13 +20,11 @@ func setupServer() *syslog.Server {
 	server.SetFormat(syslog.Automatic)
 	server.SetHandler(handler)
 	if err := server.ListenUDP("0.0.0.0:40000"); err != nil { // Due to permission issues, we can't listen on port 514 on the CI.
-		log.Printf("failed to listen on UDP: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to listen on UDP: %v", err)
 	}
 
 	if err := server.Boot(); err != nil {
-		log.Printf("failed to boot the server: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to boot the server: %v", err)
 	}
 
 	go func(channel syslog.LogPartsChannel) {
