@@ -1,6 +1,7 @@
 package exporters
 
 import (
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -18,16 +19,20 @@ func setupServer() *syslog.Server {
 	server := syslog.NewServer()
 	server.SetFormat(syslog.Automatic)
 	server.SetHandler(handler)
-	server.ListenUDP("0.0.0.0:514")
-	server.Boot()
+	if err := server.ListenUDP("0.0.0.0:514"); err != nil {
+		log.Printf("failed to listen on UDP: %v", err)
+		os.Exit(1)
+	}
+
+	if err := server.Boot(); err != nil {
+		log.Printf("failed to boot the server: %v", err)
+		os.Exit(1)
+	}
 
 	go func(channel syslog.LogPartsChannel) {
 		for logParts := range channel {
-			// Assert logParts is not nil
 			if assert.NotNil(nil, logParts) {
-				// Assert logParts["content"] is not nil
 				if assert.NotNil(nil, logParts["content"]) {
-					// Assert logParts["message"].(string) is not empty
 					assert.NotEmpty(nil, logParts["content"].(string))
 				}
 			} else {
@@ -47,7 +52,7 @@ func TestSyslogExporter(t *testing.T) {
 	defer server.Kill()
 
 	// Set up environment variables for the exporter
-	syslogHost := "localhost:514"
+	syslogHost := "127.0.0.1:514"
 	os.Setenv("SYSLOG_HOST", syslogHost)
 	os.Setenv("SYSLOG_PROTOCOL", "udp")
 
@@ -58,6 +63,13 @@ func TestSyslogExporter(t *testing.T) {
 	}
 
 	// Send an alert
+	syslogExp.SendAlert(&rule.R0001UnexpectedProcessLaunchedFailure{
+		RuleName: "testrule",
+		Err:      "Application profile is missing",
+		FailureEvent: &tracing.ExecveEvent{GeneralEvent: tracing.GeneralEvent{
+			ContainerName: "testcontainer", ContainerID: "testcontainerid", Namespace: "testnamespace", PodName: "testpodname"}},
+	})
+
 	syslogExp.SendAlert(&rule.R0001UnexpectedProcessLaunchedFailure{
 		RuleName: "testrule",
 		Err:      "Application profile is missing",
