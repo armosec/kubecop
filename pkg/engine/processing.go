@@ -18,20 +18,25 @@ func (engine *Engine) ProcessEvent(eventType tracing.EventType, event interface{
 	}
 
 	// Loop over the boundRules
-	for _, rule := range boundRules {
+	for _, boundedRule := range boundRules {
 		// TODO if no app profile and one of the rules must have it then fire alert!
-		if appProfile == nil && rule.Requirements().NeedApplicationProfile {
+		if appProfile == nil && boundedRule.Requirements().NeedApplicationProfile {
 			if os.Getenv("DEBUG") == "true" {
 				log.Printf("%v - warning missing app profile", e)
 			}
 			continue // TODO - check with the RuleBinding if alert should be fired or not
 		}
 
-		ruleFailure := rule.ProcessEvent(eventType, event, appProfile, engine)
+		ruleFailure := boundedRule.ProcessEvent(eventType, event, appProfile, engine)
 		if ruleFailure != nil {
+			if os.Getenv("RESPONSE_ENABLED") == "true" {
+				if ruleFailure.Priority() >= rule.RulePriorityHigh && boundedRule.Action() != rule.NoAction {
+					engine.Action(ruleFailure, boundedRule.Action()) // TODO - add action to the rule binding.
+				}
+			}
 			exporters.SendAlert(ruleFailure)
-			engine.promCollector.reportRuleAlereted(rule.Name())
+			engine.promCollector.reportRuleAlereted(boundedRule.Name())
 		}
-		engine.promCollector.reportRuleProcessed(rule.Name())
+		engine.promCollector.reportRuleProcessed(boundedRule.Name())
 	}
 }

@@ -72,6 +72,9 @@ type Rule interface {
 
 	// Get rule parameters.
 	GetParameters() map[string]interface{}
+
+	// Rule action.
+	Action() Action
 }
 
 type BaseRule struct {
@@ -101,6 +104,10 @@ func (rule *BaseRule) GetParameters() map[string]interface{} {
 	}
 
 	return parametersCopy
+}
+
+func (rule *BaseRule) Action() Action {
+	return NoAction
 }
 
 func (r *RuleDesciptor) HasTags(tags []string) bool {
