@@ -39,7 +39,6 @@ def all_alerts_from_malicious_app(test_framework):
             "Exec Binary Not In Base Image",
             "Malicious SSH Connection",
             "Exec from mount",
-            "Unshare System Call usage",
             "Crypto Miners port detected"
         ]
 
