@@ -23,6 +23,9 @@ kubecop:
     enabled: false
     endpoint: "localhost:514"
     protocol: "udp"
+  csv:
+    enabled: false
+    path: "/tmp/kubecop.csv"
   prometheusExporter:
     enabled: false
   pprofserver:

@@ -35,7 +35,6 @@ spec:
     - ruleName: "Kernel Module Load"
     - ruleName: "Exec Binary Not In Base Image"
     - ruleName: "Malicious SSH Connection"
-    - ruleName: "Unshare System Call usage"
     - ruleName: "Crypto Miners port detected"
     - ruleName: "Exec from mount"
 
