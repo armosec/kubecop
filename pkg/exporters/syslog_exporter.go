@@ -52,7 +52,7 @@ func (se *SyslogExporter) SendAlert(failedRule rule.RuleFailure) {
 		ProcessID: fmt.Sprintf("%d", failedRule.Event().Pid),
 		StructuredData: []rfc5424.StructuredData{
 			{
-				ID: "kubecop - General Event",
+				ID: fmt.Sprintf("kubecop@%d", failedRule.Event().Pid),
 				Parameters: []rfc5424.SDParam{
 					{
 						Name:  "rule",
