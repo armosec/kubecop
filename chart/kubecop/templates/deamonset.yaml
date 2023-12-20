@@ -72,6 +72,10 @@ spec:
           - name: SYSLOG_PROTOCOL
             value: {{ .Values.kubecop.syslog.protocol }}
           {{- end }}
+          {{- if .Values.kubecop.csv.enabled  }}
+          - name: EXPORTER_CSV_PATH
+            value: {{ .Values.kubecop.csv.path }}
+          {{- end }}
           {{- if .Values.kubecop.pprofserver.enabled  }}
           - name: _PPROF_SERVER
             value: "true"

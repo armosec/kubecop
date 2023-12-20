@@ -86,6 +86,9 @@ Currently supported:
     * Endpoint: `kubecop.syslog.endpoint` (example `localhost:514`)
     * Protocol: `kubecop.syslog.protocol` (example `udp`)
 * Stdout (printing alerts to log)
+* CSV (writing alerts to CSV file)
+    * Enable: `kubecop.csv.enabled`
+    * Path: `kubecop.csv.path` (example `/tmp/alerts.csv`)
 
 
 Read more about them [here](/pkg/exporters/README.md)
