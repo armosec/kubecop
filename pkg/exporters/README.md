@@ -6,6 +6,7 @@ The following exporters are available:
 - [Alertmanager](https://github.com/prometheus/alertmanager)
 - STD OUT
 - SYSLOG
+- CSV
 
 ### Alertmanager
 The Alertmanager exporter is used to send alerts to the Alertmanager. The Alertmanager will then send the alerts to the configured receivers.
@@ -23,3 +24,8 @@ NOTE: The SYSLOG messages format is RFC 5424.
 To enable the SYSLOG exporter, set the following environment variables:
 - `SYSLOG_HOST`: The host of the syslog server. Example: `localhost:514`
 - `SYSLOG_PROTOCOL`: The protocol of the syslog server. Example: `tcp` or `udp`
+
+### CSV
+The CSV exporter is used to write the alerts to a CSV file. This exporter is disabled by default.
+To enable the CSV exporter, set the following environment variables:
+- `EXPORTER_CSV_PATH`: The path to the CSV file. Example: `/tmp/alerts.csv`
