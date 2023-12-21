@@ -6,7 +6,7 @@ kubecop:
   recording:
     samplingInterval: 60s
     finalizationDuration: 120s
-    finalizationJitter: 0s
+    finalizationJitter: 1s
   alertmanager:
     enabled: true
     endpoint: "alertmanager-operated.monitoring.svc.cluster.local:9093"
