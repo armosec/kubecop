@@ -99,6 +99,10 @@ spec:
           - name: FINALIZATION_DURATION
             value: "{{ .Values.kubecop.recording.finalizationDuration }}"
           {{- end }}
+          {{- if .Values.kubecop.recording.finalizationJitter  }}
+          - name: FINALIZATION_JITTER
+            value: "{{ .Values.kubecop.recording.finalizationJitter }}"
+          {{- end }}
         volumeMounts:
         - name: host
           mountPath: /host
