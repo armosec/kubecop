@@ -30,7 +30,7 @@ type ApplicationProfileK8sCache struct {
 	k8sConfig     *rest.Config
 	dynamicClient *dynamic.DynamicClient
 
-	cache map[string]*ApplicationProfileCacheEntry
+	cache map[string]ApplicationProfileCacheEntry
 
 	applicationProfileWatcher watcher.WatcherInterface
 
@@ -61,7 +61,7 @@ func NewApplicationProfileK8sCache(k8sConfig *rest.Config) (*ApplicationProfileK
 	if err != nil {
 		return nil, err
 	}
-	cache := make(map[string]*ApplicationProfileCacheEntry)
+	cache := make(map[string]ApplicationProfileCacheEntry)
 	newApplicationCache := ApplicationProfileK8sCache{
 		k8sConfig:                 k8sConfig,
 		dynamicClient:             dynamicClient,
@@ -106,7 +106,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 		return fmt.Errorf("application profile %s is not final", applicationProfile.GetName())
 	}
 
-	cache.cache[containerID] = &ApplicationProfileCacheEntry{
+	cache.cache[containerID] = ApplicationProfileCacheEntry{
 		ApplicationProfile: applicationProfile,
 		WorkloadName:       workloadName,
 		WorkloadKind:       strings.ToLower(kind),
@@ -120,7 +120,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 }
 
 func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace, kind, workloadName, ownerKind, ownerName, containerName, containerID string, acceptPartial bool) error {
-	cache.cache[containerID] = &ApplicationProfileCacheEntry{
+	cache.cache[containerID] = ApplicationProfileCacheEntry{
 		ApplicationProfile: nil,
 		WorkloadName:       workloadName,
 		WorkloadKind:       strings.ToLower(kind),
