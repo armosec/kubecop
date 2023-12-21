@@ -55,8 +55,12 @@ def load_10k_alerts_no_memory_leak(test_framework):
         # Get kubecop pod name
         kc_pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
         # Build query to get memory usage
-        query = 'sum(container_memory_working_set_bytes{pod="%s", container="kubecop"}) by (container)'%kc_pod_name
-        timestamps, values = send_promql_query_to_prom("load_10k_alerts_no_memory_leak_mem", query, time_start,time_end=time.time())
+        query = 'sum(container_memory_working_set_bytes{pod="%s"}) by (container)'%kc_pod_name
+        import ipdb
+        try:
+            timestamps, values = send_promql_query_to_prom("load_10k_alerts_no_memory_leak_mem", query, time_start,time_end=time.time())
+        except Exception as e:
+            ipdb.set_trace()
         save_plot_png("load_10k_alerts_no_memory_leak_mem", values=values,timestamps=timestamps, metric_name='Memory Usage (bytes)')
 
         # validate that there is no memory leak, but tolerate 5mb memory leak
