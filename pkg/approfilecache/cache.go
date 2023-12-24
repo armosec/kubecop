@@ -12,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
 )
 
 type ApplicationProfileCacheEntry struct {
@@ -27,10 +26,8 @@ type ApplicationProfileCacheEntry struct {
 }
 
 type ApplicationProfileK8sCache struct {
-	k8sConfig     *rest.Config
-	dynamicClient *dynamic.DynamicClient
-
-	cache map[string]*ApplicationProfileCacheEntry
+	dynamicClient dynamic.Interface
+	cache         map[string]ApplicationProfileCacheEntry
 
 	applicationProfileWatcher watcher.WatcherInterface
 
@@ -56,14 +53,9 @@ func getApplicationProfileFromUnstructured(typedObj *unstructured.Unstructured) 
 	return &applicationProfileObj, nil
 }
 
-func NewApplicationProfileK8sCache(k8sConfig *rest.Config) (*ApplicationProfileK8sCache, error) {
-	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
-	if err != nil {
-		return nil, err
-	}
-	cache := make(map[string]*ApplicationProfileCacheEntry)
+func NewApplicationProfileK8sCache(dynamicClient dynamic.Interface) (*ApplicationProfileK8sCache, error) {
+	cache := make(map[string]ApplicationProfileCacheEntry)
 	newApplicationCache := ApplicationProfileK8sCache{
-		k8sConfig:                 k8sConfig,
 		dynamicClient:             dynamicClient,
 		cache:                     cache,
 		applicationProfileWatcher: watcher.NewWatcher(dynamicClient, false), // No need to pre-list the application profiles since the container start will look for them
@@ -106,7 +98,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 		return fmt.Errorf("application profile %s is not final", applicationProfile.GetName())
 	}
 
-	cache.cache[containerID] = &ApplicationProfileCacheEntry{
+	cache.cache[containerID] = ApplicationProfileCacheEntry{
 		ApplicationProfile: applicationProfile,
 		WorkloadName:       workloadName,
 		WorkloadKind:       strings.ToLower(kind),
@@ -120,7 +112,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 }
 
 func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace, kind, workloadName, ownerKind, ownerName, containerName, containerID string, acceptPartial bool) error {
-	cache.cache[containerID] = &ApplicationProfileCacheEntry{
+	cache.cache[containerID] = ApplicationProfileCacheEntry{
 		ApplicationProfile: nil,
 		WorkloadName:       workloadName,
 		WorkloadKind:       strings.ToLower(kind),
@@ -133,7 +125,11 @@ func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace,
 }
 
 func (cache *ApplicationProfileK8sCache) DeleteApplicationProfile(containerID string) error {
-	delete(cache.cache, containerID)
+	if item, ok := cache.cache[containerID]; ok {
+		item.ApplicationProfile = nil
+		delete(cache.cache, containerID)
+	}
+
 	return nil
 }
 
@@ -224,8 +220,6 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 	partial := appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/partial"] == "true"
 	final := appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/final"] == "true"
 
-	log.Printf("APCache: Handling application profile %s/%s, partial: %v, final: %v\n", appProfileUnstructured.GetNamespace(), appProfileUnstructured.GetName(), partial, final)
-
 	// Check if the application profile is final or partial, if not then skip it
 	if !final {
 		return
@@ -237,7 +231,7 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 	// Add the application profile to the cache
 
 	// Loop over the application profile cache entries and check if there is an entry for the same workload
-	for _, cacheEntry := range c.cache {
+	for id, cacheEntry := range c.cache {
 		if cacheEntry.Namespace == appProfileUnstructured.GetNamespace() {
 			if !cacheEntry.AcceptPartial && partial {
 				// Skip the partial application profile becuase we expect a final one
@@ -251,9 +245,11 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 					return
 				}
 
+				log.Printf("Updating application profile %s for workload %s/%s\n", appProfile.GetName(), cacheEntry.Namespace, cacheEntry.WorkloadName)
+
 				// Update the cache entry
 				cacheEntry.ApplicationProfile = appProfile
-				cacheEntry.OwnerLevelProfile = false
+				c.cache[id] = cacheEntry
 				continue
 			}
 		}

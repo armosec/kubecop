@@ -32,6 +32,7 @@ import (
 // Global variables
 var NodeName string
 var k8sConfig *rest.Config
+var dynamicClientGlobal dynamic.Interface
 var FinalizationDurationInSeconds int64 = 120
 var FinalizationJitterInSeconds int64 = 30
 var SamplingIntervalInSeconds int64 = 60
@@ -78,6 +79,13 @@ func serviceInitNChecks(modeEbpf bool) error {
 		return err
 	}
 	k8sConfig = config
+
+	// Create Dyanmic client
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+	if err != nil {
+		return err
+	}
+	dynamicClientGlobal = dynamicClient
 
 	// Get Node name from environment variable
 	if nodeName := os.Getenv("NODE_NAME"); nodeName == "" {
@@ -160,7 +168,7 @@ func main() {
 		// Create tracer (without sink for now)
 		tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
 		// Create application profile cache
-		appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(k8sConfig)
+		appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(dynamicClientGlobal)
 		if err != nil {
 			log.Fatalf("Failed to create application profile cache: %v\n", err)
 		}
