@@ -27,7 +27,7 @@ type ApplicationProfileCacheEntry struct {
 
 type ApplicationProfileK8sCache struct {
 	dynamicClient dynamic.Interface
-	cache         map[string]*ApplicationProfileCacheEntry
+	cache         map[string]ApplicationProfileCacheEntry
 
 	applicationProfileWatcher watcher.WatcherInterface
 
@@ -54,7 +54,7 @@ func getApplicationProfileFromUnstructured(typedObj *unstructured.Unstructured) 
 }
 
 func NewApplicationProfileK8sCache(dynamicClient dynamic.Interface) (*ApplicationProfileK8sCache, error) {
-	cache := make(map[string]*ApplicationProfileCacheEntry)
+	cache := make(map[string]ApplicationProfileCacheEntry)
 	newApplicationCache := ApplicationProfileK8sCache{
 		dynamicClient:             dynamicClient,
 		cache:                     cache,
@@ -98,7 +98,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 		return fmt.Errorf("application profile %s is not final", applicationProfile.GetName())
 	}
 
-	cache.cache[containerID] = &ApplicationProfileCacheEntry{
+	cache.cache[containerID] = ApplicationProfileCacheEntry{
 		ApplicationProfile: applicationProfile,
 		WorkloadName:       workloadName,
 		WorkloadKind:       strings.ToLower(kind),
@@ -112,7 +112,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 }
 
 func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace, kind, workloadName, ownerKind, ownerName, containerName, containerID string, acceptPartial bool) error {
-	cache.cache[containerID] = &ApplicationProfileCacheEntry{
+	cache.cache[containerID] = ApplicationProfileCacheEntry{
 		ApplicationProfile: nil,
 		WorkloadName:       workloadName,
 		WorkloadKind:       strings.ToLower(kind),
@@ -231,7 +231,7 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 	// Add the application profile to the cache
 
 	// Loop over the application profile cache entries and check if there is an entry for the same workload
-	for _, cacheEntry := range c.cache {
+	for id, cacheEntry := range c.cache {
 		if cacheEntry.Namespace == appProfileUnstructured.GetNamespace() {
 			if !cacheEntry.AcceptPartial && partial {
 				// Skip the partial application profile becuase we expect a final one
@@ -249,6 +249,7 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 
 				// Update the cache entry
 				cacheEntry.ApplicationProfile = appProfile
+				c.cache[id] = cacheEntry
 				continue
 			}
 		}
