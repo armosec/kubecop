@@ -73,6 +73,7 @@ func TestCacheBasicExists(t *testing.T) {
 		t.Errorf("Failed to create cache: %v", err)
 		return
 	}
+	defer cache.Destroy()
 
 	// Load a container profile
 	err = cache.LoadApplicationProfile("default", "pod", "nginx-aaaaa-bbbb", "deployment", "nginx", "nginx", "00000000000000000000000000000000", false)
@@ -142,6 +143,7 @@ func TestCacheBasicAnticipateProfile(t *testing.T) {
 		t.Errorf("Failed to create cache: %v", err)
 		return
 	}
+	defer cache.Destroy()
 
 	// Create Anticipation a container profile
 	err = cache.AnticipateApplicationProfile("default", "pod", "nginx-aaaaa-bbbb", "deployment", "nginx", "nginx", "00000000000000000000000000000000", false)
