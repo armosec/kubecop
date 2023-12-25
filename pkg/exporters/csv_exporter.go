@@ -45,6 +45,8 @@ func (ce *CsvExporter) SendAlert(failedRule rule.RuleFailure) {
 	defer csvWriter.Flush()
 	csvWriter.Write([]string{
 		failedRule.Name(),
+		failedRule.Error(),
+		failedRule.FixSuggestion(),
 		failedRule.Event().PodName,
 		failedRule.Event().ContainerName,
 		failedRule.Event().Namespace,
@@ -72,6 +74,8 @@ func writeHeaders(csvPath string) {
 	defer csvWriter.Flush()
 	csvWriter.Write([]string{
 		"Rule Name",
+		"Alert Message",
+		"Fix Suggestion",
 		"Pod Name",
 		"Container Name",
 		"Namespace",
