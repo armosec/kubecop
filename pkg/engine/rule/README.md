@@ -13,4 +13,4 @@
 | R1003 | Malicious SSH Connection | Detecting ssh connection to disallowed port | [ssh connection port malicious] | 8 | false | false |
 | R1004 | Exec from mount | Detecting exec calls from mounted paths. | [exec mount] | 5 | false | false |
 | R1006 | Unshare System Call usage | Detecting Unshare System Call usage. | [syscall escape unshare] | 8 | false | false |
-| R1007 | Crypto Miners | Detecting Crypto Miners. | [network crypto miners malicious] | 8 | false | false |
+| R1007 | Crypto Miners | Detecting Crypto Miners. | [network crypto miners malicious dns] | 8 | false | false |
