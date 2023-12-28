@@ -268,8 +268,9 @@ func main() {
 		clamav := scan.NewClamAV(clamavConfig)
 
 		// Check if we can connect to ClamAV - Retry every 5 seconds until we can connect.
-		for {
+		for retryCount := 0; retryCount < 5; retryCount++ {
 			if err := clamav.Ping(); err != nil {
+				retryCount++
 				// log.Fatalf("Failed to connect to ClamAV: %v\n", err)
 				log.Printf("Failed to connect to ClamAV: %v\n", err)
 				log.Printf("Retrying in 5 seconds...\n")
