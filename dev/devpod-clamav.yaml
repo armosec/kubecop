@@ -128,7 +128,7 @@ spec:
         - name: bpffs
           mountPath: /sys/fs/bpf
       - name: clamd
-        image: clamav/clamav-debian:latest
+        image: clamav/clamav:latest
         imagePullPolicy: Always
         volumeMounts:
         - name: clamdb
