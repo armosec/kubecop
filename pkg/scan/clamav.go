@@ -44,9 +44,9 @@ func (c *ClamAV) StartInfiniteScan(ctx context.Context, path string) {
 	}()
 }
 
-// Continuously scan the given path for viruses (recursively).
+// Scan the given path for viruses (recursively).
 func (c *ClamAV) scan(ctx context.Context, path string) {
-	response, err := c.clamd.AllMatchScanFile(path)
+	response, err := c.clamd.ScanFile(path)
 
 	if err != nil {
 		log.Fatal(err)

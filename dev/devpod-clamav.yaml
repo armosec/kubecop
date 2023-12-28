@@ -33,26 +33,14 @@ data:
     Debug no
     LeaveTemporaryFiles no
     LogFile /dev/stdout
-    LogFileMaxSize 0
     LogTime yes
-    LogClean no
+    LogClean yes
     TCPSocket 3310
     ExcludePath ^/proc/
     ExcludePath ^/sys/
     ExcludePath ^/host/proc/
     ExcludePath ^/host/sys/
     MaxDirectoryRecursion 64
-    FollowDirectorySymlinks no
-    FollowFileSymlinks no
-    CrossFilesystems no
-    AllowAllMatchScan no
-    HeuristicAlerts no
-    HeuristicScanPrecedence no
-    ScanELF yes
-    ScanPDF yes
-    ScanSWF yes
-    ScanXMLDOCS yes
-    ScanArchive yes
 
   freshclam.conf: |
     Foreground yes
