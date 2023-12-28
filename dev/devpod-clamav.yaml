@@ -32,10 +32,10 @@ data:
     Foreground yes
     Debug no
     LeaveTemporaryFiles no
-    LogFile /dev/stdout
     LogTime yes
     LogClean yes
     TCPSocket 3310
+    TCPAddr 127.0.0.1
     ExcludePath ^/proc/
     ExcludePath ^/sys/
     ExcludePath ^/host/proc/
@@ -57,7 +57,6 @@ data:
     CompressLocalDatabase no
     TestDatabases yes
     Checks 12
-    NotifyClamd /etc/clamav/clamd.conf
     ConnectTimeout 30
     ReceiveTimeout 60
 
@@ -130,6 +129,11 @@ spec:
       - name: clamd
         image: clamav/clamav:latest
         imagePullPolicy: Always
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_ADMIN
         volumeMounts:
         - name: clamdb
           mountPath: /var/lib/clamav
