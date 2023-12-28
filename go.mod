@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/cilium/ebpf v0.12.3
+	github.com/dutchcoders/go-clamd v0.0.0-20170520113014-b970184f4d9e
 	github.com/gammazero/workerpool v1.1.3
 	github.com/go-openapi/strfmt v0.21.7
 	github.com/inspektor-gadget/inspektor-gadget v0.23.1

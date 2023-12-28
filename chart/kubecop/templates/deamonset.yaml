@@ -91,6 +91,16 @@ spec:
           - name: OPEN_IGNORE_PREFIXES
             value: "{{ .Values.kubecop.partialProfiles.ignorePrefixes }}"
           {{- end }}
+          {{- if .Values.kubecop.clamAV.enabled  }}
+          - name: CLAMAV_HOST
+            value: {{ .Values.kubecop.clamAV.host }}
+          - name: CLAMAV_PORT
+            value: {{ .Values.kubecop.clamAV.port }}
+          - name: CLAMAV_SCAN_PATH
+            value: {{ .Values.kubecop.clamAV.path }}
+          - name: CLAMAV_SCAN_INTERVAL
+            value: {{ .Values.kubecop.clamAV.scanInterval }}
+          {{- end }}
           {{- if .Values.kubecop.recording.samplingInterval  }}
           - name: SAMPLING_INTERVAL
             value: "{{ .Values.kubecop.recording.samplingInterval }}"
