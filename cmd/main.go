@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"net/http"
 	_ "net/http/pprof"
@@ -266,8 +267,19 @@ func main() {
 	if clamavConfig.Host != "" && clamavConfig.Port != "" && clamavConfig.ScanInterval != "" {
 		clamav := scan.NewClamAV(clamavConfig)
 
-		if err := clamav.Ping(); err != nil {
-			log.Fatalf("Failed to connect to ClamAV: %v\n", err)
+		// Check if we can connect to ClamAV - Retry every 5 seconds until we can connect.
+		for {
+			if err := clamav.Ping(); err != nil {
+				// log.Fatalf("Failed to connect to ClamAV: %v\n", err)
+				log.Printf("Failed to connect to ClamAV: %v\n", err)
+				log.Printf("Retrying in 5 seconds...\n")
+				// Wait 5 seconds before retrying
+				select {
+				case <-time.After(5 * time.Second):
+					continue
+				}
+			}
+			break
 		}
 
 		// Start the ClamAV scanner
