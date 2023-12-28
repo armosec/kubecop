@@ -5,7 +5,7 @@ import "fmt"
 type ClamAVConfig struct {
 	Host         string
 	Port         string
-	ScanInterval int
+	ScanInterval string
 }
 
 func (c *ClamAVConfig) Address() string {

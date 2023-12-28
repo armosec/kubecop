@@ -10,7 +10,7 @@ import (
 
 type ClamAV struct {
 	clamd        *clamd.Clamd
-	scanInterval int
+	scanInterval string
 }
 
 // New ClamAV
@@ -32,8 +32,14 @@ func (c *ClamAV) StartInfiniteScan(ctx context.Context, path string) {
 				c.scan(ctx, path)
 			}
 
+			// Convert c.scanInterval to time.Duration before multiplying with time.Second
+			interval, err := time.ParseDuration(c.scanInterval)
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			// Wait for the given interval before scanning again
-			time.Sleep(time.Duration(c.scanInterval) * time.Second)
+			time.Sleep(interval)
 		}
 	}()
 }

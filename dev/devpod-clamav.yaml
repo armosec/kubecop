@@ -22,6 +22,58 @@ roleRef:
   name: cluster-admin
   apiGroup: rbac.authorization.k8s.io
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clamav
+  namespace: kapprofiler-dev-env
+data:
+  clamd.conf: |
+    Foreground yes
+    Debug no
+    LeaveTemporaryFiles no
+    LogFile /dev/stdout
+    LogFileMaxSize 0
+    LogTime yes
+    LogClean no
+    TCPSocket 3310
+    ExcludePath ^/proc/
+    ExcludePath ^/sys/
+    ExcludePath ^/host/proc/
+    ExcludePath ^/host/sys/
+    MaxDirectoryRecursion 64
+    FollowDirectorySymlinks no
+    FollowFileSymlinks no
+    CrossFilesystems no
+    AllowAllMatchScan no
+    HeuristicAlerts no
+    HeuristicScanPrecedence no
+    ScanELF yes
+    ScanPDF yes
+    ScanSWF yes
+    ScanXMLDOCS yes
+    ScanArchive yes
+
+  freshclam.conf: |
+    Foreground yes
+    DatabaseDirectory /var/lib/clamav
+    UpdateLogFile /dev/stdout
+    Debug no
+    LogFileMaxSize 0
+    LogTime yes
+    DatabaseOwner root
+    DNSDatabaseInfo current.cvd.clamav.net
+    DatabaseMirror database.clamav.net
+    MaxAttempts 3
+    ScriptedUpdates yes
+    CompressLocalDatabase no
+    TestDatabases yes
+    Checks 12
+    NotifyClamd /etc/clamav/clamd.conf
+    ConnectTimeout 30
+    ReceiveTimeout 60
+
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -61,6 +113,14 @@ spec:
                 fieldPath: metadata.name
           - name: HOST_ROOT
             value: "/host"
+          - name: CLAMAV_HOST
+            value: "localhost"
+          - name: CLAMAV_PORT
+            value: "3310"
+          - name: CLAMAV_SCAN_INTERVAL
+            value: "60s"
+          - name: CLAMAV_SCAN_PATH
+            value: "/host"
         securityContext:
           privileged: true
           capabilities:
@@ -79,9 +139,19 @@ spec:
           mountPath: /sys/fs/cgroup
         - name: bpffs
           mountPath: /sys/fs/bpf
-      - name: clamav-no-update
-        image: clamav/clamav-debian:1.2.0-6
+      - name: clamd
+        image: clamav/clamav-debian:latest
         imagePullPolicy: Always
+        volumeMounts:
+        - name: clamdb
+          mountPath: /var/lib/clamav
+          readOnly: false
+        - name: etc
+          mountPath: /etc/clamav
+          readOnly: true
+        - name: host
+          mountPath: /host
+          readOnly: true
       tolerations:
       - effect: NoSchedule
         operator: Exists
@@ -106,3 +176,8 @@ spec:
       - name: debugfs
         hostPath:
           path: /sys/kernel/debug
+      - name: clamdb
+        emptyDir: {}
+      - name: etc
+        configMap:
+          name: clamav

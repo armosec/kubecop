@@ -257,18 +257,13 @@ func main() {
 	}
 
 	// Start the ClamAV scanner
-	scanInterval, err := strconv.Atoi(os.Getenv("CLAMAV_SCAN_INTERVAL"))
-	if err != nil {
-		log.Fatalf("Failed to parse CLAMAV_SCAN_INTERVAL: %v\n", err)
-	}
-
 	clamavConfig := scan.ClamAVConfig{
 		Host:         os.Getenv("CLAMAV_HOST"),
 		Port:         os.Getenv("CLAMAV_PORT"),
-		ScanInterval: scanInterval,
+		ScanInterval: os.Getenv("CLAMAV_SCAN_INTERVAL"),
 	}
 
-	if clamavConfig.Host != "" && clamavConfig.Port != "" {
+	if clamavConfig.Host != "" && clamavConfig.Port != "" && clamavConfig.ScanInterval != "" {
 		clamav := scan.NewClamAV(clamavConfig)
 
 		if err := clamav.Ping(); err != nil {
