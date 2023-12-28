@@ -133,3 +133,7 @@ func (engine *Engine) SendDnsEvent(event *tracing.DnsEvent) {
 	engine.promCollector.reportEbpfEvent(tracing.DnsEventType)
 	engine.submitEventForProcessing(event.ContainerID, tracing.DnsEventType, event)
 }
+
+func (engine *Engine) ReportError(eventType tracing.EventType, err error) {
+	engine.promCollector.reportEbpfFailedEvent()
+}
