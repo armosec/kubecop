@@ -12,6 +12,7 @@ type prometheusMetric struct {
 	ebpfDNSCounter        prometheus.Counter
 	ebpfSyscallCounter    prometheus.Counter
 	ebpfCapabilityCounter prometheus.Counter
+	ebpfFailedCounter     prometheus.Counter
 	ruleCounter           prometheus.Counter
 	alertCounter          prometheus.Counter
 }
@@ -65,8 +66,11 @@ func createPrometheusMetric() *prometheusMetric {
 	})
 	prometheus.MustRegister(alertCounter)
 
-	//prometheus.MustRegister(perf.RecordReadCounter)
-	//prometheus.MustRegister(perf.WaitCounter)
+	ebpfFailedCounter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "kubecop_ebpf_event_failure_counter",
+		Help: "The total number of failed events received from the eBPF probe",
+	})
+	prometheus.MustRegister(ebpfFailedCounter)
 
 	return &prometheusMetric{
 		ebpfExecCounter:       ebpfExecCounter,
@@ -75,6 +79,7 @@ func createPrometheusMetric() *prometheusMetric {
 		ebpfDNSCounter:        ebpfDNSCounter,
 		ebpfSyscallCounter:    ebpfSyscallCounter,
 		ebpfCapabilityCounter: ebpfCapabilityCounter,
+		ebpfFailedCounter:     ebpfFailedCounter,
 		ruleCounter:           ruleCounter,
 		alertCounter:          alertCounter,
 	}
@@ -87,6 +92,7 @@ func (p *prometheusMetric) destroy() {
 	prometheus.Unregister(p.ebpfDNSCounter)
 	prometheus.Unregister(p.ebpfSyscallCounter)
 	prometheus.Unregister(p.ebpfCapabilityCounter)
+	prometheus.Unregister(p.ebpfFailedCounter)
 	prometheus.Unregister(p.ruleCounter)
 	prometheus.Unregister(p.alertCounter)
 }
@@ -106,6 +112,10 @@ func (p *prometheusMetric) reportEbpfEvent(eventType tracing.EventType) {
 	case tracing.CapabilitiesEventType:
 		p.ebpfCapabilityCounter.Inc()
 	}
+}
+
+func (p *prometheusMetric) reportEbpfFailedEvent() {
+	p.ebpfFailedCounter.Inc()
 }
 
 func (p *prometheusMetric) reportRuleProcessed(ruleID string) {
