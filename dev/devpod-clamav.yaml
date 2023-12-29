@@ -40,6 +40,8 @@ data:
     ExcludePath ^/sys/
     ExcludePath ^/host/proc/
     ExcludePath ^/host/sys/
+    ExcludePath ^/host/dev/
+    ExcludePath ^/host/run/
     MaxDirectoryRecursion 64
 
   freshclam.conf: |
@@ -129,11 +131,6 @@ spec:
       - name: clamd
         image: clamav/clamav:latest
         imagePullPolicy: Always
-        securityContext:
-          privileged: true
-          capabilities:
-            add:
-              - SYS_ADMIN
         volumeMounts:
         - name: clamdb
           mountPath: /var/lib/clamav
