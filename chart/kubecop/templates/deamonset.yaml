@@ -126,6 +126,21 @@ spec:
           mountPath: /sys/fs/cgroup
         - name: bpffs
           mountPath: /sys/fs/bpf
+    {{- if .Values.kubecop.clamAV.enabled }}
+      - name: clamd
+        image: clamav/clamav:latest
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: clamdb
+          mountPath: /var/lib/clamav
+          readOnly: false
+        - name: etc
+          mountPath: /etc/clamav
+          readOnly: true
+        - name: host
+          mountPath: /host
+          readOnly: true
+    {{- end }}
       tolerations:
       - effect: NoSchedule
         operator: Exists
