@@ -273,13 +273,17 @@ func main() {
 				retryCount++
 				// log.Fatalf("Failed to connect to ClamAV: %v\n", err)
 				log.Printf("Failed to connect to ClamAV: %v\n", err)
-				log.Printf("Retrying in 5 seconds...\n")
-				// Wait 5 seconds before retrying
+				log.Printf("Retrying in 10 seconds...\n")
+				// Wait 10 seconds before retrying
 				select {
-				case <-time.After(5 * time.Second):
+				case <-time.After(10 * time.Second):
 					continue
 				}
 			}
+			if retryCount < 5 {
+				log.Printf("Connected to ClamAV\n")
+			}
+
 			break
 		}
 

@@ -29,6 +29,7 @@ func (c *ClamAV) StartInfiniteScan(ctx context.Context, path string) {
 				log.Println("Infinite scan cancelled")
 				return
 			default:
+				log.Println("Starting scan")
 				c.scan(ctx, path)
 			}
 
@@ -46,7 +47,7 @@ func (c *ClamAV) StartInfiniteScan(ctx context.Context, path string) {
 
 // Scan the given path for viruses (recursively).
 func (c *ClamAV) scan(ctx context.Context, path string) {
-	response, err := c.clamd.ScanFile(path)
+	response, err := c.clamd.ContScanFile(path)
 
 	if err != nil {
 		log.Fatal(err)
@@ -61,11 +62,7 @@ func (c *ClamAV) scan(ctx context.Context, path string) {
 				return
 			}
 			if result.Status == clamd.RES_FOUND {
-				log.Printf("Virus detected: %s\nHash: %s\n Size: %d\n Path: %s", result.Description, result.Hash, result.Size, result.Path)
-			} else if result.Status == clamd.RES_ERROR {
-				log.Printf("error scanning file: %s", result.Description)
-			} else if result.Status == clamd.RES_PARSE_ERROR {
-				log.Printf("error parsing file: %s", result.Description)
+				log.Printf("Virus detected: %s", result.Path)
 			}
 		case <-ctx.Done():
 			// The context was cancelled, which means we should stop the scan.
