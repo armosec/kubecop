@@ -122,7 +122,7 @@ spec:
                       - Malicious SSH Connection
                       - Exec from mount
                       - Unshare System Call usage
-                      - Crypto Miners port detected
+                      - Crypto Miner detected
                       type: string
                     ruleTags:
                       items:

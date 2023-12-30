@@ -20,4 +20,4 @@ spec:
     - ruleName: "Kubernetes Client Executed"
     - ruleName: "Exec from mount"
     - ruleName: "Unshare System Call usage"
-    - ruleName: "Crypto Miners port detected"
+    - ruleName: "Crypto Miner detected"

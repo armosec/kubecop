@@ -46,4 +46,23 @@ func TestR1007CryptoMiners(t *testing.T) {
 		return
 	}
 
+	// Create dns event
+	e2 := &tracing.DnsEvent{
+		GeneralEvent: tracing.GeneralEvent{
+			ContainerID: "test",
+			PodName:     "test",
+			Namespace:   "test",
+			Timestamp:   0,
+		},
+		DnsName:   "zergpool.com",
+		Addresses: []string{},
+	}
+
+	ruleResult = r.ProcessEvent(tracing.DnsEventType, e2, nil, nil)
+	if ruleResult == nil {
+		fmt.Printf("ruleResult: %v\n", ruleResult)
+		t.Errorf("Expected ruleResult to be Failure because of dns name is in the commonly used crypto miners domains")
+		return
+	}
+
 }
