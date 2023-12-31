@@ -43,6 +43,7 @@ data:
     ExcludePath ^/host/dev/
     ExcludePath ^/host/run/
     MaxDirectoryRecursion 64
+    ExtendedDetectionInfo yes
 
   freshclam.conf: |
     Foreground yes
@@ -129,7 +130,7 @@ spec:
         - name: bpffs
           mountPath: /sys/fs/bpf
       - name: clamd
-        image: clamav/clamav:latest
+        image: clamav/clamav-debian:1.2.0-6
         imagePullPolicy: Always
         volumeMounts:
         - name: clamdb

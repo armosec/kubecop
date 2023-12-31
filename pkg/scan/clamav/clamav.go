@@ -64,7 +64,13 @@ func (c *ClamAV) scan(ctx context.Context, path string) {
 				return
 			}
 			if result.Status == clamd.RES_FOUND {
-				exporters.SendMalwareAlert(scan.MalwareDescription{})
+				exporters.SendMalwareAlert(scan.MalwareDescription{
+					Name:        result.Description,
+					Path:        result.Path,
+					Hash:        result.Hash,
+					Size:        result.Size,
+					Description: result.Description,
+				})
 			}
 		case <-ctx.Done():
 			// The context was cancelled, which means we should stop the scan.

@@ -33,5 +33,17 @@ func (exporter *StdoutExporter) SendRuleAlert(failedRule rule.RuleFailure) {
 }
 
 func (exporter *StdoutExporter) SendMalwareAlert(malwareDescription scan.MalwareDescription) {
-	exporter.logger.Error(malwareDescription.Name, slog.Int("severity", 10), slog.String("message", malwareDescription.Description))
+	exporter.logger.Error(
+		malwareDescription.Name,
+		slog.Int("severity", 10),
+		slog.String("description", malwareDescription.Description),
+		slog.String("hash", malwareDescription.Hash),
+		slog.String("path", malwareDescription.Path),
+		slog.Int("size", malwareDescription.Size),
+		slog.String("pod", malwareDescription.PodName),
+		slog.String("namespace", malwareDescription.Namespace),
+		slog.String("container", malwareDescription.ContainerName),
+		slog.String("containerID", malwareDescription.ContainerID),
+		slog.Any("resource", malwareDescription.Resource),
+	)
 }
