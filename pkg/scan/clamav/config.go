@@ -1,4 +1,4 @@
-package scan
+package clamav
 
 import "fmt"
 

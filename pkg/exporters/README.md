@@ -28,4 +28,5 @@ To enable the SYSLOG exporter, set the following environment variables:
 ### CSV
 The CSV exporter is used to write the alerts to a CSV file. This exporter is disabled by default.
 To enable the CSV exporter, set the following environment variables:
-- `EXPORTER_CSV_PATH`: The path to the CSV file. Example: `/tmp/alerts.csv`
+- `EXPORTER_CSV_RULE_PATH`: The path to the CSV file of the failed rules. Example: `/tmp/alerts.csv`
+- `EXPORTER_CSV_MALWARE_PATH`: The path to the CSV file of the malwares found. Example: `/tmp/malware.csv`

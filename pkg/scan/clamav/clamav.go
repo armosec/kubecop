@@ -1,10 +1,12 @@
-package scan
+package clamav
 
 import (
 	"context"
 	"log"
 	"time"
 
+	"github.com/armosec/kubecop/pkg/exporters"
+	"github.com/armosec/kubecop/pkg/scan"
 	"github.com/dutchcoders/go-clamd"
 )
 
@@ -62,7 +64,7 @@ func (c *ClamAV) scan(ctx context.Context, path string) {
 				return
 			}
 			if result.Status == clamd.RES_FOUND {
-				log.Printf("Virus detected: %s", result.Path)
+				exporters.SendMalwareAlert(scan.MalwareDescription{})
 			}
 		case <-ctx.Done():
 			// The context was cancelled, which means we should stop the scan.

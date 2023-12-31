@@ -17,7 +17,7 @@ import (
 	"github.com/armosec/kubecop/pkg/engine"
 	"github.com/armosec/kubecop/pkg/exporters"
 	"github.com/armosec/kubecop/pkg/rulebindingstore"
-	"github.com/armosec/kubecop/pkg/scan"
+	scan "github.com/armosec/kubecop/pkg/scan/clamav"
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/kubescape/kapprofiler/pkg/collector"
 	reconcilercontroller "github.com/kubescape/kapprofiler/pkg/controller"
@@ -271,7 +271,6 @@ func main() {
 		for retryCount := 0; retryCount < 5; retryCount++ {
 			if err := clamav.Ping(); err != nil {
 				retryCount++
-				// log.Fatalf("Failed to connect to ClamAV: %v\n", err)
 				log.Printf("Failed to connect to ClamAV: %v\n", err)
 				log.Printf("Retrying in 10 seconds...\n")
 				// Wait 10 seconds before retrying

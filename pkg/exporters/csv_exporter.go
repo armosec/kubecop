@@ -3,40 +3,56 @@ package exporters
 import (
 	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
+	"github.com/armosec/kubecop/pkg/scan"
+	"github.com/sirupsen/logrus"
 )
 
 // CsvExporter is an exporter that sends alerts to csv
 type CsvExporter struct {
-	CsvPath string
+	CsvRulePath    string
+	CsvMalwarePath string
 }
 
 // InitCsvExporter initializes a new CsvExporter
-func InitCsvExporter(csvPath string) *CsvExporter {
-	if csvPath == "" {
-		csvPath = os.Getenv("EXPORTER_CSV_PATH")
-		if csvPath == "" {
+func InitCsvExporter(csvRulePath, csvMalwarePath string) *CsvExporter {
+	if csvRulePath == "" {
+		csvRulePath = os.Getenv("EXPORTER_CSV_RULE_PATH")
+		if csvRulePath == "" {
+			logrus.Debugf("csv rule path not provided, rule alerts will not be exported to csv")
 			return nil
 		}
 	}
 
-	if _, err := os.Stat(csvPath); os.IsNotExist(err) {
-		writeHeaders(csvPath)
+	if csvMalwarePath == "" {
+		csvMalwarePath = os.Getenv("EXPORTER_CSV_MALWARE_PATH")
+		if csvMalwarePath == "" {
+			logrus.Debugf("csv malware path not provided, malware alerts will not be exported to csv")
+			return nil
+		}
+	}
+
+	if _, err := os.Stat(csvRulePath); os.IsNotExist(err) {
+		writeRuleHeaders(csvRulePath)
+	}
+
+	if _, err := os.Stat(csvMalwarePath); os.IsNotExist(err) {
+		writeMalwareHeaders(csvMalwarePath)
 	}
 
 	return &CsvExporter{
-		CsvPath: csvPath,
+		CsvRulePath:    csvRulePath,
+		CsvMalwarePath: csvMalwarePath,
 	}
 }
 
-// SendAlert sends an alert to csv
-func (ce *CsvExporter) SendAlert(failedRule rule.RuleFailure) {
-	csvFile, err := os.OpenFile(ce.CsvPath, os.O_APPEND|os.O_WRONLY, 0644)
+// SendRuleAlert sends an alert to csv
+func (ce *CsvExporter) SendRuleAlert(failedRule rule.RuleFailure) {
+	csvFile, err := os.OpenFile(ce.CsvRulePath, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Printf("failed to initialize csv exporter: %v", err)
+		logrus.Errorf("failed to initialize csv exporter: %v", err)
 		return
 	}
 	defer csvFile.Close()
@@ -62,10 +78,10 @@ func (ce *CsvExporter) SendAlert(failedRule rule.RuleFailure) {
 	})
 }
 
-func writeHeaders(csvPath string) {
+func writeRuleHeaders(csvPath string) {
 	csvFile, err := os.OpenFile(csvPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Printf("failed to initialize csv exporter: %v", err)
+		logrus.Errorf("failed to initialize csv exporter: %v", err)
 		return
 	}
 	defer csvFile.Close()
@@ -88,5 +104,54 @@ func writeHeaders(csvPath string) {
 		"PPID",
 		"Mount Namespace ID",
 		"Timestamp",
+	})
+}
+
+func (ce *CsvExporter) SendMalwareAlert(malwareDescription scan.MalwareDescription) {
+	csvFile, err := os.OpenFile(ce.CsvMalwarePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		logrus.Errorf("failed to initialize csv exporter: %v", err)
+		return
+	}
+	defer csvFile.Close()
+
+	csvWriter := csv.NewWriter(csvFile)
+	defer csvWriter.Flush()
+	csvWriter.Write([]string{
+		malwareDescription.Name,
+		malwareDescription.Description,
+		malwareDescription.Path,
+		malwareDescription.Hash,
+		fmt.Sprintf("%d", malwareDescription.Size),
+		malwareDescription.Resource.String(),
+		malwareDescription.Namespace,
+		malwareDescription.PodName,
+		malwareDescription.ContainerName,
+		malwareDescription.ContainerID,
+	})
+}
+
+// Write Malware Headers
+func writeMalwareHeaders(csvPath string) {
+	csvFile, err := os.OpenFile(csvPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		logrus.Errorf("failed to initialize csv exporter: %v", err)
+		return
+	}
+	defer csvFile.Close()
+
+	csvWriter := csv.NewWriter(csvFile)
+	defer csvWriter.Flush()
+	csvWriter.Write([]string{
+		"Malware Name",
+		"Description",
+		"Path",
+		"Hash",
+		"Size",
+		"Resource",
+		"Namespace",
+		"Pod Name",
+		"Container Name",
+		"Container ID",
 	})
 }
