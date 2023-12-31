@@ -26,6 +26,7 @@ kubecop:
   csv:
     enabled: false
     path: "/tmp/kubecop.csv"
+    malwarePath: "/tmp/kubecop-malware.csv"
   prometheusExporter:
     enabled: false
   pprofserver:
