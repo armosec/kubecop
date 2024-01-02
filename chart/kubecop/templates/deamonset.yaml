@@ -95,13 +95,13 @@ spec:
           {{- end }}
           {{- if .Values.kubecop.clamAV.enabled  }}
           - name: CLAMAV_HOST
-            value: {{ .Values.kubecop.clamAV.host }}
+            value: "{{ .Values.kubecop.clamAV.host }}"
           - name: CLAMAV_PORT
-            value: {{ .Values.kubecop.clamAV.port }}
+            value: "{{ .Values.kubecop.clamAV.port }}"
           - name: CLAMAV_SCAN_PATH
-            value: {{ .Values.kubecop.clamAV.path }}
+            value: "{{ .Values.kubecop.clamAV.path }}"
           - name: CLAMAV_SCAN_INTERVAL
-            value: {{ .Values.kubecop.clamAV.scanInterval }}
+            value: "{{ .Values.kubecop.clamAV.scanInterval }}"
           {{- end }}
           {{- if .Values.kubecop.recording.samplingInterval  }}
           - name: SAMPLING_INTERVAL
@@ -141,7 +141,7 @@ spec:
             cpu: "200m"
         volumeMounts:
         - name: clamdb
-          mountPath: /var/lib/clamav
+          mountPath: /var/lib/clamav-tmp
           readOnly: false
         - name: etc
           mountPath: /etc/clamav
@@ -174,3 +174,15 @@ spec:
       - name: debugfs
         hostPath:
           path: /sys/kernel/debug
+    {{- if .Values.kubecop.clamAV.enabled }}
+      - name: clamdb
+        emptyDir: {}
+      - name: etc
+        configMap:
+          name: {{ include "..fullname" . }}-clamav
+          items:
+          - key: clamd.conf
+            path: clamd.conf
+          - key: freshclam.conf
+            path: freshclam.conf
+    {{- end }}

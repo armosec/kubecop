@@ -267,7 +267,7 @@ func main() {
 	if clamavConfig.Host != "" && clamavConfig.Port != "" && clamavConfig.ScanInterval != "" {
 		clamav := scan.NewClamAV(clamavConfig)
 
-		// Check if we can connect to ClamAV - Retry every 5 seconds until we can connect.
+		// Check if we can connect to ClamAV - Retry every 10 seconds until we can connect.
 		for retryCount := 0; retryCount < 5; retryCount++ {
 			if err := clamav.Ping(); err != nil {
 				retryCount++

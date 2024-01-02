@@ -38,7 +38,7 @@ kubecop:
   clamAV:
     enabled: false
     host: "localhost"
-    port: 3310
+    port: "3310"
     path: "/host"
     scanInterval: 600s # Scan interval in seconds.
 
