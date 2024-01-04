@@ -29,7 +29,7 @@ func (engine *Engine) ProcessEvent(eventType tracing.EventType, event interface{
 
 		ruleFailure := rule.ProcessEvent(eventType, event, appProfile, engine)
 		if ruleFailure != nil {
-			exporters.SendAlert(ruleFailure)
+			exporters.SendRuleAlert(ruleFailure)
 			engine.promCollector.reportRuleAlereted(rule.Name())
 		}
 		engine.promCollector.reportRuleProcessed(rule.Name())

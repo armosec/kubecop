@@ -73,8 +73,10 @@ spec:
             value: {{ .Values.kubecop.syslog.protocol }}
           {{- end }}
           {{- if .Values.kubecop.csv.enabled  }}
-          - name: EXPORTER_CSV_PATH
+          - name: EXPORTER_CSV_RULE_PATH
             value: {{ .Values.kubecop.csv.path }}
+          - name: EXPORTER_CSV_MALWARE_PATH
+            value: {{ .Values.kubecop.csv.malwarePath }}
           {{- end }}
           {{- if .Values.kubecop.pprofserver.enabled  }}
           - name: _PPROF_SERVER
@@ -90,6 +92,16 @@ spec:
             value: "{{ .Values.kubecop.partialProfiles.ignoreMounts }}"
           - name: OPEN_IGNORE_PREFIXES
             value: "{{ .Values.kubecop.partialProfiles.ignorePrefixes }}"
+          {{- end }}
+          {{- if .Values.clamAV.enabled  }}
+          - name: CLAMAV_HOST
+            value: "{{ .Values.clamAV.host }}"
+          - name: CLAMAV_PORT
+            value: "{{ .Values.clamAV.port }}"
+          - name: CLAMAV_SCAN_PATH
+            value: "{{ .Values.clamAV.path }}"
+          - name: CLAMAV_SCAN_INTERVAL
+            value: "{{ .Values.clamAV.scanInterval }}"
           {{- end }}
           {{- if .Values.kubecop.recording.samplingInterval  }}
           - name: SAMPLING_INTERVAL
@@ -116,6 +128,28 @@ spec:
           mountPath: /sys/fs/cgroup
         - name: bpffs
           mountPath: /sys/fs/bpf
+    {{- if .Values.clamAV.enabled }}
+      - name: clamd
+        image: {{ .Values.clamAV.image.repository }}:{{ .Values.clamAV.image.tag }}
+        imagePullPolicy: {{ .Values.clamAV.image.pullPolicy }}
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "350Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: clamdb
+          mountPath: /var/lib/clamav-tmp # This is a temporary filler until we have a mirror of the clamav database.
+          readOnly: false
+        - name: etc
+          mountPath: /etc/clamav
+          readOnly: true
+        - name: host
+          mountPath: /host
+          readOnly: true
+    {{- end }}
       tolerations:
       - effect: NoSchedule
         operator: Exists
@@ -140,3 +174,15 @@ spec:
       - name: debugfs
         hostPath:
           path: /sys/kernel/debug
+    {{- if .Values.clamAV.enabled }}
+      - name: clamdb
+        emptyDir: {}
+      - name: etc
+        configMap:
+          name: {{ include "..fullname" . }}-clamav
+          items:
+          - key: clamd.conf
+            path: clamd.conf
+          - key: freshclam.conf
+            path: freshclam.conf
+    {{- end }}

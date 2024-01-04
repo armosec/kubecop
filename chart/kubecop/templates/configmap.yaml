@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-clamav
+  namespace: {{ .Release.Namespace }}
+data:
+  clamd.conf: |-
+{{ .Files.Get "files/clamd.conf" | indent 4 }}
+  freshclam.conf: |-
+{{ .Files.Get "files/freshclam.conf" | indent 4 }}
