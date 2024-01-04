@@ -93,6 +93,7 @@ Navigate to AlertManager UI by going to `http://<node-ip>:9093` and you should s
 ![AlertManager](assets/alertmanager.png)
 
 We can see that KubeCop raised two alerts, one for the unexpected command execution and one for the unexpected file activity.
+We can see the details of the alerts such as the command that was executed and the file that was accessed and on which workload.
 
 Now, let's try to run a more malicious command, let's try to get the service account token.
 
@@ -106,7 +107,7 @@ KubeCop detected the attack because it has a rule that identifies access to the 
 
 Next, let's try to download kubectl into the container and run it to get the pods in the cluster.
 
-Execute theses commands one by one:
+Execute the following commands one by one:
 ```bash
 # Get the architecture of the node
 1.1.1.1;arch=$(uname -m | sed 's/x86_64/amd64/g' | sed 's/aarch64/arm64/g')
@@ -120,6 +121,9 @@ Execute theses commands one by one:
 # Get the pods in the cluster
 1.1.1.1;./kubectl --server https://kubernetes.default --insecure-skip-tls-verify --token $(cat /run/secrets/kubernetes.io/serviceaccount/token) get pods
 ```
+
+You should see the following output:
+![pods](assets/pods.png)
 
 We can see that KubeCop detected the attack and sent an alert to AlertManager.
 ![kubectl](assets/kubectl.png)
