@@ -18,7 +18,7 @@ To learn more about KubeCop, see [here](../README.md).
 
 
 ## Installation
-To install KubeCop, you need to have a Kubernetes cluster up and running, you can use [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) or [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
+To install KubeCop, you need to have a Kubernetes cluster up and running. In case you want to test it on your local machine you can use [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) or [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
 
 After you have a Kubernetes cluster up and running, you can install KubeCop by running the following commands:
 
@@ -28,9 +28,13 @@ git clone https://github.com/armosec/kubecop.git && cd kubecop
 helm install kubecop chart/kubecop -n kubescape --create-namespace
 ```
 
-You should be getting alerts after the learning period ends. Try `kubectl exec` on one of the Pods after the learning period!
+You should be getting alerts after the learning period ends. The defult installation comes with a 15 minute learning period counted from the time KubeCop or the container starts.  
 
-If you don't have AlertManager running, you can install it by running the following commands:
+Try `kubectl exec` on one of the Pods after the learning period to test out anomaly detection!
+
+### Getting alerts
+
+One of the ways to get alert from KubeCop is to connect it an AlertManager. If you don't have AlertManager running, you can install it by running the following commands:
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
@@ -45,13 +49,16 @@ helm upgrade kubecop chart/kubecop -n kubescape --create-namespace --set kubecop
 To learn more about KubeCop installation, see [here](../README.md#basic-installation).
 You can also enable other exporters, see [here](../README.md#advanced-parameter-configurations).
 
-If you want to use our script to setup a cluster with KubeCop and AlertManager, run the following commands:
+### Development install
+
+If you want to use our script to setup a development cluster with KubeCop and AlertManager, run the following commands:
 ```bash
+make build-image
 chmod +x scripts/setup-system-test-cluster.sh
 ./scripts/setup-system-test-cluster.sh
 ```
 
-Once you have KubeCop installed, let's deploy a sample web application and attack it.
+**Once you have KubeCop installed, let's deploy a sample web application and attack it.**
 
 ## Deploy Web Application
 
@@ -70,13 +77,14 @@ You should see the following page:
 Once you have the web application up and running, let's attack it and see how KubeCop detects the attack.
 
 ## Attack Web Application
-Our web application is vulnerable to a [command injection](https://owasp.org/www-community/attacks/Command_Injection) attack.
-The application allows us to ping a host, and it will return the output of the ping command.
+
+Our web application is deliberatly made vulnerable to a [command injection](https://owasp.org/www-community/attacks/Command_Injection) attack.
+The application is a "Ping service", it allows the user to ping a host, and it will return the output of the ping command.
 Let's try to ping `1.1.1.1` and see the output.
 
 ![Ping](assets/ping.png)
 
-We can use this to run arbitrary commands on the web application container and get the output.
+Behind the scenes, the application is taking the IP from the form as a string and concatenates it to a command. Since there is no proper insput sanitization we can use this to run arbitrary commands on the web application container and get the output.
 
 Let's try to execute the `ls` command on the web application container.
 
