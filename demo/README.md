@@ -84,7 +84,7 @@ Let's try to ping `1.1.1.1` and see the output.
 
 ![Ping](assets/ping.png)
 
-Behind the scenes, the application is taking the IP from the form as a string and concatenates it to a command. Since there is no proper insput sanitization we can use this to run arbitrary commands on the web application container and get the output.
+Behind the scenes, the application is taking the IP from the form as a string and concatenates it to a command. Since there is no proper input sanitization we can use this to run arbitrary commands on the web application container and get the output.
 
 Let's try to execute the `ls` command on the web application container.
 
