@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"net/http"
 	_ "net/http/pprof"
@@ -16,6 +17,7 @@ import (
 	"github.com/armosec/kubecop/pkg/engine"
 	"github.com/armosec/kubecop/pkg/exporters"
 	"github.com/armosec/kubecop/pkg/rulebindingstore"
+	scan "github.com/armosec/kubecop/pkg/scan/clamav"
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/kubescape/kapprofiler/pkg/collector"
 	reconcilercontroller "github.com/kubescape/kapprofiler/pkg/controller"
@@ -253,6 +255,41 @@ func main() {
 		appProfileReconcilerController := reconcilercontroller.NewController(k8sConfig)
 		appProfileReconcilerController.StartController()
 		defer appProfileReconcilerController.StopController()
+	}
+
+	// Start the ClamAV scanner
+	clamavConfig := scan.ClamAVConfig{
+		Host:         os.Getenv("CLAMAV_HOST"),
+		Port:         os.Getenv("CLAMAV_PORT"),
+		ScanInterval: os.Getenv("CLAMAV_SCAN_INTERVAL"),
+	}
+
+	if clamavConfig.Host != "" && clamavConfig.Port != "" && clamavConfig.ScanInterval != "" {
+		clamav := scan.NewClamAV(clamavConfig)
+
+		// Check if we can connect to ClamAV - Retry every 10 seconds until we can connect.
+		for retryCount := 0; retryCount < 5; retryCount++ {
+			if err := clamav.Ping(); err != nil {
+				retryCount++
+				log.Printf("Failed to connect to ClamAV: %v\n", err)
+				log.Printf("Retrying in 10 seconds...\n")
+				// Wait 10 seconds before retrying
+				select {
+				case <-time.After(10 * time.Second):
+					continue
+				}
+			}
+			if retryCount < 5 {
+				log.Printf("Connected to ClamAV\n")
+			}
+
+			break
+		}
+
+		// Start the ClamAV scanner
+		ctx, cancel := context.WithCancel(context.Background())
+		go clamav.StartInfiniteScan(ctx, os.Getenv("CLAMAV_SCAN_PATH"))
+		defer cancel()
 	}
 
 	// Start prometheus metrics server

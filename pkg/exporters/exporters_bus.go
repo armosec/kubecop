@@ -4,13 +4,15 @@ import (
 	"log"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
+	"github.com/armosec/kubecop/pkg/scan"
 )
 
 type ExportersConfig struct {
 	StdoutExporter          *bool  `yaml:"stdoutExporter"`
 	AlertManagerExporterURL string `yaml:"alertManagerExporterURL"`
 	SyslogExporter          string `yaml:"syslogExporterURL"`
-	CsvExporterPath         string `yaml:"csvExporterPath"`
+	CsvRuleExporterPath     string `yaml:"csvRuleExporterPath"`
+	CsvMalwareExporterPath  string `yaml:"csvMalwareExporterPath"`
 }
 
 // This file will contain the single point of contact for all exporters,
@@ -35,7 +37,7 @@ func InitExporters(exportersConfig ExportersConfig) {
 	if syslogExp != nil {
 		exporters = append(exporters, syslogExp)
 	}
-	csvExp := InitCsvExporter(exportersConfig.CsvExporterPath)
+	csvExp := InitCsvExporter(exportersConfig.CsvRuleExporterPath, exportersConfig.CsvMalwareExporterPath)
 	if csvExp != nil {
 		exporters = append(exporters, csvExp)
 	}
@@ -46,8 +48,14 @@ func InitExporters(exportersConfig ExportersConfig) {
 	log.Print("exporters initialized")
 }
 
-func SendAlert(failedRule rule.RuleFailure) {
+func SendRuleAlert(failedRule rule.RuleFailure) {
 	for _, exporter := range exporters {
-		exporter.SendAlert(failedRule)
+		exporter.SendRuleAlert(failedRule)
+	}
+}
+
+func SendMalwareAlert(malwareDescription scan.MalwareDescription) {
+	for _, exporter := range exporters {
+		exporter.SendMalwareAlert(malwareDescription)
 	}
 }

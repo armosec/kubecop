@@ -26,6 +26,7 @@ kubecop:
   csv:
     enabled: false
     path: "/tmp/kubecop.csv"
+    malwarePath: "/tmp/kubecop-malware.csv"
   prometheusExporter:
     enabled: false
   pprofserver:
@@ -34,6 +35,17 @@ kubecop:
     enabled: true
     ignoreMounts: "true"
     ignorePrefixes: "/proc,/tmp"
+
+clamAV:
+  enabled: false
+  host: "localhost"
+  port: "3310"
+  path: "/host"
+  scanInterval: 600s # Scan interval in seconds.
+  image:
+    repository: quay.io/armosec/klamav
+    pullPolicy: Always
+    tag: "beta4"
 
 serviceAccount:
   # Specifies whether a service account should be created
