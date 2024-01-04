@@ -93,15 +93,15 @@ spec:
           - name: OPEN_IGNORE_PREFIXES
             value: "{{ .Values.kubecop.partialProfiles.ignorePrefixes }}"
           {{- end }}
-          {{- if .Values.kubecop.clamAV.enabled  }}
+          {{- if .Values.clamAV.enabled  }}
           - name: CLAMAV_HOST
-            value: "{{ .Values.kubecop.clamAV.host }}"
+            value: "{{ .Values.clamAV.host }}"
           - name: CLAMAV_PORT
-            value: "{{ .Values.kubecop.clamAV.port }}"
+            value: "{{ .Values.clamAV.port }}"
           - name: CLAMAV_SCAN_PATH
-            value: "{{ .Values.kubecop.clamAV.path }}"
+            value: "{{ .Values.clamAV.path }}"
           - name: CLAMAV_SCAN_INTERVAL
-            value: "{{ .Values.kubecop.clamAV.scanInterval }}"
+            value: "{{ .Values.clamAV.scanInterval }}"
           {{- end }}
           {{- if .Values.kubecop.recording.samplingInterval  }}
           - name: SAMPLING_INTERVAL
@@ -128,10 +128,10 @@ spec:
           mountPath: /sys/fs/cgroup
         - name: bpffs
           mountPath: /sys/fs/bpf
-    {{- if .Values.kubecop.clamAV.enabled }}
+    {{- if .Values.clamAV.enabled }}
       - name: clamd
-        image: quay.io/armosec/klamav:beta1
-        imagePullPolicy: Always
+        image: {{ .Values.clamAV.image.repository }}:{{ .Values.clamAV.image.tag }}
+        imagePullPolicy: {{ .Values.clamAV.image.pullPolicy }}
         resources:
           requests:
             memory: "64Mi"
@@ -174,7 +174,7 @@ spec:
       - name: debugfs
         hostPath:
           path: /sys/kernel/debug
-    {{- if .Values.kubecop.clamAV.enabled }}
+    {{- if .Values.clamAV.enabled }}
       - name: clamdb
         emptyDir: {}
       - name: etc

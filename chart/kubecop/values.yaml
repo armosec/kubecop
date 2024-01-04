@@ -35,12 +35,17 @@ kubecop:
     enabled: true
     ignoreMounts: "true"
     ignorePrefixes: "/proc,/tmp"
-  clamAV:
-    enabled: false
-    host: "localhost"
-    port: "3310"
-    path: "/host"
-    scanInterval: 600s # Scan interval in seconds.
+
+clamAV:
+  enabled: false
+  host: "localhost"
+  port: "3310"
+  path: "/host"
+  scanInterval: 600s # Scan interval in seconds.
+  image:
+    repository: quay.io/armosec/klamav
+    pullPolicy: Always
+    tag: "beta3"
 
 serviceAccount:
   # Specifies whether a service account should be created

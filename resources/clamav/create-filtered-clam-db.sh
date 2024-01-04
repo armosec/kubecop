@@ -7,19 +7,28 @@ mkdir -p tmp
 # Get into it
 pushd tmp
 
-# Download the main.cvd file
-if [ -z "$SOCKS_PROXY" ]
+# Check if main.cvd exists
+if [ -f ../main.cvd ]
 then
-    curl -o main.cvd -L -f http://database.clamav.net/main.cvd
+    echo "main.cvd already exists"
+    cp ../main.cvd .
 else
-    curl --socks5-hostname $SOCKS_PROXY -o main.cvd -L -f http://database.clamav.net/main.cvd
+    echo "main.cvd does not exist, downloading it"
+    # Download the main.cvd file
+    if [ -z "$SOCKS_PROXY" ]
+    then
+        curl -o main.cvd -L -f http://database.clamav.net/main.cvd
+    else
+        curl --socks5-hostname $SOCKS_PROXY -o main.cvd -L -f http://database.clamav.net/main.cvd
+    fi
+    return_code=$?
+    if [ $return_code -ne 0 ]
+    then
+        echo "Failed to download main.cvd (http code: $return_code)"
+        exit 1
+    fi
 fi
-return_code=$?
-if [ $return_code -ne 0 ]
-then
-    echo "Failed to download main.cvd (http code: $return_code)"
-    exit 1
-fi
+
 
 # unpack the main.cvd
 sigtool --unpack main.cvd
