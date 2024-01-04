@@ -30,7 +30,6 @@ func InitCsvExporter(csvRulePath, csvMalwarePath string) *CsvExporter {
 		csvMalwarePath = os.Getenv("EXPORTER_CSV_MALWARE_PATH")
 		if csvMalwarePath == "" {
 			logrus.Debugf("csv malware path not provided, malware alerts will not be exported to csv")
-			return nil
 		}
 	}
 
@@ -38,7 +37,7 @@ func InitCsvExporter(csvRulePath, csvMalwarePath string) *CsvExporter {
 		writeRuleHeaders(csvRulePath)
 	}
 
-	if _, err := os.Stat(csvMalwarePath); os.IsNotExist(err) {
+	if _, err := os.Stat(csvMalwarePath); os.IsNotExist(err) && csvMalwarePath != "" {
 		writeMalwareHeaders(csvMalwarePath)
 	}
 
