@@ -45,7 +45,7 @@ clamAV:
   image:
     repository: quay.io/armosec/klamav
     pullPolicy: Always
-    tag: "beta3"
+    tag: "beta4"
 
 serviceAccount:
   # Specifies whether a service account should be created

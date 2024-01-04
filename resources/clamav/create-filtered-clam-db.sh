@@ -62,8 +62,7 @@ do
     fi
 
     # Filter out the lines that does not contain the word "Unix" or "Multios"
-    grep "Unix" $file > $file.tmp
-    grep "Multios" $file >> $file.tmp
+    grep -v -E "Win\.|Osx\." $file > $file.tmp
     mv $file.tmp $file
     # If the file is empty, delete it
     if [ $(wc -l < $file) -eq 0 ]
