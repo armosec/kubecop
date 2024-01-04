@@ -26,7 +26,6 @@ func TestSendAlert(t *testing.T) {
 		recievedData <- bodyData
 	}))
 	defer server.Close()
-	// os.Setenv("ALERTMANAGER_URL", "localhost:9093")
 
 	// Create a new Alertmanager exporter
 	exporter := InitAlertManagerExporter(strings.Replace(server.URL, "http://", "", 1))

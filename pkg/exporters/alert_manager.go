@@ -24,12 +24,6 @@ type AlertManagerExporter struct {
 }
 
 func InitAlertManagerExporter(alertmanagerURL string) *AlertManagerExporter {
-	if alertmanagerURL == "" {
-		alertmanagerURL = os.Getenv("ALERTMANAGER_URL")
-		if alertmanagerURL == "" {
-			return nil
-		}
-	}
 	// Create a new Alertmanager client
 	cfg := client.DefaultTransportConfig().WithHost(alertmanagerURL)
 	amClient := client.NewHTTPClientWithConfig(nil, cfg)

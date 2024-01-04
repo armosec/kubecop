@@ -10,8 +10,9 @@ The following exporters are available:
 
 ### Alertmanager
 The Alertmanager exporter is used to send alerts to the Alertmanager. The Alertmanager will then send the alerts to the configured receivers.
+This exporter supports multiple Alertmanagers. The alerts will be sent to all configured Alertmanagers.
 To enable the Alertmanager exporter, set the following environment variables:
-- `ALERTMANAGER_URL`: The URL of the Alertmanager. Example: `localhost:9093`
+- `ALERTMANAGER_URLS`: The URLs of the Alertmanagers. Example: `localhost:9093` or `localhost:9093,localhost:9094`
 
 ### STD OUT
 The STD OUT exporter is used to print the alerts to the standard output. This exporter is enabled by default.
