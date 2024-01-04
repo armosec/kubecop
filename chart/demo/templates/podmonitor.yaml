@@ -1,0 +1,16 @@
+# If prometheus enabled, add prometheus exporter
+{{- if .Values.kubecop.prometheusExporter.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    release: prometheus
+  name: kubecop-pod-monitor
+  namespace: kubescape
+spec:
+  podMetricsEndpoints:
+  - port: http-metrics
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubecop
+{{ end }}

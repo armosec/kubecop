@@ -1,0 +1,151 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: runtimerulealertbindings.kubescape.io
+spec:
+  group: kubescape.io
+  names:
+    kind: RuntimeRuleAlertBinding
+    plural: runtimerulealertbindings
+    shortNames:
+    - rab
+    singular: runtimerulealertbinding
+  scope: Cluster
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              namespaceSelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                type: object
+              podSelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                type: object
+              rules:
+                items:
+                  oneOf:
+                  - not:
+                      anyOf:
+                      - required:
+                        - ruleID
+                      - required:
+                        - ruleName
+                    required:
+                    - ruleTags
+                  - not:
+                      anyOf:
+                      - required:
+                        - ruleTags
+                      - required:
+                        - ruleName
+                    required:
+                    - ruleID
+                  - not:
+                      anyOf:
+                      - required:
+                        - ruleTags
+                      - required:
+                        - ruleID
+                    required:
+                    - ruleName
+                  properties:
+                    parameters:
+                      additionalProperties: true
+                      type: object
+                    ruleID:
+                      enum:
+                      - R0001
+                      - R0002
+                      - R0003
+                      - R0004
+                      - R0005
+                      - R0006
+                      - R0007
+                      - R1000
+                      - R1001
+                      - R1002
+                      - R1003
+                      - R1004
+                      - R1006
+                      - R1007
+                      type: string
+                    ruleName:
+                      enum:
+                      - Unexpected process launched
+                      - Unexpected file access
+                      - Unexpected system call
+                      - Unexpected capability used
+                      - Unexpected domain request
+                      - Unexpected Service Account Token Access
+                      - Kubernetes Client Executed
+                      - Exec from malicious source
+                      - Kernel Module Load
+                      - Exec Binary Not In Base Image
+                      - Malicious SSH Connection
+                      - Exec from mount
+                      - Unshare System Call usage
+                      - Crypto Miner detected
+                      type: string
+                    ruleTags:
+                      items:
+                        enum:
+                        - capabilities
+                        - dns
+                        - exec
+                        - open
+                        - signature
+                        - syscall
+                        - whitelisted
+                        - mount
+                        - ssh
+                        - escape
+                        - token
+                        - crypto
+                        type: string
+                      type: array
+                    severity:
+                      type: string
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true

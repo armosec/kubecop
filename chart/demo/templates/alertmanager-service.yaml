@@ -1,0 +1,12 @@
+# alertmanager-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager-kubecop-service
+spec:
+  selector:
+    app: alertmanager-kubecop  # This should match the labels of your Alertmanager pods
+  ports:
+    - protocol: TCP
+      port: 9093        # The port on which Alertmanager is running
+      targetPort: 9093  # The port to forward traffic to on the selected pods
