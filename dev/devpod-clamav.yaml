@@ -44,10 +44,12 @@ data:
     ExcludePath ^/host/run/
     MaxDirectoryRecursion 64
     ExtendedDetectionInfo yes
+    ExitOnOOM yes
+    VirusEvent "echo VIRUS DETECTED: %v in the path %f >> /dev/stdout"
 
   freshclam.conf: |
     Foreground yes
-    DatabaseDirectory /var/lib/clamav
+    DatabaseDirectory /host/tmp/clamav-db
     UpdateLogFile /dev/stdout
     Debug no
     LogFileMaxSize 0
@@ -56,10 +58,10 @@ data:
     DNSDatabaseInfo current.cvd.clamav.net
     DatabaseMirror database.clamav.net
     MaxAttempts 3
-    ScriptedUpdates yes
+    ScriptedUpdates no
     CompressLocalDatabase no
     TestDatabases yes
-    Checks 12
+    Checks 0
     ConnectTimeout 30
     ReceiveTimeout 60
 
@@ -130,11 +132,18 @@ spec:
         - name: bpffs
           mountPath: /sys/fs/bpf
       - name: clamd
-        image: clamav/clamav-debian:1.2.0-6
+        image: quay.io/armosec/klamav:beta1
         imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "200Mi"
+            cpu: "200m"
         volumeMounts:
         - name: clamdb
-          mountPath: /var/lib/clamav
+          mountPath: /host/tmp/clamav-db
           readOnly: false
         - name: etc
           mountPath: /etc/clamav
