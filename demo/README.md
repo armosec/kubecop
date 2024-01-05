@@ -15,6 +15,7 @@ To learn more about KubeCop, see [here](../README.md).
 - [Deploy Web Application](#deploy-web-application)
 - [Attack Web Application](#attack-web-application)
 - [Attack Fileless Malware](#attack-fileless-malware)
+- [Attack Malicious Image](#attack-malicious-image)
 - [Conclusion](#conclusion)
 
 
