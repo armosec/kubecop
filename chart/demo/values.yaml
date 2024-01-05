@@ -2,94 +2,12 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-image:
-  repository: quay.io/armosec/kubecop
-  pullPolicy: IfNotPresent
-  tag: "latest"
-
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: "kubecop"
-
 kubecop:
-  recording:
-    samplingInterval: 60s
-    finalizationDuration: 900s
-    finalizationJitter: 120s
   alertmanager:
-    enabled: true
-    endpoints: "alertmanager-kubecop-service.kubescape.svc.cluster.local:9093"
     smtp_endpoint: ""
     smtp_from: ""
     smtp_auth_username: ""
     smtp_auth_password: ""
     smtp_require_tls: false
     email_to: ""
-  syslog:
-    enabled: false
-    endpoint: "localhost:514"
-    protocol: "udp"
-  csv:
-    enabled: false
-    path: "/tmp/kubecop.csv"
-  prometheusExporter:
-    enabled: false
-  pprofserver:
-    enabled: false
-  partialProfiles: # If enabled, application profiles won't be enriched with the following prefixes and mounts.
-    enabled: true
-    ignoreMounts: "true"
-    ignorePrefixes: "/proc,/tmp"
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: "kubecop"
-
-podAnnotations: {}
-
-podSecurityContext: {}
-
-securityContext:
-  privileged: true
-  capabilities:
-    add:
-      - SYS_ADMIN
-      - NET_ADMIN
-
-securityContextNormal: {}
-
-resources:
-  limits:
-    cpu: 500m
-    memory: 1Gi
-  requests:
-    cpu: 100m
-    memory: 256Mi
-
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity:
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/os
-          operator: In
-          values:
-          - linux
-        - key: kubernetes.io/arch
-          operator: In
-          values:
-          - arm64
-          - amd64
-
-# default rule binding to catch all pods
-installDefaultAlertRuleBinding: true

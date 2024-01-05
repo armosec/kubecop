@@ -1,6 +1,6 @@
 apiVersion: v2
-name: kubecop
-description: A Helm chart for Kubernetes Runtime Security detection system KubeCop
+name: kubecop-alertmanager
+description: A Helm chart for kubecop-alertmanager
 
 type: application
 
