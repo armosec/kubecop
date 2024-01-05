@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
+	"github.com/armosec/kubecop/pkg/scan"
 )
 
 type ExportersConfig struct {
@@ -47,7 +48,7 @@ func InitExporters(exportersConfig ExportersConfig) {
 	if syslogExp != nil {
 		exporters = append(exporters, syslogExp)
 	}
-	csvExp := InitCsvExporter(exportersConfig.CsvExporterPath)
+	csvExp := InitCsvExporter(exportersConfig.CsvRuleExporterPath, exportersConfig.CsvMalwareExporterPath)
 	if csvExp != nil {
 		exporters = append(exporters, csvExp)
 	}
@@ -74,6 +75,12 @@ func parseAlertManagerUrls(urls string) []string {
 
 func SendAlert(failedRule rule.RuleFailure) {
 	for _, exporter := range exporters {
-		exporter.SendAlert(failedRule)
+		exporter.SendRuleAlert(failedRule)
+	}
+}
+
+func SendMalwareAlert(malwareDescription scan.MalwareDescription) {
+	for _, exporter := range exporters {
+		exporter.SendMalwareAlert(malwareDescription)
 	}
 }
