@@ -105,6 +105,12 @@ These metrics can be useful to understand the load on the system how it behaves.
 
 You can enable the exported with `kubecop.prometheusExporter.enabled=true`.
 
+### ClamAV Scanning
+KubeCop can scan the nodes for malware using ClamAV. To enable ClamAV scanning, you need to use the following parameter in Helm:
+```bash
+kubecop.clamav.enabled=true
+```
+
 #### Bindings
 
 KubeCop applies alert rules on Kubernetes workloads based on rule-binding configuration.

@@ -3,7 +3,8 @@ This is a walkthrough of KubeCop, in this demo we will do the following:
 1. Install KubeCop.
 2. Deploy a sample web application and attack it.
 3. Deploy fileless malware.
-4. See how KubeCop detects the attacks.
+4. Deploy a container with malicious image that contains malwares.
+5. See how KubeCop detects the attacks.
 
 With this demo you will be able to see how KubeCop works and how it can be used to detect and prevent attacks.
 To learn more about KubeCop, see [here](../README.md).
@@ -154,6 +155,34 @@ Let's see what has popped up in AlertManager.
 
 We can see that KubeCop detected that an exec syscall was made from `/proc/self/fd/3` which is the file descriptor of the malware that resides in the container's memory.
 This is a fileless malware, so we don't have any files to scan, but KubeCop still detected it.
+
+## Attack Malicious Image
+Let's deploy a container with malicious image that contains malwares such as [cryptominer](https://www.crowdstrike.com/blog/what-is-cryptomining/) and [webshell](https://owasp.org/www-community/attacks/Web_Shell).
+
+We are going to be using [ruzickap malwares container](https://github.com/ruzickap/malware-cryptominer-container) to deploy a container with malwares.
+To deploy the container, run the following command:
+```bash
+kubectl run malware-cryptominer --image=quay.io/petr_ruzicka/malware-cryptominer-container:2.0.2
+```
+Or, alternatively, you can build the image yourself by running the following commands:
+```bash
+docker build -t malware-cryptominer -f malwares_image/Containerfile .
+docker tag malware-cryptominer quay.io/petr_ruzicka/malware-cryptominer-container:2.0.2
+# If you are using minikube
+minikube image load quay.io/petr_ruzicka/malware-cryptominer-container:2.0.2
+# If you are using kind
+kind load docker-image quay.io/petr_ruzicka/malware-cryptominer-container:2.0.2
+```
+
+Let's see what has popped up in AlertManager.
+![malwares](assets/malwares.png)
+We can see that KubeCop detected that the container is running a malicious image that contains malwares.
+It also supplies the path to the malwares in the node's filesystem as well as the signatures of the malwares.
+KubeCop uses [ClamAV](https://www.clamav.net/) to scan the images for malwares.
+ClamAV is an open source antivirus engine for detecting trojans, viruses, malware & other malicious threats, it supports a wide range of signature languages including YARA and bytecode signatures.
+
+Please note that KubeCop doesn't scan the images by default, you need to enable it by setting `kubecop.clamav.enabled=true` in the helm chart. See [here](../README.md#clamav-scanning) for more information.
+
 
 ## Conclusion
 In this demo we saw how KubeCop can be used to detect and prevent attacks in Kubernetes.
