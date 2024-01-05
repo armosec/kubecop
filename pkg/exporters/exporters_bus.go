@@ -13,7 +13,8 @@ type ExportersConfig struct {
 	StdoutExporter           *bool  `yaml:"stdoutExporter"`
 	AlertManagerExporterUrls string `yaml:"alertManagerExporterUrls"`
 	SyslogExporter           string `yaml:"syslogExporterURL"`
-	CsvExporterPath          string `yaml:"csvExporterPath"`
+	CsvRuleExporterPath      string `yaml:"CsvRuleExporterPath"`
+	CsvMalwareExporterPath   string `yaml:"CsvMalwareExporterPath"`
 }
 
 // This file will contain the single point of contact for all exporters,
@@ -32,12 +33,10 @@ var (
 // InitExporters initializes all exporters.
 func InitExporters(exportersConfig ExportersConfig) {
 	alertManagerUrls := parseAlertManagerUrls(exportersConfig.AlertManagerExporterUrls)
-	if alertManagerUrls != nil {
-		for _, url := range alertManagerUrls {
-			alertMan := InitAlertManagerExporter(url)
-			if alertMan != nil {
-				exporters = append(exporters, alertMan)
-			}
+	for _, url := range alertManagerUrls {
+		alertMan := InitAlertManagerExporter(url)
+		if alertMan != nil {
+			exporters = append(exporters, alertMan)
 		}
 	}
 	stdoutExp := InitStdoutExporter(exportersConfig.StdoutExporter)
@@ -73,7 +72,7 @@ func parseAlertManagerUrls(urls string) []string {
 	return strings.Split(urls, AlertManagerSepartorDelimiter)
 }
 
-func SendAlert(failedRule rule.RuleFailure) {
+func SendRuleAlert(failedRule rule.RuleFailure) {
 	for _, exporter := range exporters {
 		exporter.SendRuleAlert(failedRule)
 	}
