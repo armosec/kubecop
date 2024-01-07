@@ -45,7 +45,7 @@ clamAV:
   image:
     repository: quay.io/armosec/klamav
     pullPolicy: Always
-    tag: "beta4"
+    tag: "beta5"
   resources:
     limits:
       cpu: 300m
