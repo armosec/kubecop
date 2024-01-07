@@ -38,6 +38,12 @@ A standout feature of KubeCop is its anomaly detection mechanism, which is groun
 
 Additionally, KubeCop is equipped with rules designed to identify well-known attack signatures. These rules are adept at uncovering various threats, such as unauthorized software executions that deviate from the original container image, detection of unpackers in memory, reverse shell activities, and more. Users have the flexibility to create 'Rule Bindings'—specific instructions that direct KubeCop on which rules should be applied to which Pods. This level of customization ensures that security measures are tailored to the unique needs of each Kubernetes deployment, enhancing the overall security posture and responsiveness of the system.
 
+### Host malware scanning
+
+KubeCop can scan the nodes for malware using ClamAV as an engine, a popular open-source antivirus engine. ClamAV supports scanning of files, directories, and volumes, and can be configured to scan the entire node or only specific directories. You can read more about ClamAV [here](https://www.clamav.net/). <br>
+
+KubeCop uses its own virus database which is a subset of the latest ClamAV virus database release but adopted to Kubernetes environment to save resources.
+
 ### Rules
 
 See [here](/pkg/engine/rule/README.md) more about our rules
@@ -106,9 +112,7 @@ These metrics can be useful to understand the load on the system how it behaves.
 You can enable the exported with `kubecop.prometheusExporter.enabled=true`.
 
 ### ClamAV Scanning
-KubeCop can scan the nodes for malware using ClamAV, a popular open-source antivirus engine.
-ClamAV supports scanning of files, directories, and volumes, and can be configured to scan the entire node or only specific directories.
-You can read more about ClamAV [here](https://www.clamav.net/). <br>
+
 To enable ClamAV scanning, you need to use the following parameter in Helm: `kubecop.clamav.enabled=true`. <br>
 Please note that ClamAV scanning is not enabled by default, and it is not recommended for low-resource environments.
 
