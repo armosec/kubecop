@@ -38,6 +38,8 @@ var dynamicClientGlobal dynamic.Interface
 var FinalizationDurationInSeconds int64 = 120
 var FinalizationJitterInSeconds int64 = 30
 var SamplingIntervalInSeconds int64 = 60
+var ClamAVRetryDelay time.Duration = 10 * time.Second
+var ClamAVMaxRetries int = 5
 
 func checkKubernetesConnection() (*rest.Config, error) {
 	// Check if the Kubernetes cluster is reachable
@@ -262,34 +264,38 @@ func main() {
 		Host:         os.Getenv("CLAMAV_HOST"),
 		Port:         os.Getenv("CLAMAV_PORT"),
 		ScanInterval: os.Getenv("CLAMAV_SCAN_INTERVAL"),
+		RetryDelay:   ClamAVRetryDelay,
+		MaxRetries:   ClamAVMaxRetries,
 	}
 
 	if clamavConfig.Host != "" && clamavConfig.Port != "" && clamavConfig.ScanInterval != "" {
 		clamav := scan.NewClamAV(clamavConfig)
 
 		// Check if we can connect to ClamAV - Retry every 10 seconds until we can connect.
-		for retryCount := 0; retryCount < 5; retryCount++ {
+		retryCount := 0
+
+		for retryCount < clamavConfig.MaxRetries {
 			if err := clamav.Ping(); err != nil {
 				retryCount++
 				log.Printf("Failed to connect to ClamAV: %v\n", err)
-				log.Printf("Retrying in 10 seconds...\n")
-				// Wait 10 seconds before retrying
-				select {
-				case <-time.After(10 * time.Second):
-					continue
-				}
-			}
-			if retryCount < 5 {
-				log.Printf("Connected to ClamAV\n")
+				log.Printf("Retrying in %d seconds...\n", clamavConfig.RetryDelay/time.Second)
+				// Wait before retrying.
+				time.Sleep(clamavConfig.RetryDelay)
+				continue
 			}
 
+			log.Printf("Connected to ClamAV\n")
 			break
 		}
 
 		// Start the ClamAV scanner
-		ctx, cancel := context.WithCancel(context.Background())
-		go clamav.StartInfiniteScan(ctx, os.Getenv("CLAMAV_SCAN_PATH"))
-		defer cancel()
+		if retryCount == clamavConfig.MaxRetries {
+			log.Fatalf("Failed to connect to ClamAV after %d retries. Exiting...\n", clamavConfig.MaxRetries)
+		} else {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			go clamav.StartInfiniteScan(ctx, os.Getenv("CLAMAV_SCAN_PATH"))
+		}
 	}
 
 	// Start prometheus metrics server
