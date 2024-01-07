@@ -5,4 +5,4 @@ image:
 kubecop:
   alertmanager:
     enabled: true
-    endpoint: "alertmanager-operated.monitoring.svc.cluster.local:9093"
+    endpoints: "alertmanager-operated.monitoring.svc.cluster.local:9093"

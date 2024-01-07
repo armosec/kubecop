@@ -18,7 +18,7 @@ kubecop:
     finalizationJitter: 120s
   alertmanager:
     enabled: false
-    endpoint: "localhost:9093"
+    endpoints: "localhost:9093"
   syslog:
     enabled: false
     endpoint: "localhost:514"

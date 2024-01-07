@@ -63,8 +63,8 @@ spec:
           - name: HOST_ROOT
             value: "/host"
           {{- if .Values.kubecop.alertmanager.enabled  }}
-          - name: ALERTMANAGER_URL
-            value: {{ .Values.kubecop.alertmanager.endpoint }}
+          - name: ALERTMANAGER_URLS
+            value: {{ .Values.kubecop.alertmanager.endpoints }}
           {{- end }}
           {{- if .Values.kubecop.syslog.enabled  }}
           - name: SYSLOG_HOST
