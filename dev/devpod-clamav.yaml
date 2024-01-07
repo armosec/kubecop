@@ -32,8 +32,11 @@ data:
     Foreground yes
     Debug no
     LeaveTemporaryFiles no
-    LogTime yes
+    LogTime no
     LogClean yes
+    LocalSocket /run/clamav/clamd.sock
+    LocalSocketGroup clamav
+    LocalSocketMode 660
     TCPSocket 3310
     TCPAddr 127.0.0.1
     ExcludePath ^/proc/
@@ -42,9 +45,8 @@ data:
     ExcludePath ^/host/sys/
     ExcludePath ^/host/dev/
     ExcludePath ^/host/run/
-    MaxDirectoryRecursion 64
+    MaxDirectoryRecursion 20
     ExtendedDetectionInfo yes
-    ExitOnOOM yes
     VirusEvent "echo VIRUS DETECTED: %v in the path %f >> /dev/stdout"
 
   freshclam.conf: |
@@ -112,7 +114,9 @@ spec:
           - name: CLAMAV_SCAN_INTERVAL
             value: "60s"
           - name: CLAMAV_SCAN_PATH
-            value: "/host"
+            value: "/host/var/lib/docker"
+          - name: ALERTMANAGER_URL
+            value: "alertmanager-operated.monitoring.svc.cluster.local:9093"
         securityContext:
           privileged: true
           capabilities:
@@ -132,15 +136,8 @@ spec:
         - name: bpffs
           mountPath: /sys/fs/bpf
       - name: clamd
-        image: quay.io/armosec/klamav:beta1
+        image: quay.io/armosec/klamav:beta4
         imagePullPolicy: Always
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "100m"
-          limits:
-            memory: "200Mi"
-            cpu: "200m"
         volumeMounts:
         - name: clamdb
           mountPath: /host/tmp/clamav-db

@@ -1,11 +1,16 @@
 package clamav
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type ClamAVConfig struct {
 	Host         string
 	Port         string
 	ScanInterval string
+	RetryDelay   time.Duration
+	MaxRetries   int
 }
 
 func (c *ClamAVConfig) Address() string {
