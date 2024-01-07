@@ -8,8 +8,8 @@ spec:
 
   containers:
   - name: ping-app
-    image: docker.io/library/ping-app:latest # Replace with quay.io/armosec/ping-app:latest
-    imagePullPolicy: IfNotPresent
+    image: amitschendel/ping-app:latest
+    imagePullPolicy: Always
     ports:
     - containerPort: 80
 ---
