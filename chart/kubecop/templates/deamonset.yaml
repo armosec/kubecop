@@ -132,13 +132,15 @@ spec:
       - name: clamd
         image: {{ .Values.clamAV.image.repository }}:{{ .Values.clamAV.image.tag }}
         imagePullPolicy: {{ .Values.clamAV.image.pullPolicy }}
+        redinessProbe:
+          tcpSocket:
+            port: 3310
+          initialDelaySeconds: 50
+          periodSeconds: 10
+        {{- if .Values.clamAV.resources }}
         resources:
-          requests:
-            memory: "64Mi"
-            cpu: "100m"
-          limits:
-            memory: "350Mi"
-            cpu: "200m"
+          {{- toYaml .Values.clamAV.resources | nindent 12 }}
+        {{- end }}
         volumeMounts:
         - name: clamdb
           mountPath: /var/lib/clamav-tmp # This is a temporary filler until we have a mirror of the clamav database.

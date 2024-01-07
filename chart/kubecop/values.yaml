@@ -41,11 +41,18 @@ clamAV:
   host: "localhost"
   port: "3310"
   path: "/host"
-  scanInterval: 600s # Scan interval in seconds.
+  scanInterval: 1h
   image:
     repository: quay.io/armosec/klamav
     pullPolicy: Always
     tag: "beta4"
+  resources:
+    limits:
+      cpu: 300m
+      memory: 400Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
 
 serviceAccount:
   # Specifies whether a service account should be created
