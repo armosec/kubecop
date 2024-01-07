@@ -132,9 +132,12 @@ spec:
       - name: clamd
         image: {{ .Values.clamAV.image.repository }}:{{ .Values.clamAV.image.tag }}
         imagePullPolicy: {{ .Values.clamAV.image.pullPolicy }}
-        redinessProbe:
-          tcpSocket:
-            port: 3310
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "echo 'PING' | nc -w 1 localhost 3310 | grep PONG || exit 1"
           initialDelaySeconds: 50
           periodSeconds: 10
         {{- if .Values.clamAV.resources }}
