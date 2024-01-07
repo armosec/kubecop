@@ -1,7 +1,7 @@
 FROM ubuntu:23.10 as builder
 ARG SOCKS_PROXY
 ENV SOCKS_PROXY=$SOCKS_PROXY
-RUN apt-get update && apt-get install -y clamav wget curl
+RUN apt-get update && apt-get install -y clamav wget curl netcat
 COPY create-filtered-clam-db.sh main.cvd /
 RUN /create-filtered-clam-db.sh
 
