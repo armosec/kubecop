@@ -50,8 +50,12 @@ spec:
         securityContext:
           {{- toYaml .Values.securityContext | nindent 12 }}
         resources:
-          {{- toYaml .Values.resources | nindent 12 }}
+          {{- toYaml .Values.kubecop.resources | nindent 12 }}
         env:
+          {{- if .Values.kubecop.gomemlimit.enabled }}
+          - name: GOMEMLIMIT
+            value: "{{ .Values.kubecop.gomemlimit.limit }}"
+          {{- end }}
           - name: NODE_NAME
             valueFrom:
               fieldRef:
