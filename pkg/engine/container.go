@@ -121,7 +121,9 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			}
 		}
 		for neededEvent := range neededEvents {
-			_ = engine.tracer.StartTraceContainer(event.NsMntId, event.Pid, neededEvent)
+			if engine.tracer != nil {
+				_ = engine.tracer.StartTraceContainer(event.NsMntId, event.Pid, neededEvent)
+			}
 		}
 
 	} else if event.Activity == tracing.ContainerActivityEventStop {
@@ -132,7 +134,9 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 
 			// Stop tracing the container
 			for _, eventInUse := range eventsInUse {
-				_ = engine.tracer.StopTraceContainer(event.NsMntId, event.Pid, eventInUse)
+				if engine.tracer != nil {
+					_ = engine.tracer.StopTraceContainer(event.NsMntId, event.Pid, eventInUse)
+				}
 			}
 
 			// Remove the container from the cache

@@ -30,8 +30,11 @@ var (
 	exporters []Exporter
 )
 
+type ExporterBus struct {
+}
+
 // InitExporters initializes all exporters.
-func InitExporters(exportersConfig ExportersConfig) {
+func InitExporters(exportersConfig ExportersConfig) ExporterBus {
 	alertManagerUrls := parseAlertManagerUrls(exportersConfig.AlertManagerExporterUrls)
 	for _, url := range alertManagerUrls {
 		alertMan := InitAlertManagerExporter(url)
@@ -56,6 +59,8 @@ func InitExporters(exportersConfig ExportersConfig) {
 		panic("no exporters were initialized")
 	}
 	log.Print("exporters initialized")
+
+	return ExporterBus{}
 }
 
 // ParseAlertManagerUrls parses the alert manager urls from the given string.
@@ -72,13 +77,13 @@ func parseAlertManagerUrls(urls string) []string {
 	return strings.Split(urls, AlertManagerSepartorDelimiter)
 }
 
-func SendRuleAlert(failedRule rule.RuleFailure) {
+func (e *ExporterBus) SendRuleAlert(failedRule rule.RuleFailure) {
 	for _, exporter := range exporters {
 		exporter.SendRuleAlert(failedRule)
 	}
 }
 
-func SendMalwareAlert(malwareDescription scan.MalwareDescription) {
+func (e *ExporterBus) SendMalwareAlert(malwareDescription scan.MalwareDescription) {
 	for _, exporter := range exporters {
 		exporter.SendMalwareAlert(malwareDescription)
 	}
