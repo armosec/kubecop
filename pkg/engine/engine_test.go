@@ -383,7 +383,7 @@ func TestEngine_LoadEngineWithEvents(t *testing.T) {
 		return
 	}
 
-	timeToLoadInMinutes := 2
+	timeToLoadInMinutes := 1
 
 	execEventLoader := NewEventLoader(func() {
 		// Call exec event method

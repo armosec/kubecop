@@ -22,7 +22,7 @@ kubecop:
   gomemlimit:
     enabled: true
     # It is recommended to set this value to 3/4 of the memory limit
-    limit: 384Mi
+    limit: 384MiB
   recording:
     samplingInterval: 60s
     finalizationDuration: 900s
