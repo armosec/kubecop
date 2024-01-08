@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
+	"github.com/armosec/kubecop/pkg/exporters"
 	"github.com/armosec/kubecop/pkg/rulebindingstore"
 	"github.com/gammazero/workerpool"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -23,6 +24,7 @@ type ClientSetInterface interface {
 type Engine struct {
 	applicationProfileCache approfilecache.ApplicationProfileCache
 	tracer                  *tracing.Tracer
+	exporter                exporters.Exporter
 	// Event processing worker pool
 	eventProcessingPool   *workerpool.WorkerPool
 	k8sClientset          ClientSetInterface
@@ -33,13 +35,18 @@ type Engine struct {
 	nodeName              string
 }
 
-func NewEngine(k8sClientset ClientSetInterface, appProfileCache approfilecache.ApplicationProfileCache, tracer *tracing.Tracer, workerPoolWidth int, nodeName string) *Engine {
+func NewEngine(k8sClientset ClientSetInterface,
+	appProfileCache approfilecache.ApplicationProfileCache,
+	tracer *tracing.Tracer,
+	exporter exporters.Exporter,
+	workerPoolWidth int, nodeName string) *Engine {
 	workerPool := workerpool.New(workerPoolWidth)
 	engine := Engine{
 		applicationProfileCache: appProfileCache,
 		k8sClientset:            k8sClientset,
 		eventProcessingPool:     workerPool,
 		tracer:                  tracer,
+		exporter:                exporter,
 		promCollector:           createPrometheusMetric(),
 		nodeName:                nodeName,
 	}

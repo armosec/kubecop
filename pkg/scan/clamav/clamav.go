@@ -17,6 +17,7 @@ type ClamAV struct {
 	mutex        sync.Mutex
 	retryDelay   time.Duration
 	maxRetries   int
+	exporterBus  *exporters.ExporterBus
 }
 
 // New ClamAV
@@ -29,6 +30,7 @@ func NewClamAV(config ClamAVConfig) *ClamAV {
 		mutex:        sync.Mutex{},
 		retryDelay:   config.RetryDelay,
 		maxRetries:   config.MaxRetries,
+		exporterBus:  config.ExporterBus,
 	}
 }
 
@@ -99,7 +101,7 @@ func (c *ClamAV) scan(ctx context.Context, path string) error {
 				return nil
 			}
 			if result.Status == clamd.RES_FOUND {
-				exporters.SendMalwareAlert(scan.MalwareDescription{
+				c.exporterBus.SendMalwareAlert(scan.MalwareDescription{
 					Name:        result.Description,
 					Path:        result.Path,
 					Hash:        result.Hash,
