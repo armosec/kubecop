@@ -12,6 +12,7 @@ import (
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/rulebindingstore"
+	"github.com/armosec/kubecop/pkg/scan"
 	"github.com/kubescape/kapprofiler/pkg/collector"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	appsv1 "k8s.io/api/apps/v1"
@@ -73,8 +74,11 @@ type MockExporter struct {
 	Alerts []rule.RuleFailure
 }
 
-func (m *MockExporter) SendAlert(failedRule rule.RuleFailure) {
+func (m *MockExporter) SendRuleAlert(failedRule rule.RuleFailure) {
 	m.Alerts = append(m.Alerts, failedRule)
+}
+
+func (m *MockExporter) SendMalwareAlert(failedRule scan.MalwareDescription) {
 }
 
 type MockAppProfileAccess struct {
