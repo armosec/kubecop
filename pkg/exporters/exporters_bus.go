@@ -2,19 +2,28 @@ package exporters
 
 import (
 	"log"
+	"os"
+	"strings"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
+	"github.com/armosec/kubecop/pkg/scan"
 )
 
 type ExportersConfig struct {
-	StdoutExporter          *bool  `yaml:"stdoutExporter"`
-	AlertManagerExporterURL string `yaml:"alertManagerExporterURL"`
-	SyslogExporter          string `yaml:"syslogExporterURL"`
-	CsvExporterPath         string `yaml:"csvExporterPath"`
+	StdoutExporter           *bool  `yaml:"stdoutExporter"`
+	AlertManagerExporterUrls string `yaml:"alertManagerExporterUrls"`
+	SyslogExporter           string `yaml:"syslogExporterURL"`
+	CsvRuleExporterPath      string `yaml:"CsvRuleExporterPath"`
+	CsvMalwareExporterPath   string `yaml:"CsvMalwareExporterPath"`
 }
 
 // This file will contain the single point of contact for all exporters,
 // it will be used by the engine to send alerts to all exporters.
+
+const (
+	// AlertManagerURLs separator delimiter.
+	AlertManagerSepartorDelimiter = ","
+)
 
 var (
 	// Exporters is a list of all exporters.
@@ -23,9 +32,12 @@ var (
 
 // InitExporters initializes all exporters.
 func InitExporters(exportersConfig ExportersConfig) {
-	alertMan := InitAlertManagerExporter(exportersConfig.AlertManagerExporterURL)
-	if alertMan != nil {
-		exporters = append(exporters, alertMan)
+	alertManagerUrls := parseAlertManagerUrls(exportersConfig.AlertManagerExporterUrls)
+	for _, url := range alertManagerUrls {
+		alertMan := InitAlertManagerExporter(url)
+		if alertMan != nil {
+			exporters = append(exporters, alertMan)
+		}
 	}
 	stdoutExp := InitStdoutExporter(exportersConfig.StdoutExporter)
 	if stdoutExp != nil {
@@ -35,7 +47,7 @@ func InitExporters(exportersConfig ExportersConfig) {
 	if syslogExp != nil {
 		exporters = append(exporters, syslogExp)
 	}
-	csvExp := InitCsvExporter(exportersConfig.CsvExporterPath)
+	csvExp := InitCsvExporter(exportersConfig.CsvRuleExporterPath, exportersConfig.CsvMalwareExporterPath)
 	if csvExp != nil {
 		exporters = append(exporters, csvExp)
 	}
@@ -46,8 +58,28 @@ func InitExporters(exportersConfig ExportersConfig) {
 	log.Print("exporters initialized")
 }
 
-func SendAlert(failedRule rule.RuleFailure) {
+// ParseAlertManagerUrls parses the alert manager urls from the given string.
+func parseAlertManagerUrls(urls string) []string {
+	if urls == "" {
+		urls = os.Getenv("ALERTMANAGER_URLS")
+		if urls == "" {
+			return nil
+		}
+
+		return strings.Split(urls, AlertManagerSepartorDelimiter)
+
+	}
+	return strings.Split(urls, AlertManagerSepartorDelimiter)
+}
+
+func SendRuleAlert(failedRule rule.RuleFailure) {
 	for _, exporter := range exporters {
-		exporter.SendAlert(failedRule)
+		exporter.SendRuleAlert(failedRule)
+	}
+}
+
+func SendMalwareAlert(malwareDescription scan.MalwareDescription) {
+	for _, exporter := range exporters {
+		exporter.SendMalwareAlert(malwareDescription)
 	}
 }

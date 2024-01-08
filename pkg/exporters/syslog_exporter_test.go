@@ -7,9 +7,11 @@ import (
 	"time"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
+	"github.com/armosec/kubecop/pkg/scan"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mcuadros/go-syslog.v2"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func setupServer() *syslog.Server {
@@ -61,18 +63,35 @@ func TestSyslogExporter(t *testing.T) {
 	}
 
 	// Send an alert
-	syslogExp.SendAlert(&rule.R0001UnexpectedProcessLaunchedFailure{
+	syslogExp.SendRuleAlert(&rule.R0001UnexpectedProcessLaunchedFailure{
 		RuleName: "testrule",
 		Err:      "Application profile is missing",
 		FailureEvent: &tracing.ExecveEvent{GeneralEvent: tracing.GeneralEvent{
 			ContainerName: "testcontainer", ContainerID: "testcontainerid", Namespace: "testnamespace", PodName: "testpodname"}},
 	})
 
-	syslogExp.SendAlert(&rule.R0001UnexpectedProcessLaunchedFailure{
+	syslogExp.SendRuleAlert(&rule.R0001UnexpectedProcessLaunchedFailure{
 		RuleName: "testrule",
 		Err:      "Application profile is missing",
 		FailureEvent: &tracing.ExecveEvent{GeneralEvent: tracing.GeneralEvent{
 			ContainerName: "testcontainer", ContainerID: "testcontainerid", Namespace: "testnamespace", PodName: "testpodname"}},
+	})
+
+	syslogExp.SendMalwareAlert(scan.MalwareDescription{
+		Name:        "testmalware",
+		Hash:        "testhash",
+		Description: "testdescription",
+		Path:        "testpath",
+		Size:        1,
+		Resource: schema.GroupVersionResource{
+			Group:    "testgroup",
+			Version:  "testversion",
+			Resource: "testresource",
+		},
+		Namespace:     "testnamespace",
+		PodName:       "testpodname",
+		ContainerName: "testcontainername",
+		ContainerID:   "testcontainerid",
 	})
 
 	// Allow some time for the message to reach the mock syslog server

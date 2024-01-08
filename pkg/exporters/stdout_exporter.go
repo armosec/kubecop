@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
+	"github.com/armosec/kubecop/pkg/scan"
 )
 
 type StdoutExporter struct {
@@ -25,8 +26,24 @@ func InitStdoutExporter(useStdout *bool) *StdoutExporter {
 	}
 }
 
-func (exporter *StdoutExporter) SendAlert(failedRule rule.RuleFailure) {
+func (exporter *StdoutExporter) SendRuleAlert(failedRule rule.RuleFailure) {
 
 	exporter.logger.Error(failedRule.Name(), slog.Int("severity", failedRule.Priority()),
 		slog.String("message", failedRule.Error()), slog.Any("event", failedRule.Event()))
+}
+
+func (exporter *StdoutExporter) SendMalwareAlert(malwareDescription scan.MalwareDescription) {
+	exporter.logger.Error(
+		malwareDescription.Name,
+		slog.Int("severity", 10),
+		slog.String("description", malwareDescription.Description),
+		slog.String("hash", malwareDescription.Hash),
+		slog.String("path", malwareDescription.Path),
+		slog.Int("size", malwareDescription.Size),
+		slog.String("pod", malwareDescription.PodName),
+		slog.String("namespace", malwareDescription.Namespace),
+		slog.String("container", malwareDescription.ContainerName),
+		slog.String("containerID", malwareDescription.ContainerID),
+		slog.Any("resource", malwareDescription.Resource),
+	)
 }

@@ -10,8 +10,9 @@ The following exporters are available:
 
 ### Alertmanager
 The Alertmanager exporter is used to send alerts to the Alertmanager. The Alertmanager will then send the alerts to the configured receivers.
+This exporter supports multiple Alertmanagers. The alerts will be sent to all configured Alertmanagers.
 To enable the Alertmanager exporter, set the following environment variables:
-- `ALERTMANAGER_URL`: The URL of the Alertmanager. Example: `localhost:9093`
+- `ALERTMANAGER_URLS`: The URLs of the Alertmanagers. Example: `localhost:9093` or `localhost:9093,localhost:9094`
 
 ### STD OUT
 The STD OUT exporter is used to print the alerts to the standard output. This exporter is enabled by default.
@@ -28,4 +29,5 @@ To enable the SYSLOG exporter, set the following environment variables:
 ### CSV
 The CSV exporter is used to write the alerts to a CSV file. This exporter is disabled by default.
 To enable the CSV exporter, set the following environment variables:
-- `EXPORTER_CSV_PATH`: The path to the CSV file. Example: `/tmp/alerts.csv`
+- `EXPORTER_CSV_RULE_PATH`: The path to the CSV file of the failed rules. Example: `/tmp/alerts.csv`
+- `EXPORTER_CSV_MALWARE_PATH`: The path to the CSV file of the malwares found. Example: `/tmp/malware.csv`

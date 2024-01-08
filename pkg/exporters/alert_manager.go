@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
+	"github.com/armosec/kubecop/pkg/scan"
 	"github.com/go-openapi/strfmt"
 	"github.com/prometheus/alertmanager/api/v2/client"
 	"github.com/prometheus/alertmanager/api/v2/client/alert"
@@ -24,12 +25,6 @@ type AlertManagerExporter struct {
 }
 
 func InitAlertManagerExporter(alertmanagerURL string) *AlertManagerExporter {
-	if alertmanagerURL == "" {
-		alertmanagerURL = os.Getenv("ALERTMANAGER_URL")
-		if alertmanagerURL == "" {
-			return nil
-		}
-	}
 	// Create a new Alertmanager client
 	cfg := client.DefaultTransportConfig().WithHost(alertmanagerURL)
 	amClient := client.NewHTTPClientWithConfig(nil, cfg)
@@ -45,7 +40,7 @@ func InitAlertManagerExporter(alertmanagerURL string) *AlertManagerExporter {
 	}
 }
 
-func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
+func (ame *AlertManagerExporter) SendRuleAlert(failedRule rule.RuleFailure) {
 	sourceUrl := fmt.Sprintf("https://armosec.github.io/kubecop/alertviewer/?AlertMessage=%s&AlertRuleName=%s&AlertFix=%s&AlertNamespace=%s&AlertPod=%s&AlertContainer=%s&AlertProcess=%s",
 		failedRule.Error(),
 		failedRule.Name(),
@@ -83,6 +78,47 @@ func (ame *AlertManagerExporter) SendAlert(failedRule rule.RuleFailure) {
 				"comm":           failedRule.Event().Comm,
 				"uid":            fmt.Sprintf("%d", failedRule.Event().Uid),
 				"gid":            fmt.Sprintf("%d", failedRule.Event().Gid),
+			},
+		},
+	}
+
+	// Send the alert
+	params := alert.NewPostAlertsParams().WithContext(context.Background()).WithAlerts(models.PostableAlerts{&myAlert})
+	isOK, err := ame.client.Alert.PostAlerts(params)
+	if err != nil {
+		log.Println("Error sending alert:", err)
+		return
+	}
+	if isOK == nil {
+		log.Println("Alert was not sent successfully")
+		return
+	}
+}
+
+func (ame *AlertManagerExporter) SendMalwareAlert(malwareDescription scan.MalwareDescription) {
+	summary := fmt.Sprintf("Malware '%s' detected in namespace '%s' pod '%s' description '%s' path '%s'", malwareDescription.Name, malwareDescription.Namespace, malwareDescription.PodName, malwareDescription.Description, malwareDescription.Path)
+	myAlert := models.PostableAlert{
+		StartsAt: strfmt.DateTime(time.Now()),
+		EndsAt:   strfmt.DateTime(time.Now().Add(time.Hour)),
+		Annotations: map[string]string{
+			"title":       malwareDescription.Name,
+			"summary":     summary,
+			"message":     summary,
+			"description": malwareDescription.Description,
+			"fix":         "Remove the malware from the container",
+		},
+		Alert: models.Alert{
+			GeneratorURL: strfmt.URI("https://armosec.github.io/kubecop/alertviewer/"),
+			Labels: map[string]string{
+				"alertname":      "KubeCopMalwareDetected",
+				"malware_name":   malwareDescription.Name,
+				"container_id":   malwareDescription.ContainerID,
+				"container_name": malwareDescription.ContainerName,
+				"namespace":      malwareDescription.Namespace,
+				"pod_name":       malwareDescription.PodName,
+				"severity":       "critical",
+				"host":           ame.Host,
+				"node_name":      ame.NodeName,
 			},
 		},
 	}
