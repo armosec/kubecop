@@ -29,7 +29,7 @@ func TestCsvExporter(t *testing.T) {
 		Hash:        "testhash",
 		Description: "testdescription",
 		Path:        "testpath",
-		Size:        1,
+		Size:        "2MB",
 		Resource: schema.GroupVersionResource{
 			Group:    "testgroup",
 			Version:  "testversion",

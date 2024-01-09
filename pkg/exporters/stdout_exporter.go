@@ -39,11 +39,12 @@ func (exporter *StdoutExporter) SendMalwareAlert(malwareDescription scan.Malware
 		slog.String("description", malwareDescription.Description),
 		slog.String("hash", malwareDescription.Hash),
 		slog.String("path", malwareDescription.Path),
-		slog.Int("size", malwareDescription.Size),
+		slog.String("size", malwareDescription.Size),
 		slog.String("pod", malwareDescription.PodName),
 		slog.String("namespace", malwareDescription.Namespace),
 		slog.String("container", malwareDescription.ContainerName),
 		slog.String("containerID", malwareDescription.ContainerID),
+		slog.Bool("isPartOfImage", malwareDescription.IsPartOfImage),
 		slog.Any("resource", malwareDescription.Resource),
 	)
 }
