@@ -149,7 +149,7 @@ func (se *SyslogExporter) SendMalwareAlert(malwareDescription scan.MalwareDescri
 					},
 					{
 						Name:  "size",
-						Value: fmt.Sprintf("%d", malwareDescription.Size),
+						Value: malwareDescription.Size,
 					},
 					{
 						Name:  "namespace",
@@ -166,6 +166,10 @@ func (se *SyslogExporter) SendMalwareAlert(malwareDescription scan.MalwareDescri
 					{
 						Name:  "container_id",
 						Value: malwareDescription.ContainerID,
+					},
+					{
+						Name:  "is_part_of_image",
+						Value: fmt.Sprintf("%t", malwareDescription.IsPartOfImage),
 					},
 				},
 			},

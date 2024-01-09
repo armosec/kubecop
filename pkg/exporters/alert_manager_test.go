@@ -92,7 +92,7 @@ func TestSendMalwareAlert(t *testing.T) {
 		Description:   "testmalwaredescription",
 		Path:          "testmalwarepath",
 		Hash:          "testmalwarehash",
-		Size:          123,
+		Size:          "2MiB",
 		Resource:      schema.EmptyObjectKind.GroupVersionKind().GroupVersion().WithResource("testmalwareresource"),
 		Namespace:     "testmalwarenamespace",
 		PodName:       "testmalwarepodname",

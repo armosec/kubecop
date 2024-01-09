@@ -121,12 +121,13 @@ func (ce *CsvExporter) SendMalwareAlert(malwareDescription scan.MalwareDescripti
 		malwareDescription.Description,
 		malwareDescription.Path,
 		malwareDescription.Hash,
-		fmt.Sprintf("%d", malwareDescription.Size),
+		malwareDescription.Size,
 		malwareDescription.Resource.String(),
 		malwareDescription.Namespace,
 		malwareDescription.PodName,
 		malwareDescription.ContainerName,
 		malwareDescription.ContainerID,
+		fmt.Sprintf("%t", malwareDescription.IsPartOfImage),
 	})
 }
 
@@ -152,5 +153,6 @@ func writeMalwareHeaders(csvPath string) {
 		"Pod Name",
 		"Container Name",
 		"Container ID",
+		"Is Part of Image",
 	})
 }
