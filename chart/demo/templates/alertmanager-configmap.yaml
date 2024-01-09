@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: kubescape
+data:
+  alertmanager.yml: |
+    global:
+      smtp_smarthost: {{ .Values.kubecop.alertmanager.smtp_endpoint }}
+      smtp_from: '{{ .Values.kubecop.alertmanager.smtp_from }}'
+      smtp_auth_username: '{{ .Values.kubecop.alertmanager.smtp_auth_username }}'
+      smtp_auth_password: '{{ .Values.kubecop.alertmanager.smtp_auth_password }}'
+      smtp_auth_secret: '{{ .Values.kubecop.alertmanager.smtp_auth_secret }}'
+      smtp_auth_identity: '{{ .Values.kubecop.alertmanager.smtp_auth_identity }}'
+      smtp_require_tls: {{ .Values.kubecop.alertmanager.smtp_require_tls }}
+
+    route:
+      group_by: ['alertname']
+      receiver: 'email-notifications'
+
+    receivers:
+    - name: 'email-notifications'
+      email_configs:
+      - to: '{{ .Values.kubecop.alertmanager.email_to }}'

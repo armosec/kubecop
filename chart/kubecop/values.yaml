@@ -12,13 +12,24 @@ nameOverride: ""
 fullnameOverride: "kubecop"
 
 kubecop:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  gomemlimit:
+    enabled: true
+    # It is recommended to set this value to 3/4 of the memory limit
+    limit: 384MiB
   recording:
     samplingInterval: 60s
     finalizationDuration: 900s
     finalizationJitter: 120s
   alertmanager:
     enabled: false
-    endpoint: "localhost:9093"
+    endpoints: "localhost:9093"
   syslog:
     enabled: false
     endpoint: "localhost:514"
@@ -49,7 +60,7 @@ clamAV:
   resources:
     limits:
       cpu: 300m
-      memory: 400Mi
+      memory: 512Mi
     requests:
       cpu: 100m
       memory: 256Mi
@@ -76,13 +87,7 @@ securityContext:
 
 securityContextNormal: {}
 
-resources:
-  limits:
-    cpu: 500m
-    memory: 1Gi
-  requests:
-    cpu: 100m
-    memory: 256Mi
+
 
 
 nodeSelector: {}

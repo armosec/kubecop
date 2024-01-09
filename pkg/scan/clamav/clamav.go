@@ -27,6 +27,7 @@ type ClamAV struct {
 	maxRetries                 int
 	containeridToContainer     map[string]tracing.ContainerActivityEvent
 	containeridToContainerLock sync.RWMutex
+	exporterBus                *exporters.ExporterBus
 }
 
 type MalwareK8sData struct {
@@ -48,6 +49,7 @@ func NewClamAV(config ClamAVConfig) *ClamAV {
 		maxRetries:                 config.MaxRetries,
 		containeridToContainer:     make(map[string]tracing.ContainerActivityEvent),
 		containeridToContainerLock: sync.RWMutex{},
+		exporterBus:                config.ExporterBus,
 	}
 }
 
@@ -139,7 +141,7 @@ func (c *ClamAV) scan(ctx context.Context, path string) error {
 				if malwareK8sData.ContainerID == "" {
 					log.Printf("Could not find container for path %s\n", path)
 					log.Println("Malware is part of the host filesystem, sending alert without container details")
-					exporters.SendMalwareAlert(malwareDescription)
+					c.exporterBus.SendMalwareAlert(malwareDescription)
 					continue
 				}
 
@@ -159,7 +161,7 @@ func (c *ClamAV) scan(ctx context.Context, path string) error {
 					malwareDescription.IsPartOfImage = false
 				}
 
-				exporters.SendMalwareAlert(malwareDescription)
+				c.exporterBus.SendMalwareAlert(malwareDescription)
 			}
 		case <-ctx.Done():
 			// The context was cancelled, which means we should stop the scan.

@@ -86,7 +86,7 @@ They can be enabled with Helm (Stdout is on by default)
 Currently supported:
 * Alert manager
     * Enable: `kubecop.alertmanager.enabled`
-    * Endpoint: `kubecop.alertmanager.endpoint` (example `localhost:9093`)
+    * Endpoint: `kubecop.alertmanager.endpoints` (example `localhost:9093` or `localhost:9093,localhost:9094`)
 * Syslog (RFC 5424)
     * Enable: `kubecop.syslog.enabled`
     * Endpoint: `kubecop.syslog.endpoint` (example `localhost:514`)

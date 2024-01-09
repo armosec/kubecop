@@ -83,7 +83,7 @@ func IsExecBinaryInUpperLayer(execEvent *tracing.ExecveEvent) bool {
 	// Find a process with the same mount namespace ID as the exec event.
 	process, err := findProcessByMountNamespace(execEvent)
 	if err != nil {
-		fmt.Printf("Error finding process by mount namespace: %s\n", err)
+		//log.Printf("Error finding process by mount namespace: %s\n", err)
 		return false
 	}
 

@@ -219,9 +219,10 @@ func (c *ApplicationProfileK8sCache) StartController() {
 func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstructured *unstructured.Unstructured) {
 	partial := appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/partial"] == "true"
 	final := appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/final"] == "true"
+	failed := appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/failed"] == "true"
 
 	// Check if the application profile is final or partial, if not then skip it
-	if !final {
+	if !final || failed {
 		return
 	}
 
