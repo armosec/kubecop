@@ -249,8 +249,13 @@ func main() {
 			ExporterBus:  &exporterBus,
 		}
 
+		clamavConfigured := false
+		var clamav *scan.ClamAV
+		clamAVContext, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
 		if clamavConfig.Host != "" && clamavConfig.Port != "" && clamavConfig.ScanInterval != "" {
-			clamav := scan.NewClamAV(clamavConfig)
+			clamav = scan.NewClamAV(clamavConfig)
 
 			// Check if we can connect to ClamAV - Retry every 10 seconds until we can connect.
 			retryCount := 0
@@ -273,12 +278,10 @@ func main() {
 			if retryCount == clamavConfig.MaxRetries {
 				log.Fatalf("Failed to connect to ClamAV after %d retries. Exiting...\n", clamavConfig.MaxRetries)
 			} else {
-				ctx, cancel := context.WithCancel(context.Background())
-				defer cancel()
 				// Add ClamAV to the tracer
 				tracer.AddContainerActivityListener(clamav)
 				defer tracer.RemoveContainerActivityListener(clamav)
-				go clamav.StartInfiniteScan(ctx, os.Getenv("CLAMAV_SCAN_PATH"))
+				clamavConfigured = true
 			}
 		}
 
@@ -293,6 +296,11 @@ func main() {
 		}
 		defer tracer.Stop()
 		log.Printf("Tracer started")
+
+		// Start the clamav scanner (Avoid race).
+		if clamavConfigured {
+			go clamav.StartInfiniteScan(clamAVContext, os.Getenv("CLAMAV_SCAN_PATH"))
+		}
 	}
 
 	if controllerMode {
