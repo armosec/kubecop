@@ -246,6 +246,7 @@ func main() {
 			ScanInterval: os.Getenv("CLAMAV_SCAN_INTERVAL"),
 			RetryDelay:   ClamAVRetryDelay,
 			MaxRetries:   ClamAVMaxRetries,
+			ExporterBus:  &exporterBus,
 		}
 
 		if clamavConfig.Host != "" && clamavConfig.Port != "" && clamavConfig.ScanInterval != "" {
@@ -292,48 +293,6 @@ func main() {
 		}
 		defer tracer.Stop()
 		log.Printf("Tracer started")
-
-		//////////////////////////////////////////////////////////////////////////////
-		// Start the ClamAV scanner
-		// Start the ClamAV scanner
-		clamavConfig := scan.ClamAVConfig{
-			Host:         os.Getenv("CLAMAV_HOST"),
-			Port:         os.Getenv("CLAMAV_PORT"),
-			ScanInterval: os.Getenv("CLAMAV_SCAN_INTERVAL"),
-			RetryDelay:   ClamAVRetryDelay,
-			MaxRetries:   ClamAVMaxRetries,
-			ExporterBus:  &exporterBus,
-		}
-
-		if clamavConfig.Host != "" && clamavConfig.Port != "" && clamavConfig.ScanInterval != "" {
-			clamav := scan.NewClamAV(clamavConfig)
-
-			// Check if we can connect to ClamAV - Retry every 10 seconds until we can connect.
-			retryCount := 0
-
-			for retryCount < clamavConfig.MaxRetries {
-				if err := clamav.Ping(); err != nil {
-					retryCount++
-					log.Printf("Failed to connect to ClamAV: %v\n", err)
-					log.Printf("Retrying in %d seconds...\n", clamavConfig.RetryDelay/time.Second)
-					// Wait before retrying.
-					time.Sleep(clamavConfig.RetryDelay)
-					continue
-				}
-
-				log.Printf("Connected to ClamAV\n")
-				break
-			}
-
-			// Start the ClamAV scanner
-			if retryCount == clamavConfig.MaxRetries {
-				log.Fatalf("Failed to connect to ClamAV after %d retries. Exiting...\n", clamavConfig.MaxRetries)
-			} else {
-				ctx, cancel := context.WithCancel(context.Background())
-				defer cancel()
-				go clamav.StartInfiniteScan(ctx, os.Getenv("CLAMAV_SCAN_PATH"))
-			}
-		}
 	}
 
 	if controllerMode {
