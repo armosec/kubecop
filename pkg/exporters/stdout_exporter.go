@@ -45,6 +45,7 @@ func (exporter *StdoutExporter) SendMalwareAlert(malwareDescription scan.Malware
 		slog.String("container", malwareDescription.ContainerName),
 		slog.String("containerID", malwareDescription.ContainerID),
 		slog.Bool("isPartOfImage", malwareDescription.IsPartOfImage),
+		slog.String("containerImage", malwareDescription.ContainerImage),
 		slog.Any("resource", malwareDescription.Resource),
 	)
 }

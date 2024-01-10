@@ -171,6 +171,10 @@ func (se *SyslogExporter) SendMalwareAlert(malwareDescription scan.MalwareDescri
 						Name:  "is_part_of_image",
 						Value: fmt.Sprintf("%t", malwareDescription.IsPartOfImage),
 					},
+					{
+						Name:  "container_image",
+						Value: malwareDescription.ContainerImage,
+					},
 				},
 			},
 		},
