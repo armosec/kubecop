@@ -2,14 +2,12 @@ package clamav
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"io"
-	"log"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/exporters"
 	"github.com/armosec/kubecop/pkg/scan"
@@ -17,6 +15,7 @@ import (
 	"github.com/dutchcoders/go-clamd"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 )
 
 type ClamAV struct {
@@ -28,9 +27,10 @@ type ClamAV struct {
 	containeridToContainer     map[string]tracing.ContainerActivityEvent
 	containeridToContainerLock sync.RWMutex
 	exporterBus                *exporters.ExporterBus
+	kubernetesClient           *kubernetes.Clientset
 }
 
-type MalwareK8sData struct {
+type MalwareHostData struct {
 	// ContainerID of the container that was infected
 	ContainerID string `json:"container_id"`
 	// OverlayLayer of the container that was infected
@@ -50,6 +50,7 @@ func NewClamAV(config ClamAVConfig) *ClamAV {
 		containeridToContainer:     make(map[string]tracing.ContainerActivityEvent),
 		containeridToContainerLock: sync.RWMutex{},
 		exporterBus:                config.ExporterBus,
+		kubernetesClient:           config.KubernetesClient,
 	}
 }
 
@@ -59,11 +60,11 @@ func (c *ClamAV) StartInfiniteScan(ctx context.Context, path string) {
 			select {
 			case <-ctx.Done():
 				// The context was cancelled, which means we should stop the scan.
-				log.Println("Infinite scan cancelled")
+				log.Infoln("Infinite scan cancelled")
 				return
 			default:
 				c.scanLock.Lock()
-				log.Printf("Starting scan of %s\n", path)
+				log.Infof("Starting scan of %s\n", path)
 				c.scanWithRetries(ctx, path)
 				c.scanLock.Unlock()
 			}
@@ -89,12 +90,12 @@ func (c *ClamAV) scanWithRetries(ctx context.Context, path string) {
 			break
 		}
 
-		log.Printf("Error during scan attempt %d: %v", retry+1, err)
+		log.Errorf("Error during scan attempt %d: %v", retry+1, err)
 
 		select {
 		case <-ctx.Done():
 			// The context was canceled, which means we should stop the scan.
-			log.Println("Scan canceled")
+			log.Infoln("Scan canceled")
 			return
 		case <-time.After(c.retryDelay):
 			// Wait for the given delay before retrying the scan.
@@ -115,18 +116,18 @@ func (c *ClamAV) scan(ctx context.Context, path string) error {
 		case result, ok := <-response:
 			if !ok {
 				// The response channel was closed, which means the scan is over.
-				log.Println("Scan completed")
+				log.Infoln("Scan completed")
 				return nil
 			}
 			if result.Status == clamd.RES_FOUND {
 				// A malware was found, send an alert.
-				hash, err := c.calculateFileHash(result.Path)
+				hash, err := scan.CalculateFileHash(result.Path)
 				if err != nil {
-					log.Printf("Error calculating hash of %s: %v\n", result.Path, err)
+					log.Errorf("Error calculating hash of %s: %v\n", result.Path, err)
 				}
-				size, err := c.getFileSize(result.Path)
+				size, err := scan.GetFileSize(result.Path)
 				if err != nil {
-					log.Printf("Error getting size of %s: %v\n", result.Path, err)
+					log.Errorf("Error getting size of %s: %v\n", result.Path, err)
 				}
 				path := strings.TrimPrefix(result.Path, os.Getenv("HOST_ROOT"))
 				malwareDescription := scan.MalwareDescription{
@@ -137,25 +138,31 @@ func (c *ClamAV) scan(ctx context.Context, path string) error {
 					Description: result.Description,
 				}
 
-				malwareK8sData := c.getMalwarek8sData(path)
-				if malwareK8sData.ContainerID == "" {
-					log.Printf("Could not find container for path %s\n", path)
-					log.Println("Malware is part of the host filesystem, sending alert without container details")
+				malwareHostData := c.getMalwareHostData(path)
+				if malwareHostData.ContainerID == "" {
+					log.Debugf("Could not find container for path %s\n", path)
+					log.Infoln("Malware is part of the host filesystem or the container is not running, sending alert without container details")
 					c.exporterBus.SendMalwareAlert(malwareDescription)
 					continue
 				}
 
 				// Get the container details.
-				malwareDescription.PodName = c.containeridToContainer[malwareK8sData.ContainerID].PodName
-				malwareDescription.Namespace = c.containeridToContainer[malwareK8sData.ContainerID].Namespace
+				malwareDescription.PodName = c.containeridToContainer[malwareHostData.ContainerID].PodName
+				malwareDescription.Namespace = c.containeridToContainer[malwareHostData.ContainerID].Namespace
 				malwareDescription.Resource = schema.GroupVersionResource{
 					Group:    "v1",
 					Version:  "Pod",
 					Resource: "Pod",
 				}
-				malwareDescription.ContainerName = c.containeridToContainer[malwareK8sData.ContainerID].ContainerName
-				malwareDescription.ContainerID = malwareK8sData.ContainerID
-				if malwareK8sData.OverlayLayer == "lower" {
+				malwareDescription.ContainerName = c.containeridToContainer[malwareHostData.ContainerID].ContainerName
+				malwareDescription.ContainerID = malwareHostData.ContainerID
+
+				malwareDescription.ContainerImage, err = scan.GetContainerImageID(c.kubernetesClient, malwareDescription.Namespace, malwareDescription.PodName, malwareDescription.ContainerName)
+				if err != nil {
+					log.Infof("Error getting container image ID: %v\n", err)
+				}
+
+				if malwareHostData.OverlayLayer == "lower" {
 					malwareDescription.IsPartOfImage = true
 				} else {
 					malwareDescription.IsPartOfImage = false
@@ -165,7 +172,7 @@ func (c *ClamAV) scan(ctx context.Context, path string) error {
 			}
 		case <-ctx.Done():
 			// The context was cancelled, which means we should stop the scan.
-			log.Println("Scan cancelled")
+			log.Infoln("Scan cancelled")
 			return ctx.Err()
 		}
 	}
@@ -192,7 +199,7 @@ func (c *ClamAV) OnContainerActivityEvent(event *tracing.ContainerActivityEvent)
 }
 
 // Iterate over /proc/<pid>/mountinfo files to find the container that contains the given path.
-func (c *ClamAV) getMalwarek8sData(path string) MalwareK8sData {
+func (c *ClamAV) getMalwareHostData(path string) MalwareHostData {
 	// Iterate over all containers.
 	c.containeridToContainerLock.RLock()
 	for _, container := range c.containeridToContainer {
@@ -201,7 +208,7 @@ func (c *ClamAV) getMalwarek8sData(path string) MalwareK8sData {
 		if overlayLayer != "" {
 			// The path is in the container, return the container ID.
 			c.containeridToContainerLock.RUnlock()
-			return MalwareK8sData{
+			return MalwareHostData{
 				ContainerID:  container.ContainerID,
 				OverlayLayer: overlayLayer,
 			}
@@ -209,42 +216,7 @@ func (c *ClamAV) getMalwarek8sData(path string) MalwareK8sData {
 	}
 	c.containeridToContainerLock.RUnlock()
 
-	return MalwareK8sData{}
-}
-
-// Get the size of the given file.
-func (c *ClamAV) getFileSize(path string) (int64, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return 0, err
-	}
-
-	// Get the file size.
-	fileInfo, err := file.Stat()
-	if err != nil {
-		return 0, err
-	}
-
-	return fileInfo.Size(), nil
-}
-
-// Calculate the SHA256 hash of the given file.
-func (c *ClamAV) calculateFileHash(path string) (string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		return "", err
-	}
-
-	hashInBytes := hash.Sum(nil)
-	hashString := hex.EncodeToString(hashInBytes)
-
-	return hashString, nil
+	return MalwareHostData{}
 }
 
 // Ping ClamAV

@@ -27,4 +27,6 @@ type MalwareDescription struct {
 	ContainerName string `json:"container_name"`
 	// K8s container ID that was infected
 	ContainerID string `json:"container_id"`
+	// K8s container image that was infected
+	ContainerImage string `json:"container_image"`
 }

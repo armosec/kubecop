@@ -2,8 +2,9 @@ package scan
 
 import (
 	"fmt"
-	"log"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/prometheus/procfs"
 )
@@ -15,28 +16,32 @@ type Overlay struct {
 	WorkDir string
 	// MergedDir is the path to the merged directory of the overlay filesystem.
 	MergedDir string
-	// LowerDir is the path to the lower directory of the overlay filesystem.
-	LowerDir string
+	// LowerDirs is the path to the lower directory of the overlay filesystem.
+	LowerDirs []string
 }
 
 func GetOverlayLayer(path string, pid uint32) string {
 	process, err := procfs.NewProc(int(pid))
 	if err != nil {
-		log.Printf("Error creating procfs for PID %d: %s\n", pid, err)
+		log.Infof("Error creating procfs for PID %d: %s\n", pid, err)
 		return ""
 	}
 
 	// Get the overlay mount points for the process.
 	overlay, err := getOverlayMountPoints(&process)
 	if err != nil {
-		log.Printf("Error getting overlay mount points for PID %d: %s\n", pid, err)
+		log.Errorf("Error getting overlay mount points for PID %d: %s\n", pid, err)
 		return ""
 	}
 
 	// Check if the path is in one of the overlay mount points.
-	if strings.HasPrefix(path, overlay.LowerDir) {
-		return "lower"
-	} else if strings.HasPrefix(path, overlay.UpperDir) {
+	for _, lowerDir := range overlay.LowerDirs {
+		if strings.HasPrefix(path, lowerDir) {
+			return "lower"
+		}
+	}
+
+	if strings.HasPrefix(path, overlay.UpperDir) {
 		return "upper"
 	} else if strings.HasPrefix(path, overlay.WorkDir) {
 		return "work"
@@ -57,7 +62,7 @@ func getOverlayMountPoints(process *procfs.Proc) (Overlay, error) {
 					mount.SuperOptions["upperdir"],
 					mount.SuperOptions["workdir"],
 					strings.Replace(mount.SuperOptions["upperdir"], "diff", "merged", 1),
-					mount.SuperOptions["lowerdir"],
+					strings.Split(mount.SuperOptions["lowerdir"], ":"),
 				}, nil
 			}
 		}

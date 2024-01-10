@@ -5,15 +5,17 @@ import (
 	"time"
 
 	"github.com/armosec/kubecop/pkg/exporters"
+	"k8s.io/client-go/kubernetes"
 )
 
 type ClamAVConfig struct {
-	Host         string
-	Port         string
-	ScanInterval string
-	RetryDelay   time.Duration
-	MaxRetries   int
-	ExporterBus  *exporters.ExporterBus
+	Host             string
+	Port             string
+	ScanInterval     string
+	RetryDelay       time.Duration
+	MaxRetries       int
+	ExporterBus      *exporters.ExporterBus
+	KubernetesClient *kubernetes.Clientset
 }
 
 func (c *ClamAVConfig) Address() string {
