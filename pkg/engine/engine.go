@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/exporters"

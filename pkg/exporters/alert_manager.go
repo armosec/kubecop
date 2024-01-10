@@ -6,9 +6,10 @@ package exporters
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
@@ -86,11 +87,11 @@ func (ame *AlertManagerExporter) SendRuleAlert(failedRule rule.RuleFailure) {
 	params := alert.NewPostAlertsParams().WithContext(context.Background()).WithAlerts(models.PostableAlerts{&myAlert})
 	isOK, err := ame.client.Alert.PostAlerts(params)
 	if err != nil {
-		log.Println("Error sending alert:", err)
+		log.Errorf("Error sending alert: %v\n", err)
 		return
 	}
 	if isOK == nil {
-		log.Println("Alert was not sent successfully")
+		log.Errorln("Alert was not sent successfully")
 		return
 	}
 }
@@ -130,11 +131,11 @@ func (ame *AlertManagerExporter) SendMalwareAlert(malwareDescription scan.Malwar
 	params := alert.NewPostAlertsParams().WithContext(context.Background()).WithAlerts(models.PostableAlerts{&myAlert})
 	isOK, err := ame.client.Alert.PostAlerts(params)
 	if err != nil {
-		log.Println("Error sending alert:", err)
+		log.Errorf("Error sending alert: %v\n", err)
 		return
 	}
 	if isOK == nil {
-		log.Println("Alert was not sent successfully")
+		log.Errorln("Alert was not sent successfully")
 		return
 	}
 }

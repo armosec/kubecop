@@ -1,10 +1,11 @@
 package exporters
 
 import (
-	"log"
 	"os"
 	"testing"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"

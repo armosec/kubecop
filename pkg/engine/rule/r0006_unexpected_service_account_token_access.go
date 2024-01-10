@@ -2,8 +2,9 @@ package rule
 
 import (
 	"fmt"
-	"os"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -94,9 +95,7 @@ func (rule *R0006UnexpectedServiceAccountTokenAccess) ProcessEvent(eventType tra
 	}
 
 	if !shouldCheckEvent {
-		if os.Getenv("DEBUG") == "true" {
-			fmt.Printf("Skipping event %s because it is not a service account token\n", openEvent.PathName)
-		}
+		log.Debugf("Skipping event %s because it is not a service account token\n", openEvent.PathName)
 		return nil
 	}
 

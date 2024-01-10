@@ -1,9 +1,10 @@
 package exporters
 
 import (
-	"log"
 	"os"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
@@ -58,7 +59,7 @@ func InitExporters(exportersConfig ExportersConfig) ExporterBus {
 	if len(exporters) == 0 {
 		panic("no exporters were initialized")
 	}
-	log.Print("exporters initialized")
+	log.Info("exporters initialized")
 
 	return ExporterBus{}
 }

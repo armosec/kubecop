@@ -2,10 +2,11 @@ package exporters
 
 import (
 	"fmt"
-	"log"
 	"log/syslog"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/crewjam/rfc5424"
 
@@ -115,7 +116,7 @@ func (se *SyslogExporter) SendRuleAlert(failedRule rule.RuleFailure) {
 
 	_, err := message.WriteTo(se.writer)
 	if err != nil {
-		log.Printf("failed to send alert to syslog: %v", err)
+		log.Errorf("failed to send alert to syslog: %v", err)
 	}
 }
 
@@ -183,6 +184,6 @@ func (se *SyslogExporter) SendMalwareAlert(malwareDescription scan.MalwareDescri
 
 	_, err := message.WriteTo(se.writer)
 	if err != nil {
-		log.Printf("failed to send alert to syslog: %v", err)
+		log.Errorf("failed to send alert to syslog: %v", err)
 	}
 }

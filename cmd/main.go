@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"net/http"
 	_ "net/http/pprof"
@@ -129,6 +130,20 @@ func serviceInitNChecks(modeEbpf bool) error {
 }
 
 func main() {
+	// Set log level
+	logLevel := os.Getenv("DEBUG")
+	if logLevel == "" {
+		logLevel = "info"
+	} else {
+		logLevel = "debug"
+	}
+
+	if level, err := log.ParseLevel(logLevel); err != nil {
+		log.Fatalf("Failed to parse log level: %v\n", err)
+	} else {
+		log.SetLevel(level)
+	}
+
 	// Parse command line arguments to check which mode to run in
 	controllerMode := false
 	nodeAgentMode := false

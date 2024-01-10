@@ -2,9 +2,10 @@ package rule
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"slices"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
