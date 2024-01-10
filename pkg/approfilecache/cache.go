@@ -3,8 +3,9 @@ package approfilecache
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/kubescape/kapprofiler/pkg/collector"
 	"github.com/kubescape/kapprofiler/pkg/watcher"
@@ -212,7 +213,7 @@ func (c *ApplicationProfileK8sCache) StartController() {
 	)
 
 	if err != nil {
-		log.Printf("Failed to start application profile watcher: %v\n", err)
+		log.Errorf("Failed to start application profile watcher: %v\n", err)
 	}
 }
 
@@ -242,7 +243,7 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 				(cacheEntry.OwnerName == workloadName && cacheEntry.OwnerKind == kind) {
 				appProfile, err := getApplicationProfileFromUnstructured(appProfileUnstructured)
 				if err != nil {
-					log.Printf("Failed to get application profile from object: %v\n", err)
+					log.Errorf("Failed to get application profile from object: %v\n", err)
 					return
 				}
 

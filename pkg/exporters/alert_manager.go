@@ -6,9 +6,10 @@ package exporters
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
@@ -86,11 +87,11 @@ func (ame *AlertManagerExporter) SendRuleAlert(failedRule rule.RuleFailure) {
 	params := alert.NewPostAlertsParams().WithContext(context.Background()).WithAlerts(models.PostableAlerts{&myAlert})
 	isOK, err := ame.client.Alert.PostAlerts(params)
 	if err != nil {
-		log.Println("Error sending alert:", err)
+		log.Errorf("Error sending alert: %v\n", err)
 		return
 	}
 	if isOK == nil {
-		log.Println("Alert was not sent successfully")
+		log.Errorln("Alert was not sent successfully")
 		return
 	}
 }
@@ -110,15 +111,18 @@ func (ame *AlertManagerExporter) SendMalwareAlert(malwareDescription scan.Malwar
 		Alert: models.Alert{
 			GeneratorURL: strfmt.URI("https://armosec.github.io/kubecop/alertviewer/"),
 			Labels: map[string]string{
-				"alertname":      "KubeCopMalwareDetected",
-				"malware_name":   malwareDescription.Name,
-				"container_id":   malwareDescription.ContainerID,
-				"container_name": malwareDescription.ContainerName,
-				"namespace":      malwareDescription.Namespace,
-				"pod_name":       malwareDescription.PodName,
-				"severity":       "critical",
-				"host":           ame.Host,
-				"node_name":      ame.NodeName,
+				"alertname":        "KubeCopMalwareDetected",
+				"malware_name":     malwareDescription.Name,
+				"container_id":     malwareDescription.ContainerID,
+				"container_name":   malwareDescription.ContainerName,
+				"namespace":        malwareDescription.Namespace,
+				"pod_name":         malwareDescription.PodName,
+				"size":             malwareDescription.Size,
+				"is_part_of_image": fmt.Sprintf("%t", malwareDescription.IsPartOfImage),
+				"container_image":  malwareDescription.ContainerImage,
+				"severity":         "critical",
+				"host":             ame.Host,
+				"node_name":        ame.NodeName,
 			},
 		},
 	}
@@ -127,11 +131,11 @@ func (ame *AlertManagerExporter) SendMalwareAlert(malwareDescription scan.Malwar
 	params := alert.NewPostAlertsParams().WithContext(context.Background()).WithAlerts(models.PostableAlerts{&myAlert})
 	isOK, err := ame.client.Alert.PostAlerts(params)
 	if err != nil {
-		log.Println("Error sending alert:", err)
+		log.Errorf("Error sending alert: %v\n", err)
 		return
 	}
 	if isOK == nil {
-		log.Println("Alert was not sent successfully")
+		log.Errorln("Alert was not sent successfully")
 		return
 	}
 }

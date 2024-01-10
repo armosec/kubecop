@@ -2,10 +2,11 @@ package exporters
 
 import (
 	"fmt"
-	"log"
 	"log/syslog"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/crewjam/rfc5424"
 
@@ -115,7 +116,7 @@ func (se *SyslogExporter) SendRuleAlert(failedRule rule.RuleFailure) {
 
 	_, err := message.WriteTo(se.writer)
 	if err != nil {
-		log.Printf("failed to send alert to syslog: %v", err)
+		log.Errorf("failed to send alert to syslog: %v", err)
 	}
 }
 
@@ -149,7 +150,7 @@ func (se *SyslogExporter) SendMalwareAlert(malwareDescription scan.MalwareDescri
 					},
 					{
 						Name:  "size",
-						Value: fmt.Sprintf("%d", malwareDescription.Size),
+						Value: malwareDescription.Size,
 					},
 					{
 						Name:  "namespace",
@@ -167,6 +168,14 @@ func (se *SyslogExporter) SendMalwareAlert(malwareDescription scan.MalwareDescri
 						Name:  "container_id",
 						Value: malwareDescription.ContainerID,
 					},
+					{
+						Name:  "is_part_of_image",
+						Value: fmt.Sprintf("%t", malwareDescription.IsPartOfImage),
+					},
+					{
+						Name:  "container_image",
+						Value: malwareDescription.ContainerImage,
+					},
 				},
 			},
 		},
@@ -175,6 +184,6 @@ func (se *SyslogExporter) SendMalwareAlert(malwareDescription scan.MalwareDescri
 
 	_, err := message.WriteTo(se.writer)
 	if err != nil {
-		log.Printf("failed to send alert to syslog: %v", err)
+		log.Errorf("failed to send alert to syslog: %v", err)
 	}
 }

@@ -1,8 +1,7 @@
 package engine
 
 import (
-	"log"
-	"os"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine/rule"
@@ -20,9 +19,7 @@ func (engine *Engine) ProcessEvent(eventType tracing.EventType, event interface{
 	for _, rule := range boundRules {
 		// TODO if no app profile and one of the rules must have it then fire alert!
 		if appProfile == nil && rule.Requirements().NeedApplicationProfile {
-			if os.Getenv("DEBUG") == "true" {
-				log.Printf("%v - warning missing app profile", e)
-			}
+			log.Debugf("%v - warning missing app profile", e)
 			continue // TODO - check with the RuleBinding if alert should be fired or not
 		}
 

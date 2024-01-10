@@ -3,7 +3,8 @@ package engine
 import (
 	"context"
 	"fmt"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/rulebindingstore"
@@ -23,14 +24,14 @@ func (engine *Engine) OnRuleBindingChanged(ruleBinding rulebindingstore.RuntimeA
 	if selectorString == "<none>" {
 		selectorString = ""
 	} else if selectorString == "<error>" {
-		log.Printf("Failed to parse namespace selector for rule binding %s\n", ruleBinding.Name)
+		log.Errorf("Failed to parse namespace selector for rule binding %s\n", ruleBinding.Name)
 		return
 	}
 	nsList, err := engine.k8sClientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{
 		LabelSelector: selectorString,
 	})
 	if err != nil {
-		log.Printf("Failed to list namespaces: %v\n", err)
+		log.Errorf("Failed to list namespaces: %v\n", err)
 		return
 	}
 	podsMap := make(map[string]struct{})
@@ -38,7 +39,7 @@ func (engine *Engine) OnRuleBindingChanged(ruleBinding rulebindingstore.RuntimeA
 	if podSelectorString == "<none>" {
 		podSelectorString = ""
 	} else if podSelectorString == "<error>" {
-		log.Printf("Failed to parse pod selector for rule binding %s\n", ruleBinding.Name)
+		log.Errorf("Failed to parse pod selector for rule binding %s\n", ruleBinding.Name)
 		return
 	}
 	for _, ns := range nsList.Items {
@@ -48,7 +49,7 @@ func (engine *Engine) OnRuleBindingChanged(ruleBinding rulebindingstore.RuntimeA
 			FieldSelector: "spec.nodeName=" + engine.nodeName,
 		})
 		if err != nil {
-			log.Printf("Failed to list pods in namespace %s: %v\n", ns.Name, err)
+			log.Errorf("Failed to list pods in namespace %s: %v\n", ns.Name, err)
 			continue
 		}
 		for _, pod := range podList.Items {
@@ -70,7 +71,7 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 
 		ownerRef, err := getHighestOwnerOfPod(engine.k8sClientset, event.PodName, event.Namespace)
 		if err != nil {
-			log.Printf("Failed to get highest owner of pod %s/%s: %v\n", event.Namespace, event.PodName, err)
+			log.Errorf("Failed to get highest owner of pod %s/%s: %v\n", event.Namespace, event.PodName, err)
 			return
 		}
 
@@ -80,13 +81,13 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 			// Ask cache to load the application profile when/if it becomes available
 			err = engine.applicationProfileCache.AnticipateApplicationProfile(event.Namespace, "Pod", event.PodName, ownerRef.Kind, ownerRef.Name, event.ContainerName, event.ContainerID, attached)
 			if err != nil {
-				log.Printf("Failed to anticipate application profile for container %s/%s/%s/%s: %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
+				log.Errorf("Failed to anticipate application profile for container %s/%s/%s/%s: %v\n", event.Namespace, ownerRef.Kind, ownerRef.Name, event.ContainerName, err)
 			}
 		}
 
 		podSpec, err := engine.fetchPodSpec(event.PodName, event.Namespace)
 		if err != nil {
-			log.Printf("Failed to get pod spec for pod %s/%s: %v\n", event.Namespace, event.PodName, err)
+			log.Errorf("Failed to get pod spec for pod %s/%s: %v\n", event.Namespace, event.PodName, err)
 			return
 		}
 
@@ -104,12 +105,12 @@ func (engine *Engine) OnContainerActivityEvent(event *tracing.ContainerActivityE
 
 		err = engine.associateRulesWithContainerInCache(contEntry, false)
 		if err != nil {
-			log.Printf("Failed to add container details to cache: %v\n", err)
+			log.Errorf("Failed to add container details to cache: %v\n", err)
 		}
 
 		appliedContainerEntry, ok := getContainerDetails(event.ContainerID)
 		if !ok {
-			log.Printf("Failed to get container details from cache\n")
+			log.Errorf("Failed to get container details from cache\n")
 			return
 		}
 

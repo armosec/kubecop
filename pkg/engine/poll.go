@@ -2,8 +2,9 @@ package engine
 
 import (
 	"fmt"
-	"log"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )

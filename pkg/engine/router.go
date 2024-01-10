@@ -2,8 +2,8 @@ package engine
 
 import (
 	"fmt"
-	"log"
-	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
@@ -42,9 +42,7 @@ func (engine *Engine) submitEventForProcessing(containerId string, eventType tra
 		// Fetch the application profile (it should be faster than checking each rule if needed and then fetching it)
 		appProfile, err := engine.applicationProfileCache.GetApplicationProfileAccess(e.ContainerName, e.ContainerID)
 		if err != nil {
-			if os.Getenv("DEBUG") == "true" {
-				log.Printf("%v - error getting app profile: %v\n", e, err)
-			}
+			log.Debugf("%v - error getting app profile: %v\n", e, err)
 		}
 
 		engine.ProcessEvent(eventType, event, appProfile, rules)

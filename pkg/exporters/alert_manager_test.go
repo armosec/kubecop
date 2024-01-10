@@ -87,16 +87,18 @@ func TestSendMalwareAlert(t *testing.T) {
 	// Call SendAlert
 
 	exporter.SendMalwareAlert(scan.MalwareDescription{
-		Name:          "testmalware",
-		Description:   "testmalwaredescription",
-		Path:          "testmalwarepath",
-		Hash:          "testmalwarehash",
-		Size:          123,
-		Resource:      schema.EmptyObjectKind.GroupVersionKind().GroupVersion().WithResource("testmalwareresource"),
-		Namespace:     "testmalwarenamespace",
-		PodName:       "testmalwarepodname",
-		ContainerName: "testmalwarecontainername",
-		ContainerID:   "testmalwarecontainerid",
+		Name:           "testmalware",
+		Description:    "testmalwaredescription",
+		Path:           "testmalwarepath",
+		Hash:           "testmalwarehash",
+		Size:           "2MiB",
+		Resource:       schema.EmptyObjectKind.GroupVersionKind().GroupVersion().WithResource("testmalwareresource"),
+		Namespace:      "testmalwarenamespace",
+		PodName:        "testmalwarepodname",
+		ContainerName:  "testmalwarecontainername",
+		ContainerID:    "testmalwarecontainerid",
+		IsPartOfImage:  true,
+		ContainerImage: "testmalwarecontainerimage",
 	})
 	bytesData := <-recievedData
 

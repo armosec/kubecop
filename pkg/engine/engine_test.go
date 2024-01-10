@@ -2,12 +2,13 @@ package engine
 
 import (
 	"context"
-	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"runtime"
 	"testing"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine/rule"

@@ -1,10 +1,11 @@
 package exporters
 
 import (
-	"log"
 	"os"
 	"testing"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
@@ -82,7 +83,7 @@ func TestSyslogExporter(t *testing.T) {
 		Hash:        "testhash",
 		Description: "testdescription",
 		Path:        "testpath",
-		Size:        1,
+		Size:        "2MB",
 		Resource: schema.GroupVersionResource{
 			Group:    "testgroup",
 			Version:  "testversion",

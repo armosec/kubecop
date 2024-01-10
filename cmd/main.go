@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"net/http"
 	_ "net/http/pprof"
@@ -129,6 +130,20 @@ func serviceInitNChecks(modeEbpf bool) error {
 }
 
 func main() {
+	// Set log level
+	logLevel := os.Getenv("DEBUG")
+	if logLevel == "" {
+		logLevel = "info"
+	} else {
+		logLevel = "debug"
+	}
+
+	if level, err := log.ParseLevel(logLevel); err != nil {
+		log.Fatalf("Failed to parse log level: %v\n", err)
+	} else {
+		log.SetLevel(level)
+	}
+
 	// Parse command line arguments to check which mode to run in
 	controllerMode := false
 	nodeAgentMode := false
@@ -239,32 +254,24 @@ func main() {
 		tracer.AddContainerActivityListener(engine)
 		defer tracer.RemoveContainerActivityListener(engine)
 
-		tracer.AddEventSink(engine)
-		defer tracer.RemoveEventSink(engine)
-		tracer.AddEventSink(eventSink)
-		defer tracer.RemoveEventSink(eventSink)
-
-		// Start the tracer
-		if err := tracer.Start(); err != nil {
-			log.Fatalf("Failed to start tracer: %v\n", err)
-		}
-		defer tracer.Stop()
-		log.Printf("Tracer started")
-
-		//////////////////////////////////////////////////////////////////////////////
-		// Start the ClamAV scanner
 		// Start the ClamAV scanner
 		clamavConfig := scan.ClamAVConfig{
-			Host:         os.Getenv("CLAMAV_HOST"),
-			Port:         os.Getenv("CLAMAV_PORT"),
-			ScanInterval: os.Getenv("CLAMAV_SCAN_INTERVAL"),
-			RetryDelay:   ClamAVRetryDelay,
-			MaxRetries:   ClamAVMaxRetries,
-			ExporterBus:  &exporterBus,
+			Host:             os.Getenv("CLAMAV_HOST"),
+			Port:             os.Getenv("CLAMAV_PORT"),
+			ScanInterval:     os.Getenv("CLAMAV_SCAN_INTERVAL"),
+			RetryDelay:       ClamAVRetryDelay,
+			MaxRetries:       ClamAVMaxRetries,
+			ExporterBus:      &exporterBus,
+			KubernetesClient: clientset,
 		}
 
+		clamavConfigured := false
+		var clamav *scan.ClamAV
+		clamAVContext, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
 		if clamavConfig.Host != "" && clamavConfig.Port != "" && clamavConfig.ScanInterval != "" {
-			clamav := scan.NewClamAV(clamavConfig)
+			clamav = scan.NewClamAV(clamavConfig)
 
 			// Check if we can connect to ClamAV - Retry every 10 seconds until we can connect.
 			retryCount := 0
@@ -287,10 +294,28 @@ func main() {
 			if retryCount == clamavConfig.MaxRetries {
 				log.Fatalf("Failed to connect to ClamAV after %d retries. Exiting...\n", clamavConfig.MaxRetries)
 			} else {
-				ctx, cancel := context.WithCancel(context.Background())
-				defer cancel()
-				go clamav.StartInfiniteScan(ctx, os.Getenv("CLAMAV_SCAN_PATH"))
+				// Add ClamAV to the tracer
+				tracer.AddContainerActivityListener(clamav)
+				defer tracer.RemoveContainerActivityListener(clamav)
+				clamavConfigured = true
 			}
+		}
+
+		tracer.AddEventSink(engine)
+		defer tracer.RemoveEventSink(engine)
+		tracer.AddEventSink(eventSink)
+		defer tracer.RemoveEventSink(eventSink)
+
+		// Start the tracer
+		if err := tracer.Start(); err != nil {
+			log.Fatalf("Failed to start tracer: %v\n", err)
+		}
+		defer tracer.Stop()
+		log.Printf("Tracer started")
+
+		// Start the clamav scanner (Avoid race).
+		if clamavConfigured {
+			go clamav.StartInfiniteScan(clamAVContext, os.Getenv("CLAMAV_SCAN_PATH"))
 		}
 	}
 

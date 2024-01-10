@@ -14,7 +14,9 @@ type MalwareDescription struct {
 	// Hash of the file that was infected
 	Hash string `json:"hash"`
 	// Size of the file that was infected
-	Size int `json:"size"`
+	Size string `json:"size"`
+	// Is part of the image
+	IsPartOfImage bool `json:"is_part_of_image"`
 	// K8s resource that was infected
 	Resource schema.GroupVersionResource `json:"resource"`
 	// K8s namespace that was infected
@@ -25,4 +27,6 @@ type MalwareDescription struct {
 	ContainerName string `json:"container_name"`
 	// K8s container ID that was infected
 	ContainerID string `json:"container_id"`
+	// K8s container image that was infected
+	ContainerImage string `json:"container_image"`
 }
