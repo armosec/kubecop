@@ -241,12 +241,13 @@ func main() {
 
 		// Start the ClamAV scanner
 		clamavConfig := scan.ClamAVConfig{
-			Host:         os.Getenv("CLAMAV_HOST"),
-			Port:         os.Getenv("CLAMAV_PORT"),
-			ScanInterval: os.Getenv("CLAMAV_SCAN_INTERVAL"),
-			RetryDelay:   ClamAVRetryDelay,
-			MaxRetries:   ClamAVMaxRetries,
-			ExporterBus:  &exporterBus,
+			Host:             os.Getenv("CLAMAV_HOST"),
+			Port:             os.Getenv("CLAMAV_PORT"),
+			ScanInterval:     os.Getenv("CLAMAV_SCAN_INTERVAL"),
+			RetryDelay:       ClamAVRetryDelay,
+			MaxRetries:       ClamAVMaxRetries,
+			ExporterBus:      &exporterBus,
+			KubernetesClient: clientset,
 		}
 
 		clamavConfigured := false
