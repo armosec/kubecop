@@ -8,7 +8,7 @@ spec:
 
   containers:
   - name: ping-app
-    image: amitschendel/ping-app:latest
+    image: docker.io/amitschendel/ping-app:latest
     imagePullPolicy: Always
     ports:
     - containerPort: 80
