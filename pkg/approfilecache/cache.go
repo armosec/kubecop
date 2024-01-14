@@ -149,9 +149,8 @@ func (cache *ApplicationProfileK8sCache) GetApplicationProfileAccess(containerNa
 		if containerProfile.Name == containerName {
 			return &ApplicationProfileAccessImpl{containerProfile: &containerProfile,
 				appProfileName:      applicationProfile.ApplicationProfile.Name,
-				appProfileNamespace: applicationProfile.Namespace}, nil
-		} else {
-			return nil, fmt.Errorf("container profile %v not found in application profile for container %v", containerName, containerID)
+				appProfileNamespace: applicationProfile.Namespace,
+			}, nil
 		}
 	}
 	return nil, fmt.Errorf("container profile %v not found in application profile for container %v", containerName, containerID)
@@ -181,8 +180,8 @@ func (access *ApplicationProfileAccessImpl) GetSystemCalls() ([]string, error) {
 	return access.containerProfile.SysCalls, nil
 }
 
-func (access *ApplicationProfileAccessImpl) GetCapabilities() ([]collector.CapabilitiesCalls, error) {
-	return access.containerProfile.Capabilities, nil
+func (access *ApplicationProfileAccessImpl) GetCapabilities() (*[]collector.CapabilitiesCalls, error) {
+	return &access.containerProfile.Capabilities, nil
 }
 
 func (access *ApplicationProfileAccessImpl) GetDNS() (*[]collector.DnsCalls, error) {
