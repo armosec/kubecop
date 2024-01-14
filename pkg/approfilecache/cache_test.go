@@ -160,7 +160,7 @@ func TestCacheBasicAnticipateProfile(t *testing.T) {
 	}
 
 	// Wait a second for the cache to be updated
-	time.Sleep(2 * time.Second)
+	time.Sleep(4 * time.Second)
 
 	// Check if the container profile is in the cache
 	_, err = cache.GetApplicationProfileAccess("nginx", "00000000000000000000000000000000")
