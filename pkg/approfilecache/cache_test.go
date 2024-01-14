@@ -2,6 +2,7 @@ package approfilecache
 
 import (
 	"context"
+	"log"
 	"testing"
 	"time"
 
@@ -159,8 +160,12 @@ func TestCacheBasicAnticipateProfile(t *testing.T) {
 		return
 	}
 
+	log.Printf("Waiting for cache to be updated")
+
 	// Wait a second for the cache to be updated
-	time.Sleep(4 * time.Second)
+	time.Sleep(1 * time.Second)
+
+	log.Printf("Cache: %v", cache.cache)
 
 	// Check if the container profile is in the cache
 	_, err = cache.GetApplicationProfileAccess("nginx", "00000000000000000000000000000000")
