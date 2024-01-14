@@ -145,8 +145,10 @@ func (cache *ApplicationProfileK8sCache) GetApplicationProfileAccess(containerNa
 		return nil, fmt.Errorf("application profile for container %s is nil (does not exist yet)", containerID)
 	}
 
-	for _, containerProfile := range applicationProfile.ApplicationProfile.Spec.Containers {
-		if containerProfile.Name == containerName {
+	for containerProfileIndex := 0; containerProfileIndex < len(applicationProfile.ApplicationProfile.Spec.Containers); containerProfileIndex++ {
+		if applicationProfile.ApplicationProfile.Spec.Containers[containerProfileIndex].Name == containerName {
+			// Copy the container profile to a new object, to prevent memory leaks.
+			containerProfile := applicationProfile.ApplicationProfile.Spec.Containers[containerProfileIndex]
 			return &ApplicationProfileAccessImpl{containerProfile: &containerProfile,
 				appProfileName:      applicationProfile.ApplicationProfile.Name,
 				appProfileNamespace: applicationProfile.Namespace,
