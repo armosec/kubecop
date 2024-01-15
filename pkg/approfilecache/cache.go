@@ -145,13 +145,14 @@ func (cache *ApplicationProfileK8sCache) GetApplicationProfileAccess(containerNa
 		return nil, fmt.Errorf("application profile for container %s is nil (does not exist yet)", containerID)
 	}
 
-	for _, containerProfile := range applicationProfile.ApplicationProfile.Spec.Containers {
-		if containerProfile.Name == containerName {
+	for containerProfileIndex := 0; containerProfileIndex < len(applicationProfile.ApplicationProfile.Spec.Containers); containerProfileIndex++ {
+		if applicationProfile.ApplicationProfile.Spec.Containers[containerProfileIndex].Name == containerName {
+			// Copy the container profile to a new object, to prevent memory leaks.
+			containerProfile := applicationProfile.ApplicationProfile.Spec.Containers[containerProfileIndex]
 			return &ApplicationProfileAccessImpl{containerProfile: &containerProfile,
 				appProfileName:      applicationProfile.ApplicationProfile.Name,
-				appProfileNamespace: applicationProfile.Namespace}, nil
-		} else {
-			return nil, fmt.Errorf("container profile %v not found in application profile for container %v", containerName, containerID)
+				appProfileNamespace: applicationProfile.Namespace,
+			}, nil
 		}
 	}
 	return nil, fmt.Errorf("container profile %v not found in application profile for container %v", containerName, containerID)
@@ -181,8 +182,8 @@ func (access *ApplicationProfileAccessImpl) GetSystemCalls() ([]string, error) {
 	return access.containerProfile.SysCalls, nil
 }
 
-func (access *ApplicationProfileAccessImpl) GetCapabilities() ([]collector.CapabilitiesCalls, error) {
-	return access.containerProfile.Capabilities, nil
+func (access *ApplicationProfileAccessImpl) GetCapabilities() (*[]collector.CapabilitiesCalls, error) {
+	return &access.containerProfile.Capabilities, nil
 }
 
 func (access *ApplicationProfileAccessImpl) GetDNS() (*[]collector.DnsCalls, error) {
