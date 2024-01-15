@@ -1,5 +1,5 @@
-# KubeCope exporters package
-This package contains the exporters for the KubeCope project.
+# KubeCop exporters package
+This package contains the exporters for the KubeCop project.
 
 ## Exporters
 The following exporters are available:
