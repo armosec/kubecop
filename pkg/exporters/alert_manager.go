@@ -118,6 +118,7 @@ func (ame *AlertManagerExporter) SendMalwareAlert(malwareDescription scan.Malwar
 				"namespace":        malwareDescription.Namespace,
 				"pod_name":         malwareDescription.PodName,
 				"size":             malwareDescription.Size,
+				"hash":             malwareDescription.Hash,
 				"is_part_of_image": fmt.Sprintf("%t", malwareDescription.IsPartOfImage),
 				"container_image":  malwareDescription.ContainerImage,
 				"severity":         "critical",

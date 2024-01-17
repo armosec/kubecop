@@ -49,7 +49,7 @@ func getApplicationProfileFromUnstructured(typedObj *unstructured.Unstructured) 
 	var applicationProfileObj collector.ApplicationProfile
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(typedObj.Object, &applicationProfileObj)
 	if err != nil {
-		return &collector.ApplicationProfile{}, err
+		return nil, err
 	}
 	return &applicationProfileObj, nil
 }
@@ -191,7 +191,6 @@ func (access *ApplicationProfileAccessImpl) GetDNS() (*[]collector.DnsCalls, err
 }
 
 func (c *ApplicationProfileK8sCache) StartController() {
-
 	err := c.applicationProfileWatcher.Start(
 		watcher.WatchNotifyFunctions{
 			AddFunc: func(obj *unstructured.Unstructured) {

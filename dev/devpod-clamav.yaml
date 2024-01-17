@@ -115,7 +115,7 @@ spec:
             value: "60s"
           - name: CLAMAV_SCAN_PATH
             value: "/host/var/lib/docker"
-          - name: ALERTMANAGER_URL
+          - name: ALERTMANAGER_URLS
             value: "alertmanager-operated.monitoring.svc.cluster.local:9093"
         securityContext:
           privileged: true
@@ -136,7 +136,7 @@ spec:
         - name: bpffs
           mountPath: /sys/fs/bpf
       - name: clamd
-        image: quay.io/armosec/klamav:beta4
+        image: quay.io/armosec/klamav:beta5
         imagePullPolicy: Always
         volumeMounts:
         - name: clamdb
