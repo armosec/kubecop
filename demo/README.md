@@ -67,6 +67,7 @@ chmod +x scripts/setup-system-test-cluster.sh
 To deploy a sample web application, run the following commands:
 
 ```bash
+kubectl apply -f demo/general_attack/webapp/ping-app.yaml
 chmod +x demo/general_attack/webapp/setup.sh
 ./demo/general_attack/webapp/setup.sh
 ```
