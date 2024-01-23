@@ -45,7 +45,7 @@ helm install alertmanager prometheus-community/kube-prometheus-stack -n monitori
 
 And enable it in KubeCop by running the following commands:
 ```bash
-helm upgrade kubecop chart/kubecop -n kubescape --create-namespace --set kubecop.alertmanager.enabled=true --set kubecop.alertmanager.endpoint=alertmanager-operated.monitoring.svc.cluster.local:9093
+helm upgrade kubecop chart/kubecop -n kubescape --create-namespace --set kubecop.alertmanager.enabled=true --set kubecop.alertmanager.endpoints=alertmanager-operated.monitoring.svc.cluster.local:9093
 ```
 
 To learn more about KubeCop installation, see [here](../README.md#basic-installation).
