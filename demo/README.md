@@ -45,7 +45,7 @@ helm install alertmanager prometheus-community/kube-prometheus-stack -n monitori
 
 And enable it in KubeCop by running the following commands:
 ```bash
-helm upgrade kubecop chart/kubecop -n kubescape --create-namespace --set kubecop.alertmanager.enabled=true --set kubecop.alertmanager.endpoint=alertmanager-operated.monitoring.svc.cluster.local:9093
+helm upgrade kubecop chart/kubecop -n kubescape --create-namespace --set kubecop.alertmanager.enabled=true --set kubecop.alertmanager.endpoints=alertmanager-operated.monitoring.svc.cluster.local:9093
 ```
 
 To learn more about KubeCop installation, see [here](../README.md#basic-installation).
@@ -120,7 +120,7 @@ Next, let's try to download kubectl into the container and run it to get the pod
 Execute the following commands one by one:
 ```bash
 # Get the architecture of the node
-1.1.1.1;arch=$(uname -m | sed 's/x86_64/amd64/g' | sed 's/aarch64/arm64/g')
+1.1.1.1;uname -m | sed 's/x86_64/amd64/g' | sed 's/aarch64/arm64/g'
 
 # Download kubectl
 1.1.1.1;curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/<node arch>/kubectl"
@@ -191,4 +191,3 @@ We covered a few attacks, but KubeCop can detect many more attacks, see [here](.
 To learn more about KubeCop, see [here](../README.md).
 
 If you have any questions, feel free to open an issue or contact us via [email](mailto:support@armosec.io) or [slack](https://cloud-native.slack.com/archives/C04EY3ZF9GE).
-

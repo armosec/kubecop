@@ -6,7 +6,7 @@ killall kubectl 2>/dev/null
 
 # Apply the YAML file for the web app
 echo "[+] Applying YAML file for the web app"
-kubectl apply -f ping-app.yaml
+kubectl apply -f demo/general_attack/webapp/ping-app.yaml
 
 # Wait for the web app to be ready
 echo "[+] Waiting for the web app to be ready"
