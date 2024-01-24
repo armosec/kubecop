@@ -89,7 +89,7 @@ func (rule *R0005UnexpectedDomainRequest) ProcessEvent(eventType tracing.EventTy
 
 	// Check that the domain is in the application profile
 	found := false
-	for _, domain := range *appProfileDnsList {
+	for _, domain := range appProfileDnsList {
 		if domain.DnsName == domainEvent.DnsName {
 			found = true
 			break

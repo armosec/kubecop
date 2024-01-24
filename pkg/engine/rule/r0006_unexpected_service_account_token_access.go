@@ -120,7 +120,7 @@ func (rule *R0006UnexpectedServiceAccountTokenAccess) ProcessEvent(eventType tra
 		}
 	}
 
-	for _, open := range *appProfileOpenList {
+	for _, open := range appProfileOpenList {
 		for _, prefix := range ServiceAccountTokenPathsPrefixs {
 			if strings.HasPrefix(open.Path, prefix) {
 				return nil

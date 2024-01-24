@@ -96,7 +96,7 @@ func (rule *R0001UnexpectedProcessLaunched) ProcessEvent(eventType tracing.Event
 		}
 	}
 
-	for _, execCall := range *appProfileExecList {
+	for _, execCall := range appProfileExecList {
 		if execCall.Path == execEvent.PathName {
 			return nil
 		}

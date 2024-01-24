@@ -113,7 +113,7 @@ func (rule *R0007KubernetesClientExecuted) handleExecEvent(event *tracing.Execve
 		return nil
 	}
 
-	for _, whitelistedExec := range *whitelistedExecs {
+	for _, whitelistedExec := range whitelistedExecs {
 		if whitelistedExec.Path == event.PathName {
 			return nil
 		}
