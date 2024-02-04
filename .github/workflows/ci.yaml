@@ -36,7 +36,7 @@ jobs:
 
     - name: Validate Namespaced Helm template
       run: |
-        helm template kubecop chart/kubecop --set isNamespaced=true --set kubecop.recording.finalizationDuration=120s -f resources/system-tests/kubecop-values.yaml -n kubescape --debug
+        helm template kubecop chart/kubecop --set isNamespaced=true --set isClusterScoped=false --set kubecop.recording.finalizationDuration=120s -f resources/system-tests/kubecop-values.yaml -n kubescape --debug
   
     - name: Run Unit Tests
       run: make test

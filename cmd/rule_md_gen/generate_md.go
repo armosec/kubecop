@@ -36,10 +36,11 @@ func main() {
 		tagsList = append(tagsList, tag)
 	}
 	slices.Sort(tagsList)
-	fillListsInCRD(idsList, namesList, tagsList)
+	fillListsInCRD(idsList, namesList, tagsList, "chart/kubecop/charts/namespaced-crds/crds/runtime-rule-binding.crd.yaml")
+	fillListsInCRD(idsList, namesList, tagsList, "chart/kubecop/charts/clustered-crds/crds/runtime-rule-binding.crd.yaml")
 }
 
-func fillListsInCRD(idsList []string, namesList []string, tagsList []string) {
+func fillListsInCRD(idsList []string, namesList []string, tagsList []string, crdFilePath string) {
 	gitRoot := "../../"
 	pwd, err := os.Getwd()
 	if err == nil {
@@ -49,7 +50,6 @@ func fillListsInCRD(idsList []string, namesList []string, tagsList []string) {
 		}
 	}
 
-	crdFilePath := "chart/kubecop/crds/runtime-rule-binding.crd.yaml"
 	crdFile, err := os.OpenFile(filepath.Join(gitRoot, crdFilePath), os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Printf("Error opening CRD file: %v\n", err)

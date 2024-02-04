@@ -143,7 +143,7 @@ jobs:
         else
           helm uninstall kubecop -n kubescape || echo "Failed to uninstall kubecop"
           kubectl delete ns kubescape || echo "Failed to delete namespace kubescape"
-          kubectl delete -f ./chart/kubecop/crds/app-profile.crd.yaml -f ./chart/kubecop/crds/runtime-rule-binding.crd.yaml || echo "Failed to delete crd"
+          kubectl delete -f ./chart/kubecop/crds/app-profile.crd.yaml -f ./chart/kubecop/charts/clustered-crds/crds/runtime-rule-binding.crd.yaml || echo "Failed to delete crd"
           helm uninstall prometheus -n monitoring || echo "Failed to uninstall prometheus"
           kubectl delete ns monitoring || echo "Failed to delete namespace monitoring"
         fi

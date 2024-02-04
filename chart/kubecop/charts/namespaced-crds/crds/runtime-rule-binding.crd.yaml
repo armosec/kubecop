@@ -10,11 +10,7 @@ spec:
     shortNames:
     - rab
     singular: runtimerulealertbinding
-  {{- if .Values.isNamespaced }}
   scope: Namespaced
-  {{- else }}
-  scope: Cluster
-  {{- end }}
   versions:
   - name: v1
     schema:

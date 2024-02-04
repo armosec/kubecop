@@ -29,7 +29,7 @@ close-shell:
 	cat cop_pids.txt | xargs kill -15
 
 deploy-dev-pod:
-	kubectl apply -f chart/kubecop/crds/app-profile.crd.yaml -f chart/kubecop/crds/runtime-rule-binding.crd.yaml
+	kubectl apply -f chart/kubecop/crds/app-profile.crd.yaml -f chart/kubecop/charts/clustered-crds/crds/runtime-rule-binding.crd.yaml
 	kubectl apply -f dev/devpod.yaml
 
 build: $(BINARY_NAME)
