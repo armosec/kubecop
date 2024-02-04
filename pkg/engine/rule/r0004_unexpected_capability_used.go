@@ -88,7 +88,7 @@ func (rule *R0004UnexpectedCapabilityUsed) ProcessEvent(eventType tracing.EventT
 	}
 
 	found := false
-	for _, cap := range appProfileCapabilitiesList {
+	for _, cap := range *appProfileCapabilitiesList {
 		if capEvent.Syscall == cap.Syscall {
 			// Check that the capability is in cap.Capabilities
 			for _, baselineCapability := range cap.Capabilities {

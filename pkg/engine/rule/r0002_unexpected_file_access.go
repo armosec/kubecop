@@ -2,10 +2,10 @@ package rule
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -123,9 +123,7 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 	// Check if path is ignored
 	for _, prefix := range rule.ignorePrefixes {
 		if strings.HasPrefix(openEvent.PathName, prefix) {
-			if os.Getenv("DEBUG") == "true" {
-				log.Printf("Path %s is ignored - Skipping check", openEvent.PathName)
-			}
+			log.Debugf("Path %s is ignored - Skipping check", openEvent.PathName)
 			return nil
 		}
 	}
@@ -148,9 +146,7 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 		for _, mount := range mounts {
 			contained := isPathContained(mount, openEvent.PathName)
 			if contained {
-				if os.Getenv("DEBUG") == "true" {
-					log.Printf("Path %s is mounted in pod %s/%s - Skipping check", openEvent.PathName, openEvent.Namespace, openEvent.PodName)
-				}
+				log.Debugf("Path %s is mounted in pod %s/%s - Skipping check", openEvent.PathName, openEvent.Namespace, openEvent.PodName)
 				return nil
 			}
 		}

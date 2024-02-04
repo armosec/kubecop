@@ -2,10 +2,10 @@ package rule
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -86,9 +86,7 @@ func (rule *R1004ExecFromMount) ProcessEvent(eventType tracing.EventType, event 
 	for _, mount := range mounts {
 		contained := rule.isPathContained(execEvent.PathName, mount)
 		if contained {
-			if os.Getenv("DEBUG") == "true" {
-				log.Printf("Path %s is mounted in pod %s/%s", execEvent.PathName, execEvent.Namespace, execEvent.PodName)
-			}
+			log.Debugf("Path %s is mounted in pod %s/%s", execEvent.PathName, execEvent.Namespace, execEvent.PodName)
 			return &R1004ExecFromMountFailure{
 				RuleName:         rule.Name(),
 				Err:              "Exec from mount",

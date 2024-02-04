@@ -12,16 +12,58 @@ nameOverride: ""
 fullnameOverride: "kubecop"
 
 kubecop:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  gomemlimit:
+    enabled: true
+    # It is recommended to set this value to 3/4 of the memory limit
+    limit: 384MiB
   recording:
     samplingInterval: 60s
     finalizationDuration: 900s
+    finalizationJitter: 120s
   alertmanager:
     enabled: false
-    endpoint: "localhost:9093"
+    endpoints: "localhost:9093"
+  syslog:
+    enabled: false
+    endpoint: "localhost:514"
+    protocol: "udp"
+  csv:
+    enabled: false
+    path: "/tmp/kubecop.csv"
+    malwarePath: "/tmp/kubecop-malware.csv"
   prometheusExporter:
     enabled: false
   pprofserver:
     enabled: false
+  partialProfiles: # If enabled, application profiles won't be enriched with the following prefixes and mounts.
+    enabled: true
+    ignoreMounts: "true"
+    ignorePrefixes: "/proc,/tmp"
+
+clamAV:
+  enabled: false
+  host: "localhost"
+  port: "3310"
+  path: "/host"
+  scanInterval: 1h
+  image:
+    repository: quay.io/armosec/klamav
+    pullPolicy: Always
+    tag: "beta5"
+  resources:
+    limits:
+      cpu: 300m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -43,13 +85,9 @@ securityContext:
       - SYS_ADMIN
       - NET_ADMIN
 
-resources:
-  limits:
-    cpu: 500m
-    memory: 1Gi
-  requests:
-    cpu: 100m
-    memory: 256Mi
+securityContextNormal: {}
+
+
 
 
 nodeSelector: {}

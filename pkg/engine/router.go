@@ -2,8 +2,8 @@ package engine
 
 import (
 	"fmt"
-	"log"
-	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 )
@@ -42,9 +42,7 @@ func (engine *Engine) submitEventForProcessing(containerId string, eventType tra
 		// Fetch the application profile (it should be faster than checking each rule if needed and then fetching it)
 		appProfile, err := engine.applicationProfileCache.GetApplicationProfileAccess(e.ContainerName, e.ContainerID)
 		if err != nil {
-			if os.Getenv("DEBUG") == "true" {
-				log.Printf("%v - error getting app profile: %v\n", e, err)
-			}
+			log.Debugf("%v - error getting app profile: %v\n", e, err)
 		}
 
 		engine.ProcessEvent(eventType, event, appProfile, rules)
@@ -110,26 +108,30 @@ func convertEventInterfaceToGenericEvent(eventType tracing.EventType, event inte
 // implement EventSink interface for the engine
 
 func (engine *Engine) SendExecveEvent(event *tracing.ExecveEvent) {
-	engine.promCollector.ReportEbpfEvent(tracing.ExecveEventType)
+	engine.promCollector.reportEbpfEvent(tracing.ExecveEventType)
 	engine.submitEventForProcessing(event.ContainerID, tracing.ExecveEventType, event)
 }
 
 func (engine *Engine) SendOpenEvent(event *tracing.OpenEvent) {
-	engine.promCollector.ReportEbpfEvent(tracing.OpenEventType)
+	engine.promCollector.reportEbpfEvent(tracing.OpenEventType)
 	engine.submitEventForProcessing(event.ContainerID, tracing.OpenEventType, event)
 }
 
 func (engine *Engine) SendNetworkEvent(event *tracing.NetworkEvent) {
-	engine.promCollector.ReportEbpfEvent(tracing.NetworkEventType)
+	engine.promCollector.reportEbpfEvent(tracing.NetworkEventType)
 	engine.submitEventForProcessing(event.ContainerID, tracing.NetworkEventType, event)
 }
 
 func (engine *Engine) SendCapabilitiesEvent(event *tracing.CapabilitiesEvent) {
-	engine.promCollector.ReportEbpfEvent(tracing.CapabilitiesEventType)
+	engine.promCollector.reportEbpfEvent(tracing.CapabilitiesEventType)
 	engine.submitEventForProcessing(event.ContainerID, tracing.CapabilitiesEventType, event)
 }
 
 func (engine *Engine) SendDnsEvent(event *tracing.DnsEvent) {
-	engine.promCollector.ReportEbpfEvent(tracing.DnsEventType)
+	engine.promCollector.reportEbpfEvent(tracing.DnsEventType)
 	engine.submitEventForProcessing(event.ContainerID, tracing.DnsEventType, event)
+}
+
+func (engine *Engine) ReportError(eventType tracing.EventType, err error) {
+	engine.promCollector.reportEbpfFailedEvent()
 }

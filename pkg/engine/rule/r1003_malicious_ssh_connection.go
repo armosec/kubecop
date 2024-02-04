@@ -2,10 +2,11 @@ package rule
 
 import (
 	"fmt"
-	"log"
 	"slices"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -96,14 +97,14 @@ func (rule *R1003MaliciousSSHConnection) SetParameters(params map[string]interfa
 			if convertedPort, ok := port.(float64); ok {
 				allowedPorts = append(allowedPorts, uint16(convertedPort))
 			} else {
-				log.Printf("Failed to convert port %v to uint16\n", port)
+				log.Errorf("Failed to convert port %v to uint16\n", port)
 			}
 		}
 
 		log.Printf("Set parameters for rule %s. Allowed ports: %v\n", rule.Name(), allowedPorts)
 		rule.allowedPorts = allowedPorts
 	} else {
-		log.Printf("Failed to set parameters for rule %s. Allowed ports: %v\n", rule.Name(), params["allowedPorts"])
+		log.Errorf("Failed to set parameters for rule %s. Allowed ports: %v\n", rule.Name(), params["allowedPorts"])
 	}
 }
 

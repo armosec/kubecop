@@ -2,8 +2,11 @@ name: KubeCop CI
 
 on:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
     branches:
       - main
+
 
 jobs:
   build:
@@ -23,7 +26,7 @@ jobs:
       run: make validate-crd
       env:
         GO111MODULE: on
-    
+
     - name: Set up Helm
       uses: azure/setup-helm@v3
 

@@ -2,6 +2,8 @@ name: KubeCop System Test
 
 on:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
     types: [labeled, synchronize, ready_for_review, opened, reopened]
 
 env:

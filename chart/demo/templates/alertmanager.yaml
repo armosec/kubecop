@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager-kubecop
+  namespace: kubescape
+  labels:
+    app: alertmanager-kubecop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager-kubecop
+  template:
+    metadata:
+      labels:
+        app: alertmanager-kubecop
+    spec:
+      containers:
+      - name: alertmanager
+        image: quay.io/prometheus/alertmanager:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9093
+        volumeMounts:  # Mount the Alertmanager configuration
+        - name: alertmanager-config
+          mountPath: /etc/alertmanager
+      volumes:
+      - name: alertmanager-config
+        configMap:
+          name: alertmanager-config

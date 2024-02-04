@@ -3,13 +3,17 @@ import time
 
 from promtopic import save_plot_png, send_promql_query_to_prom
 from pprof import pprof_recorder
+from kubernetes_wrappers import Namespace
 
-def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
+def load_10k_alerts_no_memory_leak(test_framework):
     print("Running load 10k alerts no memory leak test")
 
+    # Create a namespace
+    ns = Namespace(name=None)
+
+    namespace = ns.name()
+
     try:
-        # create the namespace
-        subprocess.check_call(["kubectl", "create", "namespace", namespace])
         #  Install nginx profile in kubernetes by applying the nginx profile yaml
         subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "dev/nginx/nginx-app-profile.yaml"])
         # Install nginx in kubernetes by applying the nginx deployment yaml with pre-creating profile for the nginx pod
@@ -51,7 +55,7 @@ def load_10k_alerts_no_memory_leak(namespace="kubecop-test"):
         # Get kubecop pod name
         kc_pod_name = subprocess.check_output(["kubectl", "-n", "kubescape", "get", "pods", "-l", "app.kubernetes.io/name=kubecop", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True).strip("'")
         # Build query to get memory usage
-        query = 'sum(container_memory_working_set_bytes{pod="%s", container="kubecop"}) by (container)'%kc_pod_name
+        query = 'sum(container_memory_working_set_bytes{pod="%s"}) by (container)'%kc_pod_name
         timestamps, values = send_promql_query_to_prom("load_10k_alerts_no_memory_leak_mem", query, time_start,time_end=time.time())
         save_plot_png("load_10k_alerts_no_memory_leak_mem", values=values,timestamps=timestamps, metric_name='Memory Usage (bytes)')
 

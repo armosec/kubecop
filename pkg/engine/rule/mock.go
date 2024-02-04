@@ -68,8 +68,8 @@ func (m *MockAppProfileAccess) GetSystemCalls() ([]string, error) {
 	return m.Syscalls, nil
 }
 
-func (m *MockAppProfileAccess) GetCapabilities() ([]collector.CapabilitiesCalls, error) {
-	return m.Capabilities, nil
+func (m *MockAppProfileAccess) GetCapabilities() (*[]collector.CapabilitiesCalls, error) {
+	return &m.Capabilities, nil
 }
 
 func (m *MockAppProfileAccess) GetDNS() (*[]collector.DnsCalls, error) {

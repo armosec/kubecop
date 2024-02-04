@@ -2,12 +2,12 @@ package rule
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"syscall"
 
 	"github.com/prometheus/procfs"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/kubescape/kapprofiler/pkg/tracing"
@@ -83,7 +83,7 @@ func IsExecBinaryInUpperLayer(execEvent *tracing.ExecveEvent) bool {
 	// Find a process with the same mount namespace ID as the exec event.
 	process, err := findProcessByMountNamespace(execEvent)
 	if err != nil {
-		fmt.Printf("Error finding process by mount namespace: %s\n", err)
+		//log.Printf("Error finding process by mount namespace: %s\n", err)
 		return false
 	}
 
@@ -106,7 +106,7 @@ func findProcessByMountNamespace(execEvent *tracing.ExecveEvent) (*procfs.Proc, 
 		// Check if the mount namespace ID matches the specified namespaceID
 		mountNamespaceId, err := getMountNamespaceID(proc.PID)
 		if err != nil {
-			log.Printf("Error reading mount namespace ID for PID %d: %s\n", proc.PID, err)
+			log.Debugf("Error reading mount namespace ID for PID %d: %s\n", proc.PID, err)
 			continue
 		}
 
@@ -147,9 +147,7 @@ func getOverlayMountPoint(process *procfs.Proc) (string, error) {
 func fileExists(filePath string) bool {
 	info, err := os.Stat(filepath.Join("/host", filePath))
 	if os.IsNotExist(err) {
-		if os.Getenv("DEBUG") == "true" {
-			log.Printf("File %s does not exist %s \n", filePath, err)
-		}
+		log.Debugf("File %s does not exist %s \n", filePath, err)
 		return false
 	}
 
