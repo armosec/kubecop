@@ -40,6 +40,10 @@ type RuleBindingK8sStore struct {
 func NewRuleBindingK8sStore(dynamicClient dynClient, coreV1Client v1.CoreV1Interface, nodeName, storeNamespace string) (*RuleBindingK8sStore, error) {
 
 	stopCh := make(chan struct{})
+	if storeNamespace == "" {
+		storeNamespace = metav1.NamespaceNone
+	}
+
 	ruleBindingStore := RuleBindingK8sStore{
 		dynamicClient:       dynamicClient,
 		informerStopChannel: stopCh,
@@ -193,9 +197,6 @@ func getRuntimeAlertRuleBindingFromObj(obj interface{}) (*RuntimeAlertRuleBindin
 }
 
 func (store *RuleBindingK8sStore) StartController() {
-	if store.storeNamespace == "" {
-		store.storeNamespace = metav1.NamespaceNone
-	}
 
 	// Initialize factory and informer
 	informer := dynamicinformer.NewFilteredDynamicSharedInformerFactory(store.dynamicClient, 0, store.storeNamespace, nil).ForResource(RuleBindingAlertGvr).Informer()
