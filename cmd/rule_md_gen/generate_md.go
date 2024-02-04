@@ -92,15 +92,31 @@ func fillListsInCRD(idsList []string, namesList []string, tagsList []string, crd
 	specRules.Items.Schema.Properties["ruleName"] = specRuleNames
 	// handle ruleTags
 	specRuleTags := specRules.Items.Schema.Properties["ruleTags"]
+	if specRuleTags.Items == nil {
+		specRuleTags.Items = &apiextensionsv1.JSONSchemaPropsOrArray{}
+		specRuleTags.Type = "array"
+	}
+	if specRuleTags.Items.Schema == nil {
+		specRuleTags.Items.Schema = &apiextensionsv1.JSONSchemaProps{}
+		specRuleTags.Items.Schema.Type = "string"
+	}
+
 	enumVals = []apiextensionsv1.JSON{}
 	for _, tag := range tagsList {
 		enumVals = append(enumVals, apiextensionsv1.JSON{Raw: []byte("\"" + tag + "\"")})
 	}
 	specRuleTags.Items.Schema.Enum = enumVals
 	specRules.Items.Schema.Properties["ruleTags"] = specRuleTags
+	specRules.Items.Schema.Properties["severity"] = apiextensionsv1.JSONSchemaProps{Type: "string"}
+	specRules.Items.Schema.Type = "object"
+	specRules.Type = "array"
 	// write back
 	spec.Properties["rules"] = specRules
+	spec.Type = "object"
 	crDef.Spec.Versions[0].Schema.OpenAPIV3Schema.Properties["spec"] = spec
+	crDef.Spec.Versions[0].Schema.OpenAPIV3Schema.Type = "object"
+	crDef.Spec.Versions[0].Served = true
+	crDef.Spec.Versions[0].Storage = true
 
 	// write CRD YAML file
 	crdFile.Seek(0, 0)
