@@ -1,4 +1,4 @@
-name: KubeCop System Test
+name: KubeCop namespaced System Test
 
 on:
   pull_request:
@@ -12,10 +12,10 @@ env:
   GKE_TEST_PROJECT: ${{ vars.GKE_TEST_PROJECT }}
 
 jobs:
-  system-tests:
+  system-tests-namespaced:
     runs-on: ubuntu-latest
     # Run on specific label or if running under act
-    if: github.event.label.name == 'requires-system-test' || contains(github.event.pull_request.labels.*.name, 'requires-system-test')|| github.actor == 'nektos/act'
+    if: github.event.label.name == 'requires-namespaced-system-test' || contains(github.event.pull_request.labels.*.name, 'requires-namespaced-system-test')|| github.actor == 'nektos/act'
     environment: gke-cluster-env
     concurrency:
       group: gke-cluster-lock
