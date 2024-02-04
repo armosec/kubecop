@@ -52,6 +52,12 @@ spec:
         resources:
           {{- toYaml .Values.kubecop.resources | nindent 12 }}
         env:
+          {{- if .Values.isNamespaced }}
+          - name: STORE_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          {{- end }}
           {{- if .Values.kubecop.gomemlimit.enabled }}
           - name: GOMEMLIMIT
             value: "{{ .Values.kubecop.gomemlimit.limit }}"

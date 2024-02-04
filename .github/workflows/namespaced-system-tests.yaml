@@ -1,0 +1,149 @@
+name: KubeCop System Test
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+    types: [labeled, synchronize, ready_for_review, opened, reopened]
+
+env:
+  GKE_TEST_CLUSTER: ${{ vars.GKE_TEST_CLUSTER }}
+  GKE_TEST_ZONE: ${{ vars.GKE_TEST_ZONE }}
+  GKE_TEST_PROJECT: ${{ vars.GKE_TEST_PROJECT }}
+
+jobs:
+  system-tests:
+    runs-on: ubuntu-latest
+    # Run on specific label or if running under act
+    if: github.event.label.name == 'requires-system-test' || contains(github.event.pull_request.labels.*.name, 'requires-system-test')|| github.actor == 'nektos/act'
+    environment: gke-cluster-env
+    concurrency:
+      group: gke-cluster-lock
+      cancel-in-progress: false
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Login to Quay.io
+      uses: docker/login-action@v3
+      with:
+        registry: quay.io/armosec
+        username: ${{ secrets.QUAYIO_REGISTRY_USERNAME }}
+        password: ${{ secrets.QUAYIO_REGISTRY_PASSWORD }}
+
+    - name: Build the Image and Push to Quay.io
+      run: |
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+        export IMAGE_TAG=test-${COMMIT_HASH}
+        export IMAGE_REPO=quay.io/armosec/kubecop
+        echo ${IMAGE_REPO} > test-image-repo.txt
+        export IMAGE_NAME=quay.io/armosec/kubecop:${IMAGE_TAG}
+        echo "${IMAGE_TAG}" > test-image-tag.txt
+        make build-image-and-push
+
+    - name: Check what K8s cluster to use
+      id: check-act
+      run: |
+        if [ -z $ACT ]; then
+        echo 'K8S_TYPE=GKE' >> $GITHUB_OUTPUT
+        else
+          echo $ACT
+          echo 'K8S_TYPE=kind'  >> $GITHUB_OUTPUT
+        fi
+
+    - name: Set up Google Cloud
+      if: ${{ steps.check-act.outputs.K8S_TYPE == 'GKE' }}
+      uses: google-github-actions/setup-gcloud@v0.2.0
+      with:
+        service_account_key: ${{ secrets.GKE_SA_KEY }}
+        project_id: ${{ vars.GKE_TEST_PROJECT }}
+
+    - name: Connect to GKE cluster
+      if: ${{ steps.check-act.outputs.K8S_TYPE == 'GKE' }}
+      run: |
+        gcloud components install --quiet kubectl
+        gcloud container clusters get-credentials ${{ vars.GKE_TEST_CLUSTER }} --zone ${{ vars.GKE_TEST_ZONE }} --project ${{ vars.GKE_TEST_PROJECT }} || echo "Failed to connect to GKE cluster"
+
+    - name: Set up Kind
+      if: ${{ steps.check-act.outputs.K8S_TYPE == 'kind' }}
+      run: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-$(uname)-amd64
+        chmod +x ./kind
+        ./kind create cluster
+        curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.21.0/bin/linux/amd64/kubectl
+        chmod +x ./kubectl
+        sudo mv ./kubectl /usr/local/bin/kubectl
+
+    - name: Install Helm and Kubectl
+      run: |
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        chmod 700 get_helm.sh
+        sudo ./get_helm.sh
+
+    - name: Install Prometheus and Node Exporter
+      run: |
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo update
+        helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --set grafana.enabled=false --namespace monitoring --create-namespace --wait --timeout 5m
+        # Check that the prometheus pod is running
+        kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=prometheus -n monitoring --timeout=300s
+        echo "prometheus" >> cleanup.txt
+
+    - name: Install KubeCop
+      run: |
+        echo "crd" >> cleanup.txt
+        helm upgrade --install kubecop chart/kubecop --set isNamespaced=true --set image.tag=$(cat test-image-tag.txt) --set image.repository=$(cat test-image-repo.txt) --set kubecop.recording.finalizationDuration=120s -f resources/system-tests/kubecop-values.yaml -n kubescape --create-namespace --wait --timeout 5m --debug
+        # Check that the kubecop pod is running
+        kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=kubecop -n kubescape --timeout=300s
+        sleep 5
+        echo "kubecop" >> cleanup.txt
+
+    - name: Install python dependencies
+      run: |
+        pip install -r system-tests/requirements.txt
+
+    - name: Run System Tests
+      run: |
+        ./scripts/run-system-tests.sh
+
+    - name: Upload plot images
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: Performance plots
+        path: "*.png"
+
+    - name: Upload pprof files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: Pprof files
+        path: "*.pprof"
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const artifactUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+          const comment = `:sparkles: Artifacts are available [here](${artifactUrl}).`;
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+    - name: Cleanup
+      if: always()
+      run: |
+        # If it is a kind cluster, delete it
+        if [ -f kind ]; then
+          ./kind delete cluster
+        else
+          helm uninstall kubecop -n kubescape || echo "Failed to uninstall kubecop"
+          kubectl delete ns kubescape || echo "Failed to delete namespace kubescape"
+          kubectl delete -f ./chart/kubecop/crds/app-profile.crd.yaml -f ./chart/kubecop/crds/runtime-rule-binding.crd.yaml || echo "Failed to delete crd"
+          helm uninstall prometheus -n monitoring || echo "Failed to uninstall prometheus"
+          kubectl delete ns monitoring || echo "Failed to delete namespace monitoring"
+        fi

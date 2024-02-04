@@ -26,7 +26,7 @@ func TestNewRuleBindingK8sStore(t *testing.T) {
 	// Create a fake core client
 	coreClient := fake.NewSimpleClientset(coreV1Objects()...).CoreV1()
 	// Create a RuleBindingK8sStore instance
-	store, err := NewRuleBindingK8sStore(dynamicClient, coreClient, "test-node")
+	store, err := NewRuleBindingK8sStore(dynamicClient, coreClient, "test-node", "")
 	assert.NoError(t, err)
 	defer store.Destroy()
 	assert.NotNil(t, store)
@@ -39,7 +39,7 @@ func TestRuleBindingK8sStore_getAllRuleBindings(t *testing.T) {
 	// Create a fake core client
 	coreClient := fake.NewSimpleClientset(coreV1Objects()...).CoreV1()
 	// Create a RuleBindingK8sStore instance
-	store, err := NewRuleBindingK8sStore(dynamicClient, coreClient, "test-node")
+	store, err := NewRuleBindingK8sStore(dynamicClient, coreClient, "test-node", "")
 	assert.NoError(t, err)
 	defer store.Destroy()
 
@@ -62,7 +62,7 @@ func TestRuleBindingK8sStore_getRuleBindingsForPod(t *testing.T) {
 	// Create a fake core client
 	coreClient := fake.NewSimpleClientset(coreV1Objects()...).CoreV1()
 	// Create a RuleBindingK8sStore instance
-	store, err := NewRuleBindingK8sStore(dynamicClient, coreClient, "test-node")
+	store, err := NewRuleBindingK8sStore(dynamicClient, coreClient, "test-node", "")
 	assert.NoError(t, err)
 	defer store.Destroy()
 
@@ -83,7 +83,7 @@ func TestRuleBindingK8sStore_GetRulesForPod(t *testing.T) {
 	// Create a fake core client
 	coreClient := fake.NewSimpleClientset(coreV1Objects()...).CoreV1()
 	// Create a RuleBindingK8sStore instance
-	store, err := NewRuleBindingK8sStore(dynamicClient, coreClient, "test-node")
+	store, err := NewRuleBindingK8sStore(dynamicClient, coreClient, "test-node", "")
 	assert.NoError(t, err)
 	defer store.Destroy()
 	// Call the GetRulesForPod function

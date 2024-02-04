@@ -111,3 +111,5 @@ affinity:
 
 # default rule binding to catch all pods
 installDefaultAlertRuleBinding: true
+
+isNamespaced: true

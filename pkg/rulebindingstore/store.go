@@ -32,11 +32,12 @@ type RuleBindingK8sStore struct {
 	coreV1Client        v1.CoreV1Interface
 	informerStopChannel chan struct{}
 	nodeName            string
+	storeNamespace      string
 	// functions to call upon a change in a rule binding
 	callBacks []RuleBindingChangedHandler
 }
 
-func NewRuleBindingK8sStore(dynamicClient dynClient, coreV1Client v1.CoreV1Interface, nodeName string) (*RuleBindingK8sStore, error) {
+func NewRuleBindingK8sStore(dynamicClient dynClient, coreV1Client v1.CoreV1Interface, nodeName, storeNamespace string) (*RuleBindingK8sStore, error) {
 
 	stopCh := make(chan struct{})
 	ruleBindingStore := RuleBindingK8sStore{
@@ -44,6 +45,7 @@ func NewRuleBindingK8sStore(dynamicClient dynClient, coreV1Client v1.CoreV1Inter
 		informerStopChannel: stopCh,
 		nodeName:            nodeName,
 		coreV1Client:        coreV1Client,
+		storeNamespace:      storeNamespace,
 	}
 	ruleBindingStore.StartController()
 	return &ruleBindingStore, nil
@@ -191,9 +193,12 @@ func getRuntimeAlertRuleBindingFromObj(obj interface{}) (*RuntimeAlertRuleBindin
 }
 
 func (store *RuleBindingK8sStore) StartController() {
+	if store.storeNamespace == "" {
+		store.storeNamespace = metav1.NamespaceNone
+	}
 
 	// Initialize factory and informer
-	informer := dynamicinformer.NewFilteredDynamicSharedInformerFactory(store.dynamicClient, 0, metav1.NamespaceNone, nil).ForResource(RuleBindingAlertGvr).Informer()
+	informer := dynamicinformer.NewFilteredDynamicSharedInformerFactory(store.dynamicClient, 0, store.storeNamespace, nil).ForResource(RuleBindingAlertGvr).Informer()
 
 	// Add event handlers to informer
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
