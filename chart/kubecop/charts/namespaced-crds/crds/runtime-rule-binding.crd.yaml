@@ -11,7 +11,7 @@ spec:
     shortNames:
     - rab
     singular: runtimerulealertbinding
-  scope: Cluster
+  scope: Namespaced
   versions:
   - name: v1
     schema:
@@ -117,8 +117,8 @@ spec:
                       - Unexpected Service Account Token Access
                       - Kubernetes Client Executed
                       - Exec from malicious source
-                      - Kernel Module Load
                       - Exec Binary Not In Base Image
+                      - Kernel Module Load
                       - Malicious SSH Connection
                       - Exec from mount
                       - Unshare System Call usage
@@ -127,18 +127,29 @@ spec:
                     ruleTags:
                       items:
                         enum:
+                        - base image
+                        - binary
                         - capabilities
-                        - dns
-                        - exec
-                        - open
-                        - signature
-                        - syscall
-                        - whitelisted
-                        - mount
-                        - ssh
-                        - escape
-                        - token
+                        - connection
                         - crypto
+                        - dns
+                        - escape
+                        - exec
+                        - kernel
+                        - load
+                        - malicious
+                        - miners
+                        - module
+                        - mount
+                        - network
+                        - open
+                        - port
+                        - signature
+                        - ssh
+                        - syscall
+                        - token
+                        - unshare
+                        - whitelisted
                         type: string
                       type: array
                     severity:

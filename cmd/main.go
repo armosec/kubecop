@@ -147,6 +147,8 @@ func main() {
 	// Parse command line arguments to check which mode to run in
 	controllerMode := false
 	nodeAgentMode := false
+	storeNamespace := ""
+
 	for _, arg := range os.Args[1:] {
 		switch arg {
 		case "--mode-controller":
@@ -160,6 +162,10 @@ func main() {
 		default:
 			log.Fatalf("Unknown command line argument: %s", arg)
 		}
+	}
+
+	if ns := os.Getenv("STORE_NAMESPACE"); ns != "" {
+		storeNamespace = ns
 	}
 
 	if !controllerMode && !nodeAgentMode {
@@ -241,7 +247,7 @@ func main() {
 		engine := engine.NewEngine(clientset, appProfileCache, tracer, &exporterBus, 4, NodeName)
 
 		// Create the rule binding store and start it
-		ruleBindingStore, err := rulebindingstore.NewRuleBindingK8sStore(dynamicClient, clientset.CoreV1(), NodeName)
+		ruleBindingStore, err := rulebindingstore.NewRuleBindingK8sStore(dynamicClient, clientset.CoreV1(), NodeName, storeNamespace)
 		if err != nil {
 			log.Fatalf("Failed to create rule binding store: %v\n", err)
 		}

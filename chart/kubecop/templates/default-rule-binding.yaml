@@ -2,6 +2,9 @@
 apiVersion: kubescape.io/v1
 kind: RuntimeRuleAlertBinding
 metadata:
+  {{- if .Values.isNamespaced }}
+  namespace: {{ .Release.Namespace }}
+  {{- end }}
   name: all-rules-all-pods
 spec:
   namespaceSelector:

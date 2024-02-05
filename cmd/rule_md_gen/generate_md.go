@@ -36,10 +36,11 @@ func main() {
 		tagsList = append(tagsList, tag)
 	}
 	slices.Sort(tagsList)
-	fillListsInCRD(idsList, namesList, tagsList)
+	fillListsInCRD(idsList, namesList, tagsList, "chart/kubecop/charts/namespaced-crds/crds/runtime-rule-binding.crd.yaml")
+	fillListsInCRD(idsList, namesList, tagsList, "chart/kubecop/charts/clustered-crds/crds/runtime-rule-binding.crd.yaml")
 }
 
-func fillListsInCRD(idsList []string, namesList []string, tagsList []string) {
+func fillListsInCRD(idsList []string, namesList []string, tagsList []string, crdFilePath string) {
 	gitRoot := "../../"
 	pwd, err := os.Getwd()
 	if err == nil {
@@ -49,7 +50,6 @@ func fillListsInCRD(idsList []string, namesList []string, tagsList []string) {
 		}
 	}
 
-	crdFilePath := "chart/kubecop/crds/runtime-rule-binding.crd.yaml"
 	crdFile, err := os.OpenFile(filepath.Join(gitRoot, crdFilePath), os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Printf("Error opening CRD file: %v\n", err)
@@ -92,15 +92,31 @@ func fillListsInCRD(idsList []string, namesList []string, tagsList []string) {
 	specRules.Items.Schema.Properties["ruleName"] = specRuleNames
 	// handle ruleTags
 	specRuleTags := specRules.Items.Schema.Properties["ruleTags"]
+	if specRuleTags.Items == nil {
+		specRuleTags.Items = &apiextensionsv1.JSONSchemaPropsOrArray{}
+		specRuleTags.Type = "array"
+	}
+	if specRuleTags.Items.Schema == nil {
+		specRuleTags.Items.Schema = &apiextensionsv1.JSONSchemaProps{}
+		specRuleTags.Items.Schema.Type = "string"
+	}
+
 	enumVals = []apiextensionsv1.JSON{}
 	for _, tag := range tagsList {
 		enumVals = append(enumVals, apiextensionsv1.JSON{Raw: []byte("\"" + tag + "\"")})
 	}
 	specRuleTags.Items.Schema.Enum = enumVals
 	specRules.Items.Schema.Properties["ruleTags"] = specRuleTags
+	specRules.Items.Schema.Properties["severity"] = apiextensionsv1.JSONSchemaProps{Type: "string"}
+	specRules.Items.Schema.Type = "object"
+	specRules.Type = "array"
 	// write back
 	spec.Properties["rules"] = specRules
+	spec.Type = "object"
 	crDef.Spec.Versions[0].Schema.OpenAPIV3Schema.Properties["spec"] = spec
+	crDef.Spec.Versions[0].Schema.OpenAPIV3Schema.Type = "object"
+	crDef.Spec.Versions[0].Served = true
+	crDef.Spec.Versions[0].Storage = true
 
 	// write CRD YAML file
 	crdFile.Seek(0, 0)

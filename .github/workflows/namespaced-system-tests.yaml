@@ -1,4 +1,4 @@
-name: KubeCop System Test
+name: KubeCop namespaced System Test
 
 on:
   pull_request:
@@ -12,10 +12,10 @@ env:
   GKE_TEST_PROJECT: ${{ vars.GKE_TEST_PROJECT }}
 
 jobs:
-  system-tests:
+  system-tests-namespaced:
     runs-on: ubuntu-latest
     # Run on specific label or if running under act
-    if: github.event.label.name == 'requires-system-test' || contains(github.event.pull_request.labels.*.name, 'requires-system-test')|| github.actor == 'nektos/act'
+    if: github.event.label.name == 'requires-namespaced-system-test' || contains(github.event.pull_request.labels.*.name, 'requires-namespaced-system-test')|| github.actor == 'nektos/act'
     environment: gke-cluster-env
     concurrency:
       group: gke-cluster-lock
@@ -91,7 +91,7 @@ jobs:
     - name: Install KubeCop
       run: |
         echo "crd" >> cleanup.txt
-        helm upgrade --install kubecop chart/kubecop --set image.tag=$(cat test-image-tag.txt) --set image.repository=$(cat test-image-repo.txt) --set kubecop.recording.finalizationDuration=120s -f resources/system-tests/kubecop-values.yaml -n kubescape --create-namespace --wait --timeout 5m --debug
+        helm upgrade --install kubecop chart/kubecop --set isNamespaced=true --set isClusterScoped=false --set image.tag=$(cat test-image-tag.txt) --set image.repository=$(cat test-image-repo.txt) --set kubecop.recording.finalizationDuration=120s -f resources/system-tests/kubecop-values.yaml -n kubescape --create-namespace --wait --timeout 5m --debug
         # Check that the kubecop pod is running
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=kubecop -n kubescape --timeout=300s
         sleep 5
@@ -143,7 +143,7 @@ jobs:
         else
           helm uninstall kubecop -n kubescape || echo "Failed to uninstall kubecop"
           kubectl delete ns kubescape || echo "Failed to delete namespace kubescape"
-          kubectl delete -f ./chart/kubecop/crds/app-profile.crd.yaml -f ./chart/kubecop/charts/clustered-crds/crds/runtime-rule-binding.crd.yaml || echo "Failed to delete crd"
+          kubectl delete -f ./chart/kubecop/crds/app-profile.crd.yaml -f ./chart/kubecop/charts/namespaced-crds/crds/runtime-rule-binding.crd.yaml || echo "Failed to delete crd"
           helm uninstall prometheus -n monitoring || echo "Failed to uninstall prometheus"
           kubectl delete ns monitoring || echo "Failed to delete namespace monitoring"
         fi
