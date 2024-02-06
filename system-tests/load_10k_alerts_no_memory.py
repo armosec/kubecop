@@ -78,8 +78,6 @@ def load_10k_alerts_no_memory_leak(test_framework):
         print("Exception: ", e)
         # Delete the namespace
         subprocess.check_call(["kubectl", "delete", "namespace", namespace])
-        if profiles_namespace_name:
-            subprocess.check_call(["kubectl", "delete", "namespace", profiles_namespace_name])
         return 1
 
     # Delete the namespace
