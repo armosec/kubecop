@@ -11,7 +11,7 @@ rules:
   verbs: ["get"]
 - apiGroups: ["kubescape.io"]
   resources: ["applicationprofiles", "namespaces/*/*", "namespaces/*/applicationprofiles/*"]
-  verbs: ["watch", "create", "update", "get"]
+  verbs: ["watch", "create", "update", "get", "list", "delete", "patch"]
 - apiGroups: ["kubescape.io"]
   resources: ["runtimerulealertbindings"]
   verbs: ["list", "watch"]
