@@ -12,6 +12,7 @@ def basic_alert_test(test_framework):
     if profiles_namespace_name:
         profiles_namespace = Namespace(name=profiles_namespace_name)
         ns = Namespace(name='test-namespace')
+
     if ns:
         # Create application profile
         if profiles_namespace_name:
