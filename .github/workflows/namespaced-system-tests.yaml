@@ -10,6 +10,7 @@ env:
   GKE_TEST_CLUSTER: ${{ vars.GKE_TEST_CLUSTER }}
   GKE_TEST_ZONE: ${{ vars.GKE_TEST_ZONE }}
   GKE_TEST_PROJECT: ${{ vars.GKE_TEST_PROJECT }}
+  STORE_NAMESPACE: kubescape
 
 jobs:
   system-tests-namespaced:
@@ -96,8 +97,6 @@ jobs:
         kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=kubecop -n kubescape --timeout=300s
         sleep 5
         echo "kubecop" >> cleanup.txt
-        # Set env variable for the namespace
-        export STORE_NAMESPACE=kubescape
 
     - name: Install python dependencies
       run: |
