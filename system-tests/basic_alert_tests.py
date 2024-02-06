@@ -12,12 +12,11 @@ def basic_alert_test(test_framework):
     if profiles_namespace_name:
         profiles_namespace = Namespace(name=profiles_namespace_name)
     if ns:
-        app_profile = None
         # Create application profile
-        if profiles_namespace:
-            app_profile = KubernetesObjects(namespace=profiles_namespace_name,object_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile-namespaced.yaml"))
+        if profiles_namespace_name:
+            KubernetesObjects(namespace=profiles_namespace,object_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile-namespaced.yaml"))
         else:
-            app_profile = KubernetesObjects(namespace=ns,object_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile.yaml"))
+            KubernetesObjects(namespace=ns,object_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile.yaml"))
 
         # Create a workload
         workload = Workload(namespace=ns,workload_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-deployment.yaml"))

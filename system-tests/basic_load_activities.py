@@ -15,8 +15,8 @@ def basic_load_activities(test_framework):
     if ns:
         # Create application profile
         app_profile = None
-        if profiles_namespace:
-            app_profile = KubernetesObjects(namespace=profiles_namespace_name,object_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile-namespaced.yaml"))
+        if profiles_namespace_name:
+            app_profile = KubernetesObjects(namespace=profiles_namespace,object_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile-namespaced.yaml"))
         else:
             app_profile = KubernetesObjects(namespace=ns,object_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile.yaml"))
 
