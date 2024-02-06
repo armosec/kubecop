@@ -116,10 +116,7 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 		searchNamespace = cache.storeNamespace
 	}
 
-	log.Printf("Loading application profile for container %s/%s/%s/%s\n", namespace, kind, workloadName, containerName)
-
 	appProfile, err := cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(searchNamespace).Get(context.TODO(), cache.generateApplicationProfileName(ownerKind, ownerName, namespace), metav1.GetOptions{})
-	log.Printf("Loading application profile -> %s\n", cache.generateApplicationProfileName(ownerKind, ownerName, namespace))
 	if err != nil {
 		// Failed to get the application profile at the owner level, try to get it at the workload level
 		appProfile, err = cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(searchNamespace).Get(context.TODO(), cache.generateApplicationProfileName(kind, workloadName, namespace), metav1.GetOptions{})
