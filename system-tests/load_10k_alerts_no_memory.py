@@ -78,10 +78,17 @@ def load_10k_alerts_no_memory_leak(test_framework):
         print("Exception: ", e)
         # Delete the namespace
         subprocess.check_call(["kubectl", "delete", "namespace", namespace])
+        # Delete the profiles if they were created
+        if profiles_namespace:
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"pod-{nginx_pod_name}-test-namespace", "-n", profiles_namespace_name])
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"deployment-nginx-deployment-test-namespace", "-n", profiles_namespace_name])
         return 1
 
     # Delete the namespace
     subprocess.check_call(["kubectl", "delete", "namespace", namespace])
+    if profiles_namespace:
+        subprocess.run(["kubectl", "delete", "applicationprofile", f"pod-{nginx_pod_name}-test-namespace", "-n", profiles_namespace_name])
+        subprocess.run(["kubectl", "delete", "applicationprofile", f"deployment-nginx-deployment-test-namespace", "-n", profiles_namespace_name])
     return 0
 
 
