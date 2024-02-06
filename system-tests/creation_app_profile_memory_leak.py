@@ -11,7 +11,7 @@ def install_app_no_application_profile_no_leak(test_framework):
     # Create a namespace
     ns = Namespace(name=None)
     namespace = ns.name()
-    
+    profiles_namespace = None
     if os.environ.get("STORE_NAMESPACE"):
         profiles_namespace = Namespace(name=os.environ.get("STORE_NAMESPACE"))
         ns = Namespace(name='test-namespace')
