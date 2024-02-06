@@ -264,7 +264,6 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 	}
 
 	kind, workloadName := c.getApplicationProfileNameParts(appProfileUnstructured)
-	log.Printf("Handling application profile %s for workload %s/%s\n", appProfileUnstructured.GetName(), appProfileUnstructured.GetNamespace(), workloadName)
 
 	applicationProfileNamespace := appProfileUnstructured.GetNamespace()
 	if c.storeNamespace != "" {
@@ -286,8 +285,6 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 					log.Errorf("Failed to get application profile from object: %v\n", err)
 					return
 				}
-
-				log.Printf("Updating application profile %s for workload %s/%s\n", appProfile.GetName(), cacheEntry.Namespace, cacheEntry.WorkloadName)
 
 				// Update the cache entry
 				cacheEntry.ApplicationProfile = appProfile

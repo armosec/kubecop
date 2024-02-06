@@ -7,6 +7,8 @@ def finalization_alert_test(test_framework):
 
     # Create a namespace
     ns = Namespace(name=None)
+    if os.environ.get("STORE_NAMESPACE"):
+        profiles_namespace = Namespace(name=os.environ.get("STORE_NAMESPACE"))
 
     if ns:
         # Create a workload

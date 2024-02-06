@@ -1,5 +1,6 @@
 import subprocess
 import time
+import os
 
 from promtopic import save_plot_png, send_promql_query_to_prom
 from pprof import pprof_recorder
@@ -12,10 +13,18 @@ def load_10k_alerts_no_memory_leak(test_framework):
     ns = Namespace(name=None)
 
     namespace = ns.name()
+    
+    profiles_namespace_name = os.environ.get("STORE_NAMESPACE")
+    profiles_namespace = None
+    if profiles_namespace_name:
+        profiles_namespace = Namespace(name=profiles_namespace_name)
 
     try:
         #  Install nginx profile in kubernetes by applying the nginx profile yaml
-        subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "dev/nginx/nginx-app-profile.yaml"])
+        if profiles_namespace_name:
+            subprocess.check_call(["kubectl", "-n", profiles_namespace_name , "apply", "-f", "resources/nginx-app-profile-namespaced.yaml"])
+        else:
+            subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "dev/nginx/nginx-app-profile.yaml"])
         # Install nginx in kubernetes by applying the nginx deployment yaml with pre-creating profile for the nginx pod
         subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "dev/nginx/nginx-deployment.yaml"])
         # Wait for nginx to be ready
@@ -67,10 +76,14 @@ def load_10k_alerts_no_memory_leak(test_framework):
         print("Exception: ", e)
         # Delete the namespace
         subprocess.check_call(["kubectl", "delete", "namespace", namespace])
+        if profiles_namespace_name:
+            subprocess.check_call(["kubectl", "delete", "namespace", profiles_namespace_name])
         return 1
 
     # Delete the namespace
     subprocess.check_call(["kubectl", "delete", "namespace", namespace])
+    if profiles_namespace_name:
+        subprocess.check_call(["kubectl", "delete", "namespace", profiles_namespace_name])
     return 0
 
 
