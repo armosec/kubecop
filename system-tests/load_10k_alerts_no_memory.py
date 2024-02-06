@@ -24,7 +24,7 @@ def load_10k_alerts_no_memory_leak(test_framework):
     try:
         #  Install nginx profile in kubernetes by applying the nginx profile yaml
         if profiles_namespace_name:
-            subprocess.check_call(["kubectl", "-n", profiles_namespace_name , "apply", "-f", "resources/nginx-app-profile-namespaced.yaml"])
+            subprocess.check_call(["kubectl", "-n", profiles_namespace_name , "apply", "-f", os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile-namespaced.yaml")])
         else:
             subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "dev/nginx/nginx-app-profile.yaml"])
         # Install nginx in kubernetes by applying the nginx deployment yaml with pre-creating profile for the nginx pod
