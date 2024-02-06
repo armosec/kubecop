@@ -189,7 +189,6 @@ func main() {
 	if nodeAgentMode {
 		// TODO: support exporters config from file/crd
 		exporterBus := exporters.InitExporters(exporters.ExportersConfig{})
-
 		// Create tracer (without sink for now)
 		tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
 		// Create application profile cache

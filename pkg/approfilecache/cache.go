@@ -116,7 +116,10 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 		searchNamespace = cache.storeNamespace
 	}
 
+	log.Printf("Loading application profile for container %s/%s/%s/%s\n", namespace, kind, workloadName, containerName)
+
 	appProfile, err := cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(searchNamespace).Get(context.TODO(), cache.generateApplicationProfileName(ownerKind, ownerName, namespace), metav1.GetOptions{})
+	log.Printf("Loading application profile -> %s\n", cache.generateApplicationProfileName(ownerKind, ownerName, namespace))
 	if err != nil {
 		// Failed to get the application profile at the owner level, try to get it at the workload level
 		appProfile, err = cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(searchNamespace).Get(context.TODO(), cache.generateApplicationProfileName(kind, workloadName, namespace), metav1.GetOptions{})
@@ -264,11 +267,17 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 	}
 
 	kind, workloadName := c.getApplicationProfileNameParts(appProfileUnstructured)
+	log.Printf("Handling application profile %s for workload %s/%s\n", appProfileUnstructured.GetName(), appProfileUnstructured.GetNamespace(), workloadName)
+
+	applicationProfileNamespace := appProfileUnstructured.GetNamespace()
+	if c.storeNamespace != "" {
+		applicationProfileNamespace = appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/namespace"]
+	}
 
 	// Add the application profile to the cache
 	// Loop over the application profile cache entries and check if there is an entry for the same workload
 	for id, cacheEntry := range c.cache {
-		if cacheEntry.Namespace == appProfileUnstructured.GetNamespace() {
+		if cacheEntry.Namespace == applicationProfileNamespace {
 			if !cacheEntry.AcceptPartial && partial {
 				// Skip the partial application profile becuase we expect a final one
 				continue
@@ -301,9 +310,14 @@ func (c *ApplicationProfileK8sCache) handleDeleteApplicationProfile(obj *unstruc
 	// Convert the application profile name to kind and workload name
 	kind, workloadName := c.getApplicationProfileNameParts(obj)
 
+	applicationProfileNamespace := appProfile.GetNamespace()
+	if c.storeNamespace != "" {
+		applicationProfileNamespace = appProfile.GetLabels()["kapprofiler.kubescape.io/namespace"]
+	}
+
 	// Delete the application profile from the cache
 	for key, cacheEntry := range c.cache {
-		if cacheEntry.WorkloadName == workloadName && cacheEntry.WorkloadKind == kind && cacheEntry.Namespace == appProfile.GetNamespace() {
+		if cacheEntry.WorkloadName == workloadName && cacheEntry.WorkloadKind == kind && cacheEntry.Namespace == applicationProfileNamespace {
 			// Delete the cache entry
 			delete(c.cache, key)
 		}
