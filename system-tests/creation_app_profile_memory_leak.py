@@ -15,6 +15,7 @@ def install_app_no_application_profile_no_leak(test_framework):
     if os.environ.get("STORE_NAMESPACE"):
         profiles_namespace = Namespace(name=os.environ.get("STORE_NAMESPACE"))
         ns = Namespace(name='test-namespace')
+        namespace = ns.name()
 
     try:
         time_start = time.time()
@@ -33,7 +34,7 @@ def install_app_no_application_profile_no_leak(test_framework):
         
         get_proc = None
         if os.environ.get("STORE_NAMESPACE"):
-            get_proc = subprocess.run(["kubectl", "-n", os.environ.get("STORE_NAMESPACE"), "get", "applicationprofiles", f"pod-{nginx_pod_name}-default", "-oyaml"], capture_output=True)
+            get_proc = subprocess.run(["kubectl", "-n", os.environ.get("STORE_NAMESPACE"), "get", "applicationprofiles", f"pod-{nginx_pod_name}-test-namespace", "-oyaml"], capture_output=True)
         else:
             get_proc = subprocess.run(["kubectl", "-n", namespace, "get", "applicationprofiles", f"pod-{nginx_pod_name}", "-oyaml"], capture_output=True)
         assert get_proc.returncode == 0 and 'kapprofiler.kubescape.io/final: "true"' in get_proc.stdout.decode("utf-8"), f"final applicationprofile ({get_proc.returncode}) did not got created {get_proc.stdout.decode('utf-8')}"
