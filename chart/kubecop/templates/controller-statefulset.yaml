@@ -36,7 +36,7 @@ spec:
         securityContext:
           {{- toYaml .Values.securityContextNormal | nindent 12 }}
         resources:
-          {{- toYaml .Values.resources | nindent 12 }}
+          {{- toYaml .Values.kubecop.resources | nindent 12 }}
         env:
           {{- if .Values.isNamespaced }}
           - name: STORE_NAMESPACE
