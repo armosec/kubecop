@@ -1,10 +1,10 @@
 apiVersion: kubescape.io/v1
 kind: ApplicationProfile
 metadata:
-  name: job-kubecop-malicious-app-job-default
+  name: job-kubecop-malicious-app-job-test-namespace
   labels:
     kapprofiler.kubescape.io/final: "true"
-    kapprofiler.kubescape.io/namespace: "default"
+    kapprofiler.kubescape.io/namespace: "test-namespace"
   namespace: kubescape
 spec:
   containers:

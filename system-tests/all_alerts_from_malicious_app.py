@@ -9,11 +9,12 @@ def all_alerts_from_malicious_app(test_framework):
     profiles_namespace = None
     if profiles_namespace_name:
         profiles_namespace = Namespace(name=profiles_namespace_name)
+        ns = Namespace(name='test-namespace')
 
     if ns:
         # Create application profile
         app_profile = None
-        if profiles_namespace:
+        if profiles_namespace_name:
             app_profile = KubernetesObjects(namespace=profiles_namespace,object_file=os.path.join(test_framework.get_root_directoty(),"resources/malicious-job-app-profile-namespaced.yaml"))
         else:
             app_profile = KubernetesObjects(namespace=ns,object_file=os.path.join(test_framework.get_root_directoty(),"resources/malicious-job-app-profile.yaml"))

@@ -18,6 +18,8 @@ def load_10k_alerts_no_memory_leak(test_framework):
     profiles_namespace = None
     if profiles_namespace_name:
         profiles_namespace = Namespace(name=profiles_namespace_name)
+        ns = Namespace(name='test-namespace')
+        namespace = ns.name()
 
     try:
         #  Install nginx profile in kubernetes by applying the nginx profile yaml

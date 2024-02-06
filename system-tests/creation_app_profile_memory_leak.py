@@ -14,6 +14,7 @@ def install_app_no_application_profile_no_leak(test_framework):
     
     if os.environ.get("STORE_NAMESPACE"):
         profiles_namespace = Namespace(name=os.environ.get("STORE_NAMESPACE"))
+        ns = Namespace(name='test-namespace')
 
     try:
         time_start = time.time()

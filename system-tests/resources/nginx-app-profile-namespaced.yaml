@@ -3,8 +3,8 @@ kind: ApplicationProfile
 metadata:
   labels:
     kapprofiler.kubescape.io/final: "true"
-    kapprofiler.kubescape.io/namespace: "default"
-  name: deployment-nginx-deployment-default
+    kapprofiler.kubescape.io/namespace: "test-namespace"
+  name: deployment-nginx-deployment-test-namespace
   namespace: kubescape
 spec:
   containers:
