@@ -15,6 +15,12 @@ import (
 	"k8s.io/client-go/dynamic"
 )
 
+const (
+	NameSeperator     = "-"
+	KindIndex         = 0
+	WorkloadNameIndex = 1
+)
+
 type ApplicationProfileCacheEntry struct {
 	ApplicationProfile *collector.ApplicationProfile
 	WorkloadName       string
@@ -33,6 +39,8 @@ type ApplicationProfileK8sCache struct {
 	applicationProfileWatcher watcher.WatcherInterface
 
 	promCollector *prometheusMetric
+
+	storeNamespace string
 }
 
 type ApplicationProfileAccessImpl struct {
@@ -41,8 +49,28 @@ type ApplicationProfileAccessImpl struct {
 	appProfileNamespace string
 }
 
-func generateApplicationProfileName(kind, workloadName string) string {
-	return strings.ToLower(kind) + "-" + workloadName
+func (cache *ApplicationProfileK8sCache) generateApplicationProfileName(kind, workloadName, namespace string) string {
+	if cache.storeNamespace != "" {
+		return strings.ToLower(kind) + NameSeperator + workloadName + NameSeperator + namespace
+	}
+
+	return strings.ToLower(kind) + NameSeperator + workloadName
+}
+
+func (cache *ApplicationProfileK8sCache) getApplicationProfileNameParts(appProfileUnstructured *unstructured.Unstructured) (string, string) {
+	var kind, workloadName string
+	if cache.storeNamespace != "" {
+		namespace := appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/namespace"]
+		kind = strings.Split(appProfileUnstructured.GetName(), NameSeperator)[KindIndex]
+		workloadName = strings.TrimPrefix(appProfileUnstructured.GetName(), kind+NameSeperator)
+		if namespace != "" {
+			workloadName = strings.TrimSuffix(workloadName, NameSeperator+namespace)
+		}
+		return kind, workloadName
+	}
+
+	kind, workloadName = strings.Split(appProfileUnstructured.GetName(), NameSeperator)[KindIndex], strings.Join(strings.Split(appProfileUnstructured.GetName(), NameSeperator)[WorkloadNameIndex:], NameSeperator)
+	return kind, workloadName
 }
 
 func getApplicationProfileFromUnstructured(typedObj *unstructured.Unstructured) (*collector.ApplicationProfile, error) {
@@ -54,13 +82,14 @@ func getApplicationProfileFromUnstructured(typedObj *unstructured.Unstructured) 
 	return &applicationProfileObj, nil
 }
 
-func NewApplicationProfileK8sCache(dynamicClient dynamic.Interface) (*ApplicationProfileK8sCache, error) {
+func NewApplicationProfileK8sCache(dynamicClient dynamic.Interface, storeNamespace string) (*ApplicationProfileK8sCache, error) {
 	cache := make(map[string]ApplicationProfileCacheEntry)
 	newApplicationCache := ApplicationProfileK8sCache{
 		dynamicClient:             dynamicClient,
 		cache:                     cache,
 		applicationProfileWatcher: watcher.NewWatcher(dynamicClient, false), // No need to pre-list the application profiles since the container start will look for them
 		promCollector:             createPrometheusMetric(),
+		storeNamespace:            storeNamespace,
 	}
 	newApplicationCache.StartController()
 	return &newApplicationCache, nil
@@ -80,10 +109,17 @@ func (cache *ApplicationProfileK8sCache) HasApplicationProfile(namespace, kind, 
 
 func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind, workloadName, ownerKind, ownerName, containerName, containerID string, acceptPartial bool) error {
 	ownerLevel := true
-	appProfile, err := cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(namespace).Get(context.TODO(), generateApplicationProfileName(ownerKind, ownerName), metav1.GetOptions{})
+
+	// If the storeNamespace is set, then the application profile name will be generated at this namespace.
+	searchNamespace := namespace
+	if cache.storeNamespace != "" {
+		searchNamespace = cache.storeNamespace
+	}
+
+	appProfile, err := cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(searchNamespace).Get(context.TODO(), cache.generateApplicationProfileName(ownerKind, ownerName, namespace), metav1.GetOptions{})
 	if err != nil {
 		// Failed to get the application profile at the owner level, try to get it at the workload level
-		appProfile, err = cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(namespace).Get(context.TODO(), generateApplicationProfileName(kind, workloadName), metav1.GetOptions{})
+		appProfile, err = cache.dynamicClient.Resource(collector.AppProfileGvr).Namespace(searchNamespace).Get(context.TODO(), cache.generateApplicationProfileName(kind, workloadName, namespace), metav1.GetOptions{})
 		if err != nil {
 			// Failed to get the application profile at the workload level as well, return the error
 			return err
@@ -227,14 +263,17 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 		return
 	}
 
-	// Convert the application profile name to kind and workload name
-	kind, workloadName := strings.Split(appProfileUnstructured.GetName(), "-")[0], strings.SplitN(appProfileUnstructured.GetName(), "-", 2)[1]
+	kind, workloadName := c.getApplicationProfileNameParts(appProfileUnstructured)
+
+	applicationProfileNamespace := appProfileUnstructured.GetNamespace()
+	if c.storeNamespace != "" {
+		applicationProfileNamespace = appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/namespace"]
+	}
 
 	// Add the application profile to the cache
-
 	// Loop over the application profile cache entries and check if there is an entry for the same workload
 	for id, cacheEntry := range c.cache {
-		if cacheEntry.Namespace == appProfileUnstructured.GetNamespace() {
+		if cacheEntry.Namespace == applicationProfileNamespace {
 			if !cacheEntry.AcceptPartial && partial {
 				// Skip the partial application profile becuase we expect a final one
 				continue
@@ -246,8 +285,6 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 					log.Errorf("Failed to get application profile from object: %v\n", err)
 					return
 				}
-
-				log.Printf("Updating application profile %s for workload %s/%s\n", appProfile.GetName(), cacheEntry.Namespace, cacheEntry.WorkloadName)
 
 				// Update the cache entry
 				cacheEntry.ApplicationProfile = appProfile
@@ -265,11 +302,16 @@ func (c *ApplicationProfileK8sCache) handleDeleteApplicationProfile(obj *unstruc
 		return
 	}
 	// Convert the application profile name to kind and workload name
-	kind, workloadName := strings.Split(appProfile.GetName(), "-")[0], strings.Split(appProfile.GetName(), "-")[1]
+	kind, workloadName := c.getApplicationProfileNameParts(obj)
+
+	applicationProfileNamespace := appProfile.GetNamespace()
+	if c.storeNamespace != "" {
+		applicationProfileNamespace = appProfile.GetLabels()["kapprofiler.kubescape.io/namespace"]
+	}
 
 	// Delete the application profile from the cache
 	for key, cacheEntry := range c.cache {
-		if cacheEntry.WorkloadName == workloadName && cacheEntry.WorkloadKind == kind && cacheEntry.Namespace == appProfile.GetNamespace() {
+		if cacheEntry.WorkloadName == workloadName && cacheEntry.WorkloadKind == kind && cacheEntry.Namespace == applicationProfileNamespace {
 			// Delete the cache entry
 			delete(c.cache, key)
 		}
