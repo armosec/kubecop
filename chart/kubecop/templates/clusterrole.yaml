@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "..fullname" . }}
+rules:
+- apiGroups: [""]
+  resources: ["namespaces", "pods", "serviceaccounts"]
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["apps","batch","extensions"]
+  resources: ["*"]
+  verbs: ["get"]
+- apiGroups: ["kubescape.io"]
+  resources: ["applicationprofiles", "namespaces/*/*", "namespaces/*/applicationprofiles/*"]
+  verbs: ["watch", "create", "update", "get", "list", "delete", "patch"]
+- apiGroups: ["kubescape.io"]
+  resources: ["runtimerulealertbindings"]
+  verbs: ["list", "watch"]
