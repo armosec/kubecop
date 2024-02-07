@@ -57,8 +57,14 @@ def install_app_no_application_profile_no_leak(test_framework):
         print("Exception: ", e)
         # Delete the namespace
         subprocess.check_call(["kubectl", "delete", "namespace", namespace])
+        if profiles_namespace:
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"pod-{nginx_pod_name}-test-namespace", "-n", os.environ.get("STORE_NAMESPACE")])
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"deployment-nginx-deployment-test-namespace", "-n", os.environ.get("STORE_NAMESPACE")])
         return 1
 
     subprocess.check_call(["kubectl", "delete", "namespace", namespace])
+    if profiles_namespace:
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"pod-{nginx_pod_name}-test-namespace", "-n", os.environ.get("STORE_NAMESPACE")])
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"deployment-nginx-deployment-test-namespace", "-n", os.environ.get("STORE_NAMESPACE")])
     return 0
 
