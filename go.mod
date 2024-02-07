@@ -8,7 +8,7 @@ require (
 	github.com/gammazero/workerpool v1.1.3
 	github.com/go-openapi/strfmt v0.21.7
 	github.com/inspektor-gadget/inspektor-gadget v0.24.0
-	github.com/kubescape/kapprofiler v0.0.49
+	github.com/kubescape/kapprofiler v0.0.50
 	github.com/prometheus/alertmanager v0.26.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/stretchr/testify v1.8.4
