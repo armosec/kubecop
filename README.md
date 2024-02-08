@@ -71,6 +71,14 @@ helm install kubecop chart/kubecop -n kubescape --create-namespace
 
 You should be getting alerts after the learning period ends. Try `kubectl exec` on one of the Pods after the learning period!
 
+#### Namespaced installation
+By default, KubeCop is installed in the `kubescape` namespace and stores application profiles in the application namespace and rule bindings as a cluster-wide resource.
+If you want KubeCop to save all of it's data, in it's own namespace, you can use the following command:
+
+```bash
+helm install kubecop chart/kubecop -n kubescape --create-namespace --set isNamespaced=true --set isClusterScoped=false
+```
+
 #### Advanced parameter configurations
 
 ##### Finalization
