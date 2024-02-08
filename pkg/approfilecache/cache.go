@@ -244,7 +244,7 @@ func (c *ApplicationProfileK8sCache) StartController() {
 		},
 		collector.AppProfileGvr,
 		metav1.ListOptions{
-			LabelSelector: "kapprofiler.kubescape.io/final=true",
+			// LabelSelector: "kapprofiler.kubescape.io/final=true", // Disabled for now, since we want to make sure we track all the resource versions.
 		},
 	)
 
