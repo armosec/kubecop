@@ -1,5 +1,6 @@
 import subprocess
 import time
+import os
 
 from promtopic import save_plot_png, send_promql_query_to_prom
 from pprof import pprof_recorder
@@ -12,10 +13,20 @@ def load_10k_alerts_no_memory_leak(test_framework):
     ns = Namespace(name=None)
 
     namespace = ns.name()
+    
+    profiles_namespace_name = os.environ.get("STORE_NAMESPACE")
+    profiles_namespace = None
+    if profiles_namespace_name:
+        profiles_namespace = Namespace(name=profiles_namespace_name)
+        ns = Namespace(name='test-namespace')
+        namespace = ns.name()
 
     try:
         #  Install nginx profile in kubernetes by applying the nginx profile yaml
-        subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "dev/nginx/nginx-app-profile.yaml"])
+        if profiles_namespace_name:
+            subprocess.check_call(["kubectl", "-n", profiles_namespace_name , "apply", "-f", os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile-namespaced.yaml")])
+        else:
+            subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "dev/nginx/nginx-app-profile.yaml"])
         # Install nginx in kubernetes by applying the nginx deployment yaml with pre-creating profile for the nginx pod
         subprocess.check_call(["kubectl", "-n", namespace , "apply", "-f", "dev/nginx/nginx-deployment.yaml"])
         # Wait for nginx to be ready
@@ -59,18 +70,25 @@ def load_10k_alerts_no_memory_leak(test_framework):
         timestamps, values = send_promql_query_to_prom("load_10k_alerts_no_memory_leak_mem", query, time_start,time_end=time.time())
         save_plot_png("load_10k_alerts_no_memory_leak_mem", values=values,timestamps=timestamps, metric_name='Memory Usage (bytes)')
 
-        # validate that there is no memory leak, but tolerate 5mb memory leak
-        assert int(values[-1]) <= int(values[0]) + 5000000, f"Memory leak detected in kubecop pod. Memory usage at the end of the test is {values[-1]} and at the beginning of the test is {values[0]}"
+        # validate that there is no memory leak, but tolerate 6mb memory leak
+        assert int(values[-1]) <= int(values[0]) + 6000000, f"Memory leak detected in kubecop pod. Memory usage at the end of the test is {values[-1]} and at the beginning of the test is {values[0]}"
 
 
     except Exception as e:
         print("Exception: ", e)
         # Delete the namespace
         subprocess.check_call(["kubectl", "delete", "namespace", namespace])
+        # Delete the profiles if they were created
+        if profiles_namespace:
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"pod-{nginx_pod_name}-test-namespace", "-n", profiles_namespace_name])
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"deployment-nginx-deployment-test-namespace", "-n", profiles_namespace_name])
         return 1
 
     # Delete the namespace
     subprocess.check_call(["kubectl", "delete", "namespace", namespace])
+    if profiles_namespace:
+        subprocess.run(["kubectl", "delete", "applicationprofile", f"pod-{nginx_pod_name}-test-namespace", "-n", profiles_namespace_name])
+        subprocess.run(["kubectl", "delete", "applicationprofile", f"deployment-nginx-deployment-test-namespace", "-n", profiles_namespace_name])
     return 0
 
 

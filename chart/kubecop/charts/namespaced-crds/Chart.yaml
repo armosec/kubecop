@@ -1,0 +1,9 @@
+apiVersion: v2
+name: kubecop-namespaced-crds
+description: A Helm chart for namespaced CRDs required by Kubernetes Runtime Security detection system KubeCop
+
+type: application
+
+version: 0.0.1
+
+appVersion: "0.0.1"

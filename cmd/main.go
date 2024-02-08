@@ -147,6 +147,8 @@ func main() {
 	// Parse command line arguments to check which mode to run in
 	controllerMode := false
 	nodeAgentMode := false
+	storeNamespace := ""
+
 	for _, arg := range os.Args[1:] {
 		switch arg {
 		case "--mode-controller":
@@ -160,6 +162,10 @@ func main() {
 		default:
 			log.Fatalf("Unknown command line argument: %s", arg)
 		}
+	}
+
+	if ns := os.Getenv("STORE_NAMESPACE"); ns != "" {
+		storeNamespace = ns
 	}
 
 	if !controllerMode && !nodeAgentMode {
@@ -183,11 +189,10 @@ func main() {
 	if nodeAgentMode {
 		// TODO: support exporters config from file/crd
 		exporterBus := exporters.InitExporters(exporters.ExportersConfig{})
-
 		// Create tracer (without sink for now)
 		tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
 		// Create application profile cache
-		appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(dynamicClientGlobal)
+		appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(dynamicClientGlobal, storeNamespace)
 		if err != nil {
 			log.Fatalf("Failed to create application profile cache: %v\n", err)
 		}
@@ -217,6 +222,7 @@ func main() {
 			K8sConfig:      k8sConfig,
 			RecordStrategy: collector.RecordStrategyOnlyIfNotExists,
 			NodeName:       NodeName,
+			StoreNamespace: storeNamespace,
 		}
 		cm, err := collector.StartCollectorManager(collectorManagerConfig)
 		if err != nil {
@@ -241,7 +247,7 @@ func main() {
 		engine := engine.NewEngine(clientset, appProfileCache, tracer, &exporterBus, 4, NodeName)
 
 		// Create the rule binding store and start it
-		ruleBindingStore, err := rulebindingstore.NewRuleBindingK8sStore(dynamicClient, clientset.CoreV1(), NodeName)
+		ruleBindingStore, err := rulebindingstore.NewRuleBindingK8sStore(dynamicClient, clientset.CoreV1(), NodeName, storeNamespace)
 		if err != nil {
 			log.Fatalf("Failed to create rule binding store: %v\n", err)
 		}
@@ -321,7 +327,7 @@ func main() {
 
 	if controllerMode {
 		// Last but not least, start the reconciler controller
-		appProfileReconcilerController := reconcilercontroller.NewController(k8sConfig)
+		appProfileReconcilerController := reconcilercontroller.NewController(k8sConfig, storeNamespace)
 		appProfileReconcilerController.StartController()
 		defer appProfileReconcilerController.StopController()
 	}

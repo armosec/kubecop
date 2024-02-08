@@ -54,7 +54,6 @@ helm install prometheus prometheus-community/kube-prometheus-stack \
 kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=prometheus -n monitoring --timeout=300s || error_exit "Prometheus did not start."
 
 # Install kubescape app profile
-# kubectl apply -f etc/app-profile.crd.yaml -f chart/kubecop/crds/runtime-rule-binding.crd.yaml || error_exit "Failed to apply app profile CRD."
 helm install kubecop chart/kubecop --set kubecop.prometheusExporter.enabled=true --set kubecop.pprofserver.enabled=true --set clamAV.enabled=true \
     -f resources/system-tests/kubecop-values.yaml \
     -n kubescape --create-namespace --wait --timeout 5m || error_exit "Failed to install kubecop."

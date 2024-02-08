@@ -1,3 +1,9 @@
+
+{{/* validate isClusterScoped and isNamespaced are mutual exclusive */}}
+{{- if and .Values.isClusterScoped .Values.isNamespaced }}
+{{- fail "isClusterScoped and isNamespaced cannot both be true" }}
+{{- end }}
+
 {{/*
 Expand the name of the chart.
 */}}

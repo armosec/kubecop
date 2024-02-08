@@ -7,10 +7,19 @@ def basic_alert_test(test_framework):
 
     # Create a namespace
     ns = Namespace(name=None)
+    profiles_namespace_name = os.environ.get("STORE_NAMESPACE")
+    profiles_namespace = None
+    if profiles_namespace_name:
+        profiles_namespace = Namespace(name=profiles_namespace_name)
+        ns = Namespace(name='test-namespace')
 
     if ns:
         # Create application profile
-        app_profile = KubernetesObjects(namespace=ns,object_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile.yaml"))
+        app_profile = None
+        if profiles_namespace_name:
+            app_profile = KubernetesObjects(namespace=profiles_namespace,object_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile-namespaced.yaml"))
+        else:
+            app_profile = KubernetesObjects(namespace=ns,object_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-app-profile.yaml"))
 
         # Create a workload
         workload = Workload(namespace=ns,workload_file=os.path.join(test_framework.get_root_directoty(),"resources/nginx-deployment.yaml"))

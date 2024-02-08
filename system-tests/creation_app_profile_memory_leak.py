@@ -1,4 +1,5 @@
 import subprocess
+import os
 import time
 
 from promtopic import save_plot_png, send_promql_query_to_prom
@@ -10,6 +11,11 @@ def install_app_no_application_profile_no_leak(test_framework):
     # Create a namespace
     ns = Namespace(name=None)
     namespace = ns.name()
+    profiles_namespace = None
+    if os.environ.get("STORE_NAMESPACE"):
+        profiles_namespace = Namespace(name=os.environ.get("STORE_NAMESPACE"))
+        ns = Namespace(name='test-namespace')
+        namespace = ns.name()
 
     try:
         time_start = time.time()
@@ -25,8 +31,12 @@ def install_app_no_application_profile_no_leak(test_framework):
 
         print("Waiting 150 seconds for the final application profile to be created")
         time.sleep(150)
-
-        get_proc = subprocess.run(["kubectl", "-n", namespace, "get", "applicationprofiles", f"pod-{nginx_pod_name}", "-oyaml"], capture_output=True)
+        
+        get_proc = None
+        if os.environ.get("STORE_NAMESPACE"):
+            get_proc = subprocess.run(["kubectl", "-n", os.environ.get("STORE_NAMESPACE"), "get", "applicationprofiles", f"pod-{nginx_pod_name}-test-namespace", "-oyaml"], capture_output=True)
+        else:
+            get_proc = subprocess.run(["kubectl", "-n", namespace, "get", "applicationprofiles", f"pod-{nginx_pod_name}", "-oyaml"], capture_output=True)
         assert get_proc.returncode == 0 and 'kapprofiler.kubescape.io/final: "true"' in get_proc.stdout.decode("utf-8"), f"final applicationprofile ({get_proc.returncode}) did not got created {get_proc.stdout.decode('utf-8')}"
 
         # wait for 60 seconds for the GC to run, so the memory leak can be detected
@@ -47,8 +57,14 @@ def install_app_no_application_profile_no_leak(test_framework):
         print("Exception: ", e)
         # Delete the namespace
         subprocess.check_call(["kubectl", "delete", "namespace", namespace])
+        if profiles_namespace:
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"pod-{nginx_pod_name}-test-namespace", "-n", os.environ.get("STORE_NAMESPACE")])
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"deployment-nginx-deployment-test-namespace", "-n", os.environ.get("STORE_NAMESPACE")])
         return 1
 
     subprocess.check_call(["kubectl", "delete", "namespace", namespace])
+    if profiles_namespace:
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"pod-{nginx_pod_name}-test-namespace", "-n", os.environ.get("STORE_NAMESPACE")])
+            subprocess.run(["kubectl", "delete", "applicationprofile", f"deployment-nginx-deployment-test-namespace", "-n", os.environ.get("STORE_NAMESPACE")])
     return 0
 
