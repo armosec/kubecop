@@ -4,7 +4,7 @@ metadata:
   name: {{ include "..fullname" . }}
 rules:
 - apiGroups: [""]
-  resources: ["namespaces", "pods", "serviceaccounts"]
+  resources: ["namespaces", "pods", "serviceaccounts", "services"]
   verbs: ["list", "get", "watch"]
 - apiGroups: ["apps","batch","extensions"]
   resources: ["*"]
