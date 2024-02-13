@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "bpf_core_read.h": "c",
+        "types.h": "c",
+        "vmlinux.h": "c",
+        "mntns.h": "c"
+    }
+}
