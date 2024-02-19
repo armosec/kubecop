@@ -42,5 +42,5 @@ jobs:
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.4.1
         env: 
-          charts_dir: "charts/kubescape-operator"
+          charts_dir: "chart/kubecop"
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
