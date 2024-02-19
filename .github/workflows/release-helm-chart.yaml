@@ -7,7 +7,7 @@ on:
         type: choice
         description: What chart do you want to release?
         options: 
-        - kubescape-operator
+        - kubecop
 
   workflow_call:
     inputs:
