@@ -69,7 +69,7 @@ func TestCacheBasicExists(t *testing.T) {
 		return
 	}
 
-	cache, err := NewApplicationProfileK8sCache(dynamicClient)
+	cache, err := NewApplicationProfileK8sCache(dynamicClient, "")
 	if err != nil {
 		t.Errorf("Failed to create cache: %v", err)
 		return
@@ -139,7 +139,7 @@ func TestCacheBasicAnticipateProfile(t *testing.T) {
 		}: "NamespaceList",
 	})
 
-	cache, err := NewApplicationProfileK8sCache(dynamicClient)
+	cache, err := NewApplicationProfileK8sCache(dynamicClient, "")
 	if err != nil {
 		t.Errorf("Failed to create cache: %v", err)
 		return

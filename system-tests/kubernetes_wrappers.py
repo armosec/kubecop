@@ -11,10 +11,16 @@ class Namespace:
         else:
             self.ns_name = name
         # Create namespace
-        subprocess.check_call(["kubectl", "create", "namespace", self.ns_name])
+        if subprocess.call(["kubectl", "get", "namespace", self.ns_name]) != 0:
+            subprocess.check_call(["kubectl", "create", "namespace", self.ns_name])
+            self.created_ns = True
+        else:
+            self.ns_name = name
+            self.created_ns = False
     def __del__(self):
         # Delete the namespace
-        subprocess.call(["kubectl", "delete", "namespace", self.ns_name])
+        if self.created_ns:
+            subprocess.call(["kubectl", "delete", "namespace", self.ns_name])
 
     def name(self):
         return self.ns_name

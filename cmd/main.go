@@ -189,11 +189,10 @@ func main() {
 	if nodeAgentMode {
 		// TODO: support exporters config from file/crd
 		exporterBus := exporters.InitExporters(exporters.ExportersConfig{})
-
 		// Create tracer (without sink for now)
 		tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
 		// Create application profile cache
-		appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(dynamicClientGlobal)
+		appProfileCache, err := approfilecache.NewApplicationProfileK8sCache(dynamicClientGlobal, storeNamespace)
 		if err != nil {
 			log.Fatalf("Failed to create application profile cache: %v\n", err)
 		}
@@ -223,6 +222,7 @@ func main() {
 			K8sConfig:      k8sConfig,
 			RecordStrategy: collector.RecordStrategyOnlyIfNotExists,
 			NodeName:       NodeName,
+			StoreNamespace: storeNamespace,
 		}
 		cm, err := collector.StartCollectorManager(collectorManagerConfig)
 		if err != nil {
@@ -327,7 +327,7 @@ func main() {
 
 	if controllerMode {
 		// Last but not least, start the reconciler controller
-		appProfileReconcilerController := reconcilercontroller.NewController(k8sConfig)
+		appProfileReconcilerController := reconcilercontroller.NewController(k8sConfig, storeNamespace)
 		appProfileReconcilerController.StartController()
 		defer appProfileReconcilerController.StopController()
 	}

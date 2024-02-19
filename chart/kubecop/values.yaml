@@ -87,9 +87,6 @@ securityContext:
 
 securityContextNormal: {}
 
-
-
-
 nodeSelector: {}
 
 tolerations: []
