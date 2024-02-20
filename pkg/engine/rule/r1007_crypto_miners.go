@@ -133,13 +133,14 @@ var CommonlyUsedCryptoMinersDomains = []string{
 var R1007CryptoMinersRuleDescriptor = RuleDesciptor{
 	ID:          R1007ID,
 	Name:        R1007CryptoMinersRuleName,
-	Description: "Detecting Crypto Miners by port & domain.",
+	Description: "Detecting Crypto Miners by port, domain and randomx event.",
 	Tags:        []string{"network", "crypto", "miners", "malicious", "dns"},
 	Priority:    RulePriorityHigh,
 	Requirements: RuleRequirements{
 		EventTypes: []tracing.EventType{
 			tracing.NetworkEventType,
 			tracing.DnsEventType,
+			tracing.RandomXEventType,
 		},
 		NeedApplicationProfile: false,
 	},
@@ -157,7 +158,7 @@ type R1007CryptoMinersFailure struct {
 	RulePriority     int
 	Err              string
 	FixSuggestionMsg string
-	FailureEvent     *tracing.NetworkEvent
+	FailureEvent     *tracing.GeneralEvent
 }
 
 func (rule *R1007CryptoMiners) Name() string {
@@ -172,16 +173,24 @@ func (rule *R1007CryptoMiners) DeleteRule() {
 }
 
 func (rule *R1007CryptoMiners) ProcessEvent(eventType tracing.EventType, event interface{}, appProfileAccess approfilecache.SingleApplicationProfileAccess, engineAccess EngineAccess) RuleFailure {
-	if eventType != tracing.NetworkEventType && eventType != tracing.DnsEventType {
+	if eventType != tracing.NetworkEventType && eventType != tracing.DnsEventType && eventType != tracing.RandomXEventType {
 		return nil
 	}
 
-	if networkEvent, ok := event.(*tracing.NetworkEvent); ok {
+	if randomXEvent, ok := event.(*tracing.RandomXEvent); ok {
+		return &R1007CryptoMinersFailure{
+			RuleName:         rule.Name(),
+			Err:              "Possible Crypto Miner detected",
+			FailureEvent:     &randomXEvent.GeneralEvent,
+			FixSuggestionMsg: "If this is a legitimate action, please consider removing this workload from the binding of this rule.",
+			RulePriority:     R1007CryptoMinersRuleDescriptor.Priority,
+		}
+	} else if networkEvent, ok := event.(*tracing.NetworkEvent); ok {
 		if networkEvent.Protocol == "TCP" && networkEvent.PacketType == "OUTGOING" && slices.Contains(CommonlyUsedCryptoMinersPorts, networkEvent.Port) {
 			return &R1007CryptoMinersFailure{
 				RuleName:         rule.Name(),
 				Err:              "Possible Crypto Miner port detected",
-				FailureEvent:     networkEvent,
+				FailureEvent:     &networkEvent.GeneralEvent,
 				FixSuggestionMsg: "If this is a legitimate action, please consider removing this workload from the binding of this rule.",
 				RulePriority:     R1007CryptoMinersRuleDescriptor.Priority,
 			}
@@ -191,7 +200,7 @@ func (rule *R1007CryptoMiners) ProcessEvent(eventType tracing.EventType, event i
 			return &R1007CryptoMinersFailure{
 				RuleName:         rule.Name(),
 				Err:              "Possible Crypto Miner domain detected",
-				FailureEvent:     networkEvent,
+				FailureEvent:     &dnsEvent.GeneralEvent,
 				FixSuggestionMsg: "If this is a legitimate action, please consider removing this workload from the binding of this rule.",
 				RulePriority:     R1007CryptoMinersRuleDescriptor.Priority,
 			}
@@ -217,7 +226,7 @@ func (rule *R1007CryptoMinersFailure) Error() string {
 }
 
 func (rule *R1007CryptoMinersFailure) Event() tracing.GeneralEvent {
-	return rule.FailureEvent.GeneralEvent
+	return *rule.FailureEvent
 }
 
 func (rule *R1007CryptoMinersFailure) Priority() int {

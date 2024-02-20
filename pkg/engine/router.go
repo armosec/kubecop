@@ -100,6 +100,14 @@ func convertEventInterfaceToGenericEvent(eventType tracing.EventType, event inte
 		} else {
 			return &syscallEvent.GeneralEvent, nil
 		}
+	case tracing.RandomXEventType:
+		// Convert the event to a randomx event
+		randomXEvent, ok := event.(*tracing.RandomXEvent)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert event to a randomx event: %v", event)
+		} else {
+			return &randomXEvent.GeneralEvent, nil
+		}
 	default:
 		return nil, fmt.Errorf("unknown event type: %v", eventType)
 	}
@@ -130,6 +138,11 @@ func (engine *Engine) SendCapabilitiesEvent(event *tracing.CapabilitiesEvent) {
 func (engine *Engine) SendDnsEvent(event *tracing.DnsEvent) {
 	engine.promCollector.reportEbpfEvent(tracing.DnsEventType)
 	engine.submitEventForProcessing(event.ContainerID, tracing.DnsEventType, event)
+}
+
+func (engine *Engine) SendRandomXEvent(event *tracing.RandomXEvent) {
+	engine.promCollector.reportEbpfEvent(tracing.RandomXEventType)
+	engine.submitEventForProcessing(event.ContainerID, tracing.RandomXEventType, event)
 }
 
 func (engine *Engine) ReportError(eventType tracing.EventType, err error) {
