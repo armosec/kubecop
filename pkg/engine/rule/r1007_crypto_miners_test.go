@@ -65,4 +65,21 @@ func TestR1007CryptoMiners(t *testing.T) {
 		return
 	}
 
+	// Test RandomX event
+	e3 := &tracing.RandomXEvent{
+		GeneralEvent: tracing.GeneralEvent{
+			ContainerID: "test",
+			PodName:     "test",
+			Namespace:   "test",
+			Timestamp:   0,
+		},
+	}
+
+	ruleResult = r.ProcessEvent(tracing.RandomXEventType, e3, nil, nil)
+	if ruleResult == nil {
+		fmt.Printf("ruleResult: %v\n", ruleResult)
+		t.Errorf("Expected ruleResult to be Failure because of RandomX event")
+		return
+	}
+
 }

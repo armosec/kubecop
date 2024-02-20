@@ -223,6 +223,7 @@ func main() {
 			RecordStrategy: collector.RecordStrategyOnlyIfNotExists,
 			NodeName:       NodeName,
 			StoreNamespace: storeNamespace,
+			OnError:        func(err error) { log.Fatalf("Collector manager watcher error: %v\n", err) },
 		}
 		cm, err := collector.StartCollectorManager(collectorManagerConfig)
 		if err != nil {
@@ -327,7 +328,9 @@ func main() {
 
 	if controllerMode {
 		// Last but not least, start the reconciler controller
-		appProfileReconcilerController := reconcilercontroller.NewController(k8sConfig, storeNamespace)
+		appProfileReconcilerController := reconcilercontroller.NewController(k8sConfig, storeNamespace, func(err error) {
+			log.Fatalf("Reconciler controller watcher error: %v\n", err)
+		})
 		appProfileReconcilerController.StartController()
 		defer appProfileReconcilerController.StopController()
 	}
