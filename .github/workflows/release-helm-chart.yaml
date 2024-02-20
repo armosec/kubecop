@@ -33,8 +33,7 @@ jobs:
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         with:
-          charts_dir: "chart/kubecop"
+          charts_dir: "chart"
         env: 
-          charts_dir: "chart/kubecop"
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           
