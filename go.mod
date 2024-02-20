@@ -7,8 +7,8 @@ require (
 	github.com/dutchcoders/go-clamd v0.0.0-20170520113014-b970184f4d9e
 	github.com/gammazero/workerpool v1.1.3
 	github.com/go-openapi/strfmt v0.21.7
-	github.com/inspektor-gadget/inspektor-gadget v0.25.1
-	github.com/kubescape/kapprofiler v0.0.54
+	github.com/inspektor-gadget/inspektor-gadget v0.24.0
+	github.com/kubescape/kapprofiler v0.0.57
 	github.com/prometheus/alertmanager v0.26.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/stretchr/testify v1.8.4
@@ -23,7 +23,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
-	github.com/vishvananda/netlink v1.2.1-beta.2 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0 // indirect
 )
 

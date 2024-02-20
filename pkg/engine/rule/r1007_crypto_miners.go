@@ -140,7 +140,7 @@ var R1007CryptoMinersRuleDescriptor = RuleDesciptor{
 		EventTypes: []tracing.EventType{
 			tracing.NetworkEventType,
 			tracing.DnsEventType,
-			tracing.RandomXEventType,
+			// tracing.RandomXEventType,
 		},
 		NeedApplicationProfile: false,
 	},
