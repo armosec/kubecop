@@ -1,0 +1,46 @@
+name: Helm chart release
+
+on:
+  workflow_dispatch:
+    inputs:
+      CHARTS_NAME:
+        type: choice
+        description: What chart do you want to release?
+        options: 
+        - kubecop
+
+  workflow_call:
+    inputs:
+      COMMIT_REF:
+        required: true
+        type: string
+      CHARTS_NAME:
+        required: true
+        type: string
+
+jobs:
+  helm-chart-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          # will change to: ref: release
+
+      - name: git status
+        run: git status
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3.5
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.4.1
+        env: 
+          charts_dir: "chart/kubecop"
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
