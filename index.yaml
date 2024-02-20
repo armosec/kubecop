@@ -1,0 +1,23 @@
+apiVersion: v1
+entries:
+  kubecop:
+  - apiVersion: v2
+    appVersion: 0.0.32
+    created: "2024-02-20T09:00:49.227945646Z"
+    dependencies:
+    - condition: isClusterScoped
+      name: kubecop-clustered-crds
+      repository: file://./charts/clustered-crds
+      version: 0.0.1
+    - condition: isNamespaced
+      name: kubecop-namespaced-crds
+      repository: file://./charts/namespaced-crds
+      version: 0.0.1
+    description: A Helm chart for Kubernetes Runtime Security detection system KubeCop
+    digest: d7c173d3801f4b0080df591f4d71bbb785cd80caa38a28e908e9b2ff3d7d2656
+    name: kubecop
+    type: application
+    urls:
+    - https://github.com/armosec/kubecop/releases/download/kubecop-0.0.32/kubecop-0.0.32.tgz
+    version: 0.0.32
+generated: "2024-02-20T09:00:49.22795321Z"
