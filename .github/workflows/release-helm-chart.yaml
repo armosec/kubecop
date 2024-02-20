@@ -2,19 +2,10 @@ name: Helm chart release
 
 on:
   workflow_dispatch:
-    inputs:
-      CHARTS_NAME:
-        type: choice
-        description: What chart do you want to release?
-        options: 
-        - kubecop
 
   workflow_call:
     inputs:
       COMMIT_REF:
-        required: true
-        type: string
-      CHARTS_NAME:
         required: true
         type: string
 
@@ -40,7 +31,8 @@ jobs:
         uses: azure/setup-helm@v3.5
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.4.1
+        uses: helm/chart-releaser-action@v1.6.0
         env: 
           charts_dir: "chart/kubecop"
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          
