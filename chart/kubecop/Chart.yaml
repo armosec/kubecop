@@ -4,9 +4,9 @@ description: A Helm chart for Kubernetes Runtime Security detection system KubeC
 
 type: application
 
-version: 0.0.32
+version: 0.0.34
 
-appVersion: "0.0.32"
+appVersion: "0.0.34"
 
 
 dependencies:
