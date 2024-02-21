@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 
@@ -41,6 +42,7 @@ type ApplicationProfileK8sCache struct {
 	promCollector *prometheusMetric
 
 	storeNamespace string
+	cacheLock      sync.RWMutex
 }
 
 type ApplicationProfileAccessImpl struct {
@@ -90,6 +92,7 @@ func NewApplicationProfileK8sCache(dynamicClient dynamic.Interface, storeNamespa
 		applicationProfileWatcher: watcher.NewWatcher(dynamicClient, false), // No need to pre-list the application profiles since the container start will look for them
 		promCollector:             createPrometheusMetric(),
 		storeNamespace:            storeNamespace,
+		cacheLock:                 sync.RWMutex{},
 	}
 	newApplicationCache.StartController()
 	return &newApplicationCache, nil
@@ -134,7 +137,8 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 		// The application profile is not final, return an error
 		return fmt.Errorf("application profile %s is not final", applicationProfile.GetName())
 	}
-
+	cache.cacheLock.Lock()
+	defer cache.cacheLock.Unlock()
 	cache.cache[containerID] = ApplicationProfileCacheEntry{
 		ApplicationProfile: applicationProfile,
 		WorkloadName:       workloadName,
@@ -149,6 +153,8 @@ func (cache *ApplicationProfileK8sCache) LoadApplicationProfile(namespace, kind,
 }
 
 func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace, kind, workloadName, ownerKind, ownerName, containerName, containerID string, acceptPartial bool) error {
+	cache.cacheLock.Lock()
+	defer cache.cacheLock.Unlock()
 	cache.cache[containerID] = ApplicationProfileCacheEntry{
 		ApplicationProfile: nil,
 		WorkloadName:       workloadName,
@@ -162,6 +168,8 @@ func (cache *ApplicationProfileK8sCache) AnticipateApplicationProfile(namespace,
 }
 
 func (cache *ApplicationProfileK8sCache) DeleteApplicationProfile(containerID string) error {
+	cache.cacheLock.Lock()
+	defer cache.cacheLock.Unlock()
 	if item, ok := cache.cache[containerID]; ok {
 		item.ApplicationProfile = nil
 		delete(cache.cache, containerID)
@@ -171,6 +179,8 @@ func (cache *ApplicationProfileK8sCache) DeleteApplicationProfile(containerID st
 }
 
 func (cache *ApplicationProfileK8sCache) GetApplicationProfileAccess(containerName, containerID string) (SingleApplicationProfileAccess, error) {
+	cache.cacheLock.RLock()
+	defer cache.cacheLock.RUnlock()
 	applicationProfile, ok := cache.cache[containerID]
 	if !ok {
 		return nil, fmt.Errorf("application profile for container %s", containerID)
@@ -270,6 +280,8 @@ func (c *ApplicationProfileK8sCache) handleApplicationProfile(appProfileUnstruct
 		applicationProfileNamespace = appProfileUnstructured.GetLabels()["kapprofiler.kubescape.io/namespace"]
 	}
 
+	c.cacheLock.Lock()
+	defer c.cacheLock.Unlock()
 	// Add the application profile to the cache
 	// Loop over the application profile cache entries and check if there is an entry for the same workload
 	for id, cacheEntry := range c.cache {
@@ -308,7 +320,8 @@ func (c *ApplicationProfileK8sCache) handleDeleteApplicationProfile(obj *unstruc
 	if c.storeNamespace != "" {
 		applicationProfileNamespace = appProfile.GetLabels()["kapprofiler.kubescape.io/namespace"]
 	}
-
+	c.cacheLock.Lock()
+	defer c.cacheLock.Unlock()
 	// Delete the application profile from the cache
 	for key, cacheEntry := range c.cache {
 		if cacheEntry.WorkloadName == workloadName && cacheEntry.WorkloadKind == kind && cacheEntry.Namespace == applicationProfileNamespace {
