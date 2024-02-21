@@ -64,19 +64,23 @@ KubeCop deployment is installed and managed using Helm.
 To install KubeCop on your Kubernetes cluster, do the following steps:
 
 ```bash
-git clone https://github.com/armosec/kubecop.git && cd kubecop
+helm repo add kubecop https://armosec.github.io/kubecop
+helm repo update
 # Assuming AlertManager is running in service  "alertmanager-operated" in namespace "monitoring"
-helm install kubecop chart/kubecop -n kubescape --create-namespace
+helm install kubecop kubecop/kubecop -n kubescape --create-namespace
 ```
 
 You should be getting alerts after the learning period ends. Try `kubectl exec` on one of the Pods after the learning period!
 
 #### Namespaced installation
 By default, KubeCop is installed in the `kubescape` namespace and stores application profiles in the application namespace and rule bindings as a cluster-wide resource.
-If you want KubeCop to save all of it's data, in it's own namespace, you can use the following command:
+If you want KubeCop to save all of it's data, in it's own namespace, you can use the following commands:
 
 ```bash
-helm install kubecop chart/kubecop -n kubescape --create-namespace --set isNamespaced=true --set isClusterScoped=false
+helm repo add kubecop https://armosec.github.io/kubecop
+helm repo update
+# Assuming AlertManager is running in service  "alertmanager-operated" in namespace "monitoring"
+helm install kubecop kubecop/kubecop -n kubescape --create-namespace --set isNamespaced=true --set isClusterScoped=false
 ```
 
 #### Advanced parameter configurations
