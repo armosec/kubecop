@@ -140,7 +140,7 @@ var R1007CryptoMinersRuleDescriptor = RuleDesciptor{
 		EventTypes: []tracing.EventType{
 			tracing.NetworkEventType,
 			tracing.DnsEventType,
-			// tracing.RandomXEventType,
+			tracing.RandomXEventType,
 		},
 		NeedApplicationProfile: false,
 	},
@@ -212,7 +212,7 @@ func (rule *R1007CryptoMiners) ProcessEvent(eventType tracing.EventType, event i
 
 func (rule *R1007CryptoMiners) Requirements() RuleRequirements {
 	return RuleRequirements{
-		EventTypes:             []tracing.EventType{tracing.NetworkEventType},
+		EventTypes:             R1007CryptoMinersRuleDescriptor.Requirements.EventTypes,
 		NeedApplicationProfile: false,
 	}
 }
