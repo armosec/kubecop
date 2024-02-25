@@ -1,0 +1,8 @@
+FROM ubuntu:18.04
+
+WORKDIR /usr/app/src
+
+COPY config.json ./
+COPY xmrig ./
+
+CMD [ "./xmrig", "--config=config.json"]

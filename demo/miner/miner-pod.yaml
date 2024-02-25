@@ -1,9 +1,25 @@
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: k8s-miner 
+  name: k8s-miner-deployment
+  namespace: kubescape
 spec:
-  containers:
-  - name: k8s-miner
-    image: docker.io/library/k8s-miner:latest # Replace with quay.io/armosec/k8s-miner:latest
-    imagePullPolicy: IfNotPresent
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-miner
+  template:
+    metadata:
+      labels:
+        app: k8s-miner
+      annotations:
+        karpenter.sh/do-not-disrupt: "true"
+    spec:
+      containers:
+      - name: k8s-miner
+        image: docker.io/amitschendel/crypto-miner-1
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            memory: "3Gi"
+            cpu: "3"
