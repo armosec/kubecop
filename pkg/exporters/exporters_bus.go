@@ -54,6 +54,12 @@ func InitExporters(exportersConfig ExportersConfig) ExporterBus {
 	if csvExp != nil {
 		exporters = append(exporters, csvExp)
 	}
+	if exportersConfig.HTTPExporterConfig == nil {
+		if httpURL := os.Getenv("HTTP_ENDPOINT_URL"); httpURL != "" {
+			exportersConfig.HTTPExporterConfig = &HTTPExporterConfig{}
+			exportersConfig.HTTPExporterConfig.URL = httpURL
+		}
+	}
 	if exportersConfig.HTTPExporterConfig != nil {
 		httpExp, err := InitHTTPExporter(*exportersConfig.HTTPExporterConfig)
 		if err != nil {

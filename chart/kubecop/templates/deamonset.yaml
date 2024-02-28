@@ -76,6 +76,10 @@ spec:
           - name: ALERTMANAGER_URLS
             value: {{ .Values.kubecop.alertmanager.endpoints }}
           {{- end }}
+          {{- if .Values.kubecop.httpEndpoint.enabled  }}
+          - name: HTTP_ENDPOINT_URL
+            value: {{ .Values.kubecop.httpEndpoint.url }}
+          {{- end }}
           {{- if .Values.kubecop.syslog.enabled  }}
           - name: SYSLOG_HOST
             value: {{ .Values.kubecop.syslog.endpoint }}

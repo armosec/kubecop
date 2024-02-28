@@ -30,6 +30,9 @@ kubecop:
   alertmanager:
     enabled: false
     endpoints: "localhost:9093"
+  httpEndpoint:
+    enabled: false
+    url: "http://synchronizer.kubescape.svc.cluster.local"
   syslog:
     enabled: false
     endpoint: "localhost:514"
