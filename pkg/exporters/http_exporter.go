@@ -16,18 +16,18 @@ import (
 )
 
 type HTTPExporterConfig struct {
-	// URL is the URL to send the HTTP POST request to
+	// URL is the URL to send the HTTP request to
 	URL string `json:"url"`
-	// Headers is a map of headers to send in the HTTP POST request
+	// Headers is a map of headers to send in the HTTP request
 	Headers map[string]string `json:"headers"`
-	// Timeout is the timeout for the HTTP POST request
+	// Timeout is the timeout for the HTTP request
 	TimeoutSeconds int `json:"timeoutSeconds"`
 	// Method is the HTTP method to use for the HTTP request
 	Method             string `json:"method"`
 	MaxAlertsPerMinute int    `json:"maxAlertsPerMinute"`
 }
 
-// we will have a CRD-like json struct to send in the HTTP POST request
+// we will have a CRD-like json struct to send in the HTTP request
 type HTTPExporter struct {
 	Host       string
 	NodeName   string
