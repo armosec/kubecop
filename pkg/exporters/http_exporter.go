@@ -42,7 +42,7 @@ type HTTPExporter struct {
 type HTTPAlertsList struct {
 	Kind       string             `json:"kind"`
 	ApiVersion string             `json:"apiVersion"`
-	Spec       HTTPAlertsListSpec `json:"items"`
+	Spec       HTTPAlertsListSpec `json:"spec"`
 }
 
 type HTTPAlertsListSpec struct {
