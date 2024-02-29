@@ -5,7 +5,7 @@
 image:
   repository: quay.io/armosec/kubecop
   pullPolicy: Always
-  tag: "v0.0.36"
+  tag: "v0.0.37"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -32,7 +32,7 @@ kubecop:
     endpoints: "localhost:9093"
   httpEndpoint:
     enabled: false
-    url: "http://synchronizer.kubescape.svc.cluster.local"
+    url: "http://synchronizer.kubescape.svc.cluster.local/apis/v1/kubescape.io/v1/RuntimeAlerts"
   syslog:
     enabled: false
     endpoint: "localhost:514"
