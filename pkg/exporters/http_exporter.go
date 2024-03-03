@@ -51,7 +51,7 @@ type HTTPAlertsListSpec struct {
 
 type RuleAlert struct {
 	Severity       int    `json:"severity,omitempty"`    // PriorityToStatus(failedRule.Priority()),
-	CommandName    string `json:"commandName,omitempty"` // failedRule.Event().Comm,
+	ProcessName    string `json:"processName,omitempty"` // failedRule.Event().Comm,
 	FixSuggestions string `json:"fixSuggestions,omitempty"`
 	PID            uint32 `json:"pid,omitempty"`
 	PPID           uint32 `json:"ppid,omitempty"` //  Parent Process ID
@@ -160,7 +160,7 @@ func (exporter *HTTPExporter) SendRuleAlert(failedRule rule.RuleFailure) {
 			FixSuggestions: failedRule.FixSuggestion(),
 			PID:            failedRule.Event().Pid,
 			PPID:           failedRule.Event().Ppid,
-			CommandName:    failedRule.Event().Comm,
+			ProcessName:    failedRule.Event().Comm,
 			UID:            failedRule.Event().Uid,
 			GID:            failedRule.Event().Gid,
 		},
