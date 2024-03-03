@@ -7,6 +7,7 @@ The following exporters are available:
 - STD OUT
 - SYSLOG
 - CSV
+- HTTP endpoint
 
 ### Alertmanager
 The Alertmanager exporter is used to send alerts to the Alertmanager. The Alertmanager will then send the alerts to the configured receivers.
@@ -31,3 +32,10 @@ The CSV exporter is used to write the alerts to a CSV file. This exporter is dis
 To enable the CSV exporter, set the following environment variables:
 - `EXPORTER_CSV_RULE_PATH`: The path to the CSV file of the failed rules. Example: `/tmp/alerts.csv`
 - `EXPORTER_CSV_MALWARE_PATH`: The path to the CSV file of the malwares found. Example: `/tmp/malware.csv`
+
+### HTTP endpoint
+The HTTP endpoint exporter is used to send the alerts to an HTTP endpoint. This exporter is disabled by default.
+To enable the HTTP endpoint exporter, set the following environment variables:
+- `HTTP_ENDPOINT_URL`: The URL of the HTTP endpoint. Example: `http://localhost:8080/alerts`
+This will send a POST request to the specified URL with the alerts as the body.
+The alerts are limited to 10000 per minute. If the limit is reached, the exporter will stop sending alerts for the rest of the minute and will send a system alert to the configured HTTP endpoint.

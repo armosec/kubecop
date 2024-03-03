@@ -84,6 +84,8 @@ helm install kubecop kubecop/kubecop -n kubescape --create-namespace --set isNam
 ```
 
 #### Advanced parameter configurations
+Exporters are the mechanisms in the system to send alerts to external endpoints from KubeCop engine.
+For more information about exporters, see [here](/pkg/exporters/README.md)
 
 ##### Finalization
 
