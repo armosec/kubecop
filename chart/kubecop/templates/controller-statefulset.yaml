@@ -52,3 +52,5 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}

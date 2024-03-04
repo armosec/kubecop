@@ -170,10 +170,7 @@ spec:
           readOnly: true
     {{- end }}
       tolerations:
-      - effect: NoSchedule
-        operator: Exists
-      - effect: NoExecute
-        operator: Exists
+        {{- toYaml .Values.tolerations | nindent 8 }}
       volumes:
       - name: host
         hostPath:
