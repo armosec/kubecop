@@ -212,12 +212,12 @@ func (access *ApplicationProfileAccessImpl) GetNamespace() string {
 	return access.appProfileNamespace
 }
 
-func (access *ApplicationProfileAccessImpl) GetExecList() (*[]collector.ExecCalls, error) {
-	return &access.containerProfile.Execs, nil
+func (access *ApplicationProfileAccessImpl) GetExecList() ([]collector.ExecCalls, error) {
+	return access.containerProfile.Execs, nil
 }
 
-func (access *ApplicationProfileAccessImpl) GetOpenList() (*[]collector.OpenCalls, error) {
-	return &access.containerProfile.Opens, nil
+func (access *ApplicationProfileAccessImpl) GetOpenList() ([]collector.OpenCalls, error) {
+	return access.containerProfile.Opens, nil
 }
 
 func (access *ApplicationProfileAccessImpl) GetNetworkActivity() (*collector.NetworkActivity, error) {
@@ -228,12 +228,12 @@ func (access *ApplicationProfileAccessImpl) GetSystemCalls() ([]string, error) {
 	return access.containerProfile.SysCalls, nil
 }
 
-func (access *ApplicationProfileAccessImpl) GetCapabilities() (*[]collector.CapabilitiesCalls, error) {
-	return &access.containerProfile.Capabilities, nil
+func (access *ApplicationProfileAccessImpl) GetCapabilities() ([]collector.CapabilitiesCalls, error) {
+	return access.containerProfile.Capabilities, nil
 }
 
-func (access *ApplicationProfileAccessImpl) GetDNS() (*[]collector.DnsCalls, error) {
-	return &access.containerProfile.Dns, nil
+func (access *ApplicationProfileAccessImpl) GetDNS() ([]collector.DnsCalls, error) {
+	return access.containerProfile.Dns, nil
 }
 
 func (c *ApplicationProfileK8sCache) StartController() {

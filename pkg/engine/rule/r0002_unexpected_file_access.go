@@ -173,7 +173,7 @@ func (rule *R0002UnexpectedFileAccess) ProcessEvent(eventType tracing.EventType,
 		}
 	}
 
-	for _, open := range *appProfileOpenList {
+	for _, open := range appProfileOpenList {
 		if open.Path == openEvent.PathName {
 			found := 0
 			for _, eventOpenFlag := range openEvent.Flags {

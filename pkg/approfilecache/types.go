@@ -10,17 +10,17 @@ type SingleApplicationProfileAccess interface {
 	// Get application profile namespace
 	GetNamespace() string
 	// Get exec list
-	GetExecList() (*[]collector.ExecCalls, error)
+	GetExecList() ([]collector.ExecCalls, error)
 	// Get open list
-	GetOpenList() (*[]collector.OpenCalls, error)
+	GetOpenList() ([]collector.OpenCalls, error)
 	// Get network activity
 	GetNetworkActivity() (*collector.NetworkActivity, error)
 	// Get system calls
 	GetSystemCalls() ([]string, error)
 	// Get capabilities
-	GetCapabilities() (*[]collector.CapabilitiesCalls, error)
+	GetCapabilities() ([]collector.CapabilitiesCalls, error)
 	// Get DNS activity
-	GetDNS() (*[]collector.DnsCalls, error)
+	GetDNS() ([]collector.DnsCalls, error)
 }
 
 type ApplicationProfileCache interface {
