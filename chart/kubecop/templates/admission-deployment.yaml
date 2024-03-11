@@ -1,0 +1,39 @@
+{{- $svcName := (printf "armo-admission-webhook.%s.svc" .Release.Namespace) -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "..fullname" . }}-admission
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "..name" . }}-admission
+    {{- include "..labels" . | nindent 4 }}
+spec:
+  replicas: 1  # Set as needed
+  selector:
+    matchLabels:
+      app: {{ include "..name" . }}-admission
+      {{- include "..selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "..name" . }}-admission
+        {{- include "..labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-admission
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --mode-admission
+          ports:
+            - containerPort: 8443
+              name: https
+              protocol: TCP
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /etc/tls
+              readOnly: true
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: {{ $svcName }}-armo-tls-pair
