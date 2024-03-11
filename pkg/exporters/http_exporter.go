@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/armosec/kubecop/pkg/admission"
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -76,17 +77,28 @@ type MalwareAlert struct {
 	ContainerImage string `json:"containerImage,omitempty"`
 }
 
+type AdmissionControlAlert struct {
+	Name        string   `json:"name"`
+	Message     string   `json:"message"`
+	User        string   `json:"user"`
+	UID         string   `json:"uid"`
+	Groups      []string `json:"groups"`
+	Resource    string   `json:"resource"`
+	Subresource string   `json:"subresource"`
+}
+
 type HTTPAlert struct {
-	RuleAlert     `json:",inline"`
-	MalwareAlert  `json:",inline"`
-	RuleName      string `json:"ruleName"`
-	Message       string `json:"message"`
-	ContainerID   string `json:"containerID,omitempty"`
-	ContainerName string `json:"containerName,omitempty"`
-	PodNamespace  string `json:"podNamespace,omitempty"`
-	PodName       string `json:"podName,omitempty"`
-	HostName      string `json:"hostName"`
-	NodeName      string `json:"nodeName"`
+	RuleAlert             `json:",inline"`
+	MalwareAlert          `json:",inline"`
+	AdmissionControlAlert `json:",inline"`
+	RuleName              string `json:"ruleName"`
+	Message               string `json:"message"`
+	ContainerID           string `json:"containerID,omitempty"`
+	ContainerName         string `json:"containerName,omitempty"`
+	PodNamespace          string `json:"podNamespace,omitempty"`
+	PodName               string `json:"podName,omitempty"`
+	HostName              string `json:"hostName"`
+	NodeName              string `json:"nodeName"`
 }
 
 func (config *HTTPExporterConfig) Validate() error {
@@ -242,6 +254,34 @@ func (exporter *HTTPExporter) SendMalwareAlert(malwareDescription scan.MalwareDe
 	}
 	exporter.sendInAlertList(httpAlert)
 
+}
+
+func (exporter *HTTPExporter) SendAdmissionControlAlert(admissionControlData admission.AdmissionControlData) {
+	isLimitReached := exporter.checkAlertLimit()
+	if isLimitReached {
+		exporter.sendAlertLimitReached()
+		return
+	}
+	httpAlert := HTTPAlert{
+		RuleName:      "KubeCopAdmissionControlAlert",
+		HostName:      exporter.Host,
+		NodeName:      exporter.NodeName,
+		ContainerID:   "",
+		ContainerName: "",
+		PodNamespace:  admissionControlData.Namespace,
+		PodName:       admissionControlData.Name,
+		Message:       admissionControlData.ResponseMessage,
+		AdmissionControlAlert: AdmissionControlAlert{
+			Name:        admissionControlData.Name,
+			Message:     admissionControlData.ResponseMessage,
+			User:        admissionControlData.User,
+			UID:         admissionControlData.UID,
+			Groups:      admissionControlData.Groups,
+			Resource:    admissionControlData.Resource,
+			Subresource: admissionControlData.Subresource,
+		},
+	}
+	exporter.sendInAlertList(httpAlert)
 }
 
 func (exporter *HTTPExporter) checkAlertLimit() bool {

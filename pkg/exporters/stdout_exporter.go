@@ -5,6 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/armosec/kubecop/pkg/admission"
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
 )
@@ -54,4 +55,20 @@ func (exporter *StdoutExporter) SendMalwareAlert(malwareDescription scan.Malware
 		"containerImage": malwareDescription.ContainerImage,
 		"resource":       malwareDescription.Resource,
 	}).Error(malwareDescription.Name)
+}
+
+func (exporter *StdoutExporter) SendAdmissionControlAlert(admissionControlData admission.AdmissionControlData) {
+	exporter.logger.WithFields(log.Fields{
+		"severity":    7,
+		"message":     admissionControlData.ResponseMessage,
+		"user":        admissionControlData.User,
+		"uid":         admissionControlData.UID,
+		"groups":      admissionControlData.Groups,
+		"namespace":   admissionControlData.Namespace,
+		"resource":    admissionControlData.Resource,
+		"subresource": admissionControlData.Subresource,
+		"operation":   admissionControlData.Operation,
+		"kind":        admissionControlData.Kind,
+		"name":        admissionControlData.Name,
+	}).Error("Admission Control Alert")
 }

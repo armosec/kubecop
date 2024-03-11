@@ -10,6 +10,7 @@ import (
 
 	"github.com/crewjam/rfc5424"
 
+	"github.com/armosec/kubecop/pkg/admission"
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
 )
@@ -186,4 +187,9 @@ func (se *SyslogExporter) SendMalwareAlert(malwareDescription scan.MalwareDescri
 	if err != nil {
 		log.Errorf("failed to send alert to syslog: %v", err)
 	}
+}
+
+// SendAdmissionControlAlert sends an alert to syslog (RFC 5424) - https://tools.ietf.org/html/rfc5424
+func (se *SyslogExporter) SendAdmissionControlAlert(admissionControlData admission.AdmissionControlData) {
+	// not implemented
 }
