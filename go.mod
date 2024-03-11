@@ -9,7 +9,6 @@ require (
 	github.com/go-openapi/strfmt v0.21.7
 	github.com/inspektor-gadget/inspektor-gadget v0.24.0
 	github.com/kubescape/kapprofiler v0.0.58
-	github.com/kubescape/kubeenforcer v0.0.10
 	github.com/prometheus/alertmanager v0.26.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/stretchr/testify v1.8.4
@@ -135,7 +134,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/cri-api v0.29.1 // indirect
-	k8s.io/klog/v2 v2.110.1
+	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231129212854-f0671cc7e66a // indirect
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
