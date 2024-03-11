@@ -40,18 +40,16 @@ type Interface interface {
 }
 
 type webhook struct {
-	lock             sync.Mutex
-	port             int
 	validator        admission.ValidationInterface
 	objectInferfaces admission.ObjectInterfaces
 	decoder          runtime.Decoder
 	addr             string
-	exporter         exporters.Exporter
+	exporter         exporters.ExporterBus
 	certFile         string
 	keyFile          string
 }
 
-func New(addr string, certFile, keyFile string, exporter exporters.Exporter, scheme *runtime.Scheme, validator admission.ValidationInterface) Interface {
+func New(addr string, certFile, keyFile string, exporter exporters.ExporterBus, scheme *runtime.Scheme, validator admission.ValidationInterface) Interface {
 	codecs := serializer.NewCodecFactory(scheme)
 	return &webhook{
 		objectInferfaces: admission.NewObjectInterfacesFromScheme(scheme),
@@ -170,7 +168,7 @@ loop:
 			}
 			serverError = ctx.Err()
 			break loop
-		case serverError, _ = <-currentErrorChannel:
+		case serverError = <-currentErrorChannel:
 			// Server was closed independently of being restarted
 			break loop
 
@@ -369,7 +367,7 @@ func (wh *webhook) reviewResponse(uid types.UID, err error, resource string, nam
 			UID:     uid,
 			Allowed: true,
 			Result: &metav1.Status{
-				Code:    status,
+				Code:    http.StatusAccepted,
 				Message: message,
 				Reason:  reason,
 			},
