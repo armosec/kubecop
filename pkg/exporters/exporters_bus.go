@@ -6,6 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/armosec/kubecop/pkg/admission"
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
 )
@@ -99,5 +100,11 @@ func (e *ExporterBus) SendRuleAlert(failedRule rule.RuleFailure) {
 func (e *ExporterBus) SendMalwareAlert(malwareDescription scan.MalwareDescription) {
 	for _, exporter := range e.exporters {
 		exporter.SendMalwareAlert(malwareDescription)
+	}
+}
+
+func (e *ExporterBus) SendAdmissionControlAlert(admissionControlData admission.AdmissionControlData) {
+	for _, exporter := range e.exporters {
+		exporter.SendAdmissionControlAlert(admissionControlData)
 	}
 }
