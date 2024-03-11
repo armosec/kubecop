@@ -9,21 +9,25 @@ require (
 	github.com/go-openapi/strfmt v0.21.7
 	github.com/inspektor-gadget/inspektor-gadget v0.24.0
 	github.com/kubescape/kapprofiler v0.0.58
+	github.com/kubescape/kubeenforcer v0.0.10
 	github.com/prometheus/alertmanager v0.26.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/stretchr/testify v1.8.4
 	k8s.io/api v0.29.1
 	k8s.io/apiextensions-apiserver v0.29.1
 	k8s.io/apimachinery v0.29.1
+	k8s.io/apiserver v0.29.1
 	k8s.io/client-go v0.29.1
 	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
+	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0 // indirect
+	k8s.io/component-base v0.29.1 // indirect
 )
 
 require (
@@ -131,7 +135,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/cri-api v0.29.1 // indirect
-	k8s.io/klog/v2 v2.110.1 // indirect
+	k8s.io/klog/v2 v2.110.1
 	k8s.io/kube-openapi v0.0.0-20231129212854-f0671cc7e66a // indirect
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
