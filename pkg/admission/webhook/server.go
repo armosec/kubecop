@@ -311,7 +311,6 @@ func (wh *webhook) handleWebhookValidate(w http.ResponseWriter, req *http.Reques
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
-	log.Debugf("review response: uid=%s, status=%d, err=%v", parsed.Request.UID, response.Response.Result.Code, response.Response.Result.Message)
 }
 
 func (wh *webhook) reviewResponse(uid types.UID, err error, resource string, name string, namespace string, attrs admission.Attributes, requestingUser *authenticationv1.UserInfo) *admissionv1.AdmissionReview {
