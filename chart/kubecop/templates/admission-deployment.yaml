@@ -22,7 +22,8 @@ spec:
       serviceAccountName: {{ include "..serviceAccountName" . }}
       containers:
         - name: {{ .Chart.Name }}-admission
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          # image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "docker.io/amitschendel/kubecop-61"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --mode-admission-controller

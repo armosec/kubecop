@@ -4,9 +4,9 @@ metadata:
   name: {{ include "..fullname" . }}
 rules:
 - apiGroups: [""]
-  resources: ["namespaces", "pods", "serviceaccounts", "services"]
+  resources: ["namespaces", "pods", "serviceaccounts", "services", "clusterrolebindings", "rolebindings", "roles", "clusterroles"]
   verbs: ["list", "get", "watch"]
-- apiGroups: ["apps","batch","extensions"]
+- apiGroups: ["apps","batch","extensions", "rbac.authorization.k8s.io"]
   resources: ["*"]
   verbs: ["get"]
 - apiGroups: ["kubescape.io"]

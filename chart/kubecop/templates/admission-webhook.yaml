@@ -31,7 +31,7 @@ webhooks:
       - operations: ["CREATE", "UPDATE", "DELETE", "CONNECT"]
         apiGroups: ["*"]
         apiVersions: ["v1"]
-        resources: ["pods", "pods/exec"]
+        resources: ["pods", "pods/exec", "pods/portforward", "pods/attach", "clusterrolebindings", "rolebindings"]
         scope: "*"
     failurePolicy: Ignore
 
