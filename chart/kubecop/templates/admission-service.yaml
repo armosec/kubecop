@@ -1,17 +1,16 @@
-{{- $svcName := (printf "armo-admission-webhook.%s.svc" .Release.Namespace) -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "..fullname" . }}-admission
+  name: "armo-admission-webhook"
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ include "..name" . }}-admission
-    {{- include "..labels" . | nindent 4 }}
+{{ include "..labels" . | nindent 4 }}
 spec:
   ports:
     - port: 443
       targetPort: 8443
   selector:
     app: {{ include "..name" . }}-admission
-    {{- include "..selectorLabels" . | nindent 6 }}
+{{ include "..selectorLabels" . | nindent 4 }}
   type: ClusterIP  # Or use LoadBalancer or NodePort if needed

@@ -17,19 +17,21 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: validation
 webhooks:
-  - name: {{ $svcName}}
+  - name: validation.armo.admission
     clientConfig:
       service:
-        name: {{ $svcName }}
+        name: armo-admission-webhook
         namespace: {{ .Release.Namespace }}
-        path: "/validate"
+        path: /validate
+        port: 443
       caBundle: {{ $ca.Cert | b64enc }}
     admissionReviewVersions: ["v1"]
     sideEffects: None
     rules:
       - operations: ["CREATE", "UPDATE", "DELETE", "CONNECT"]
-        apiGroups: [""]
+        apiGroups: ["*"]
         apiVersions: ["v1"]
         resources: ["pods", "pods/exec"]
+        scope: "*"
     failurePolicy: Ignore
 
