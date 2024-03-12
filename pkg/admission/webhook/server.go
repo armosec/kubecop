@@ -249,6 +249,31 @@ func (wh *webhook) handleWebhookValidate(w http.ResponseWriter, req *http.Reques
 			}
 		}
 
+		if len(parsed.Request.Object.Raw) > 0 {
+			obj, gvk, err := wh.decoder.Decode(parsed.Request.Object.Raw, nil, nil)
+			switch {
+			case gvk == nil || *gvk != schema.GroupVersionKind(parsed.Request.Kind):
+				// GVK case first. If object type is unknown it is parsed to
+				// unstructured, but
+				failure(fmt.Errorf("unexpected GVK %v. Expected %v", gvk, parsed.Request.Kind), http.StatusBadRequest)
+				return
+			case err != nil && runtime.IsNotRegisteredError(err):
+				var objUnstructured unstructured.Unstructured
+				err = json.Unmarshal(parsed.Request.Object.Raw, &objUnstructured)
+				if err != nil {
+					failure(err, http.StatusInternalServerError)
+					return
+				}
+
+				object = &objUnstructured
+			case err != nil:
+				failure(err, http.StatusBadRequest)
+				return
+			default:
+				object = obj
+			}
+		}
+
 		// Parse into native types if possible
 		convertExtra := func(input map[string]authenticationv1.ExtraValue) map[string][]string {
 			if input == nil {

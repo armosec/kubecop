@@ -9,6 +9,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/admission"
 	"k8s.io/client-go/kubernetes"
 )
@@ -32,10 +34,10 @@ func (av *AdmissionValidator) Validate(ctx context.Context, attrs admission.Attr
 		return av.validatePods(attrs)
 	} else if attrs.GetKind().GroupKind().Kind == "ClusterRoleBinding" || attrs.GetResource().Resource == "clusterrolebindings" {
 		// If the request is for a clusterRoleBinding, we call the validateClusterRoleBinding function to validate the request.
-		return av.validateClusterAdminRole(attrs)
+		return av.validateAdminClusterRoleBinding(attrs)
 	} else if attrs.GetKind().GroupKind().Kind == "RoleBinding" || attrs.GetResource().Resource == "rolebindings" {
 		// If the request is for a roleBinding, we call the validateRoleBinding function to validate the request.
-		return av.validateRoleBinding(attrs)
+		return av.validateAdminRoleBinding(attrs)
 	}
 
 	return nil
@@ -47,10 +49,14 @@ func (av *AdmissionValidator) Handles(operation admission.Operation) bool {
 	return true
 }
 
-func (av *AdmissionValidator) validateRoleBinding(attrs admission.Attributes) error {
+func (av *AdmissionValidator) validateAdminRoleBinding(attrs admission.Attributes) error {
 	// Check if the request is for roleBinding creation.
 	if attrs.GetOperation() == admission.Create {
-		roleBinding := attrs.GetObject().(*rbac.RoleBinding)
+		var roleBinding *rbac.RoleBinding
+		err := runtime.DefaultUnstructuredConverter.FromUnstructured(attrs.GetObject().(*unstructured.Unstructured).Object, &roleBinding)
+		if err != nil {
+			return nil
+		}
 
 		// Fetch the role from the k8s API.
 		role, err := av.kubernetesClient.RbacV1().Roles(roleBinding.GetNamespace()).Get(context.Background(), roleBinding.RoleRef.Name, metav1.GetOptions{})
@@ -61,7 +67,7 @@ func (av *AdmissionValidator) validateRoleBinding(attrs admission.Attributes) er
 
 		// If the role has * in the verbs, resources or apiGroups, return an error.
 		for _, rule := range role.Rules {
-			if slices.Contains(rule.Verbs, "*") || slices.Contains(rule.Resources, "*") || slices.Contains(rule.APIGroups, "*") || slices.Contains(rule.APIGroups, "") {
+			if slices.Contains(rule.Verbs, "*") && slices.Contains(rule.Resources, "*") && (slices.Contains(rule.APIGroups, "*") || slices.Contains(rule.APIGroups, "")) {
 				return admission.NewForbidden(attrs, fmt.Errorf("roleBinding with wildcard role is audited"))
 			}
 		}
@@ -70,13 +76,17 @@ func (av *AdmissionValidator) validateRoleBinding(attrs admission.Attributes) er
 	return nil
 }
 
-func (av *AdmissionValidator) validateClusterAdminRole(attrs admission.Attributes) error {
+func (av *AdmissionValidator) validateAdminClusterRoleBinding(attrs admission.Attributes) error {
 	// Check if the request is for clusterRoleBinding creation.
 	if attrs.GetOperation() == admission.Create {
-		clusterRoleBinding := attrs.GetObject().(*rbac.ClusterRoleBinding)
+		var clusterRoleBinding *rbac.ClusterRoleBinding
+		err := runtime.DefaultUnstructuredConverter.FromUnstructured(attrs.GetObject().(*unstructured.Unstructured).Object, &clusterRoleBinding)
+		if err != nil {
+			return nil
+		}
 
 		// Fetch the role from the k8s API.
-		role, err := av.kubernetesClient.RbacV1().Roles(clusterRoleBinding.GetNamespace()).Get(context.Background(), clusterRoleBinding.RoleRef.Name, metav1.GetOptions{})
+		role, err := av.kubernetesClient.RbacV1().ClusterRoles().Get(context.Background(), clusterRoleBinding.RoleRef.Name, metav1.GetOptions{})
 		if err != nil {
 			log.Debugf("Error fetching role: %v", err)
 			return nil
@@ -84,7 +94,7 @@ func (av *AdmissionValidator) validateClusterAdminRole(attrs admission.Attribute
 
 		// If the role has * in the verbs, resources or apiGroups, return an error.
 		for _, rule := range role.Rules {
-			if slices.Contains(rule.Verbs, "*") || slices.Contains(rule.Resources, "*") || slices.Contains(rule.APIGroups, "*") || slices.Contains(rule.APIGroups, "") {
+			if slices.Contains(rule.Verbs, "*") && slices.Contains(rule.Resources, "*") && (slices.Contains(rule.APIGroups, "*") || slices.Contains(rule.APIGroups, "")) {
 				return admission.NewForbidden(attrs, fmt.Errorf("clusterRoleBinding with wildcard role is audited"))
 			}
 		}
@@ -101,7 +111,11 @@ func (av *AdmissionValidator) validatePods(attrs admission.Attributes) error {
 
 	// Check if the request is for privileged container creation.
 	if attrs.GetOperation() == admission.Create {
-		pod := attrs.GetObject().(*v1.Pod)
+		pod, ok := attrs.GetObject().(*v1.Pod)
+		if !ok {
+			return nil
+		}
+
 		for _, container := range pod.Spec.Containers {
 			if container.SecurityContext != nil && container.SecurityContext.Privileged != nil && *container.SecurityContext.Privileged {
 				return admission.NewForbidden(attrs, fmt.Errorf("privileged container creation is audited"))
@@ -111,7 +125,11 @@ func (av *AdmissionValidator) validatePods(attrs admission.Attributes) error {
 
 	// Check if the request is for pod with insecure capabilities (SYS_ADMIN, SYS_MODULE, NET_ADMIN, NET_RAW, SYS_PTRACE, SYS_BOOT, SYS_RAWIO, BPF).
 	if attrs.GetOperation() == admission.Create {
-		pod := attrs.GetObject().(*v1.Pod)
+		pod, ok := attrs.GetObject().(*v1.Pod)
+		if !ok {
+			return nil
+		}
+
 		for _, container := range pod.Spec.Containers {
 			if container.SecurityContext != nil && container.SecurityContext.Capabilities != nil {
 				for _, capability := range container.SecurityContext.Capabilities.Add {
@@ -125,7 +143,11 @@ func (av *AdmissionValidator) validatePods(attrs admission.Attributes) error {
 
 	// Check if the request is for pod with hostMounts.
 	if attrs.GetOperation() == admission.Create {
-		pod := attrs.GetObject().(*v1.Pod)
+		pod, ok := attrs.GetObject().(*v1.Pod)
+		if !ok {
+			return nil
+		}
+
 		for _, volume := range pod.Spec.Volumes {
 			// If a volume is a hostPath, return an error.
 			if volume.HostPath != nil {
