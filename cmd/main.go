@@ -345,7 +345,10 @@ func main() {
 	}
 
 	if admissionControllerMode {
-		// Start the admission controller
+		clientset, err := kubernetes.NewForConfig(k8sConfig)
+		if err != nil {
+			log.Fatalf("Failed to create Kubernetes client: %v\n", err)
+		}
 
 		// Handle SIGINT and SIGTERM by cancelling the root context
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -357,7 +360,7 @@ func main() {
 		addr := ":8443"
 		exportersBus := exporters.InitExporters(exporters.ExportersConfig{})
 
-		admissionController := webhook.New(addr, "/etc/certs/tls.crt", "/etc/certs/tls.key", exportersBus, runtime.NewScheme(), webhook.NewAdmissionValidator())
+		admissionController := webhook.New(addr, "/etc/certs/tls.crt", "/etc/certs/tls.key", exportersBus, runtime.NewScheme(), webhook.NewAdmissionValidator(clientset))
 		// Start HTTP REST server for webhook
 		waitGroup.Add(1)
 		go func() {
