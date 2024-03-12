@@ -211,14 +211,6 @@ func (wh *webhook) handleWebhookValidate(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	log.Debugf(
-		"review request: user=%s, resource=%s, operation=%s, uid=%s",
-		parsed.Request.UserInfo.String(),
-		parsed.Request.Resource.String(),
-		parsed.Request.Operation,
-		parsed.Request.UID,
-	)
-
 	failure := func(err error, status int) {
 		http.Error(w, err.Error(), status)
 		log.Errorf("review response: uid=%s, status=%d, err=%v", parsed.Request.UID, status, err)
