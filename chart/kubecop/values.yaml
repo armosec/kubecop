@@ -5,7 +5,7 @@
 image:
   repository: quay.io/armosec/kubecop
   pullPolicy: Always
-  tag: "v0.0.39"
+  tag: "v0.0.40"
 
 imagePullSecrets: []
 nameOverride: ""
