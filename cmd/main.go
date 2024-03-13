@@ -195,9 +195,20 @@ func main() {
 		log.Fatalf("Failed to initialize service: %v\n", err)
 	}
 
+	// TODO: support exporters config from file/crd
+	exporterBus := exporters.InitExporters(exporters.ExportersConfig{})
+
+	// Create Kubernetes clientset from the configuration
+	clientset, err := kubernetes.NewForConfig(k8sConfig)
+	if err != nil {
+		log.Fatalf("Failed to create Kubernetes client: %v\n", err)
+	}
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+	if err != nil {
+		log.Fatalf("Failed to create Kubernetes dynamic client: %v\n", err)
+	}
+
 	if nodeAgentMode {
-		// TODO: support exporters config from file/crd
-		exporterBus := exporters.InitExporters(exporters.ExportersConfig{})
 		// Create tracer (without sink for now)
 		tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
 		// Create application profile cache
@@ -242,16 +253,6 @@ func main() {
 
 		//////////////////////////////////////////////////////////////////////////////
 		// Recording subsystem is ready, start the rule engine
-
-		// Create Kubernetes clientset from the configuration
-		clientset, err := kubernetes.NewForConfig(k8sConfig)
-		if err != nil {
-			log.Fatalf("Failed to create Kubernetes client: %v\n", err)
-		}
-		dynamicClient, err := dynamic.NewForConfig(k8sConfig)
-		if err != nil {
-			log.Fatalf("Failed to create Kubernetes dynamic client: %v\n", err)
-		}
 
 		// Create the "Rule Engine" and start it
 		engine := engine.NewEngine(clientset, appProfileCache, tracer, &exporterBus, 4, NodeName)
@@ -345,11 +346,6 @@ func main() {
 	}
 
 	if admissionControllerMode {
-		clientset, err := kubernetes.NewForConfig(k8sConfig)
-		if err != nil {
-			log.Fatalf("Failed to create Kubernetes client: %v\n", err)
-		}
-
 		// Handle SIGINT and SIGTERM by cancelling the root context
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 		defer stop()
@@ -358,9 +354,8 @@ func main() {
 		serverContext, serverCancel := context.WithCancel(ctx)
 
 		addr := ":8443"
-		exportersBus := exporters.InitExporters(exporters.ExportersConfig{})
 
-		admissionController := webhook.New(addr, "/etc/certs/tls.crt", "/etc/certs/tls.key", exportersBus, runtime.NewScheme(), webhook.NewAdmissionValidator(clientset))
+		admissionController := webhook.New(addr, "/etc/certs/tls.crt", "/etc/certs/tls.key", exporterBus, runtime.NewScheme(), webhook.NewAdmissionValidator(clientset))
 		// Start HTTP REST server for webhook
 		waitGroup.Add(1)
 		go func() {
