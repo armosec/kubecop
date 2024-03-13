@@ -17,6 +17,7 @@ require (
 	k8s.io/api v0.29.2
 	k8s.io/apiextensions-apiserver v0.29.2
 	k8s.io/apimachinery v0.29.2
+	k8s.io/apiserver v0.29.2
 	k8s.io/client-go v0.29.2
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -28,7 +29,7 @@ require (
 	github.com/moby/sys/user v0.1.0 // indirect
 	github.com/vishvananda/netlink v1.2.1-beta.2 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0 // indirect
-	k8s.io/component-base v0.29.1 // indirect
+	k8s.io/component-base v0.29.2 // indirect
 )
 
 require (
