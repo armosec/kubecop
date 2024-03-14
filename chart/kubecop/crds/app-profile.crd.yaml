@@ -61,6 +61,8 @@ spec:
                               type: string
                           path:
                             type: string
+                          upperLayer:
+                            type: boolean
                     name:
                       type: string
                     opens:
