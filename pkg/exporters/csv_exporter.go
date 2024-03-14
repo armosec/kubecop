@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/armosec/kubecop/pkg/admission"
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
 	"github.com/sirupsen/logrus"
@@ -157,4 +158,8 @@ func writeMalwareHeaders(csvPath string) {
 		"Is Part of Image",
 		"Container Image",
 	})
+}
+
+func (ce *CsvExporter) SendAdmissionControlAlert(admissionControlData admission.AdmissionControlData) {
+	// not implemented
 }

@@ -10,6 +10,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/armosec/kubecop/pkg/admission"
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/rulebindingstore"
@@ -80,6 +81,9 @@ func (m *MockExporter) SendRuleAlert(failedRule rule.RuleFailure) {
 }
 
 func (m *MockExporter) SendMalwareAlert(failedRule scan.MalwareDescription) {
+}
+
+func (m *MockExporter) SendAdmissionControlAlert(admissionControlData admission.AdmissionControlData) {
 }
 
 type MockAppProfileAccess struct {

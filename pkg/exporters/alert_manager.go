@@ -11,6 +11,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/armosec/kubecop/pkg/admission"
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
 	"github.com/go-openapi/strfmt"
@@ -124,6 +125,52 @@ func (ame *AlertManagerExporter) SendMalwareAlert(malwareDescription scan.Malwar
 				"severity":         "critical",
 				"host":             ame.Host,
 				"node_name":        ame.NodeName,
+			},
+		},
+	}
+
+	// Send the alert
+	params := alert.NewPostAlertsParams().WithContext(context.Background()).WithAlerts(models.PostableAlerts{&myAlert})
+	isOK, err := ame.client.Alert.PostAlerts(params)
+	if err != nil {
+		log.Errorf("Error sending alert: %v\n", err)
+		return
+	}
+	if isOK == nil {
+		log.Errorln("Alert was not sent successfully")
+		return
+	}
+}
+
+func (ame *AlertManagerExporter) SendAdmissionControlAlert(admissionControlData admission.AdmissionControlData) {
+	summary := fmt.Sprintf("Admission control alert in '%s' namespace", admissionControlData.Namespace)
+	myAlert := models.PostableAlert{
+		StartsAt: strfmt.DateTime(time.Now()),
+		EndsAt:   strfmt.DateTime(time.Now().Add(time.Hour)),
+		Annotations: map[string]string{
+			"title":       "Admission control alert",
+			"summary":     summary,
+			"message":     admissionControlData.ResponseMessage,
+			"description": admissionControlData.ResponseMessage,
+			"fix":         "Check the admission control alert",
+		},
+		Alert: models.Alert{
+			GeneratorURL: strfmt.URI("https://armosec.github.io/kubecop/alertviewer/"),
+			Labels: map[string]string{
+				"alertname":   "KubeCopAdmissionControlAlert",
+				"namespace":   admissionControlData.Namespace,
+				"severity":    "warning",
+				"host":        ame.Host,
+				"node_name":   ame.NodeName,
+				"name":        admissionControlData.Name,
+				"kind":        admissionControlData.Kind,
+				"operation":   admissionControlData.Operation,
+				"message":     admissionControlData.ResponseMessage,
+				"user":        admissionControlData.User,
+				"uid":         admissionControlData.UID,
+				"groups":      fmt.Sprintf("%v", admissionControlData.Groups),
+				"resource":    admissionControlData.Resource,
+				"subresource": admissionControlData.Subresource,
 			},
 		},
 	}

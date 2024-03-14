@@ -17,16 +17,19 @@ require (
 	k8s.io/api v0.29.2
 	k8s.io/apiextensions-apiserver v0.29.2
 	k8s.io/apimachinery v0.29.2
+	k8s.io/apiserver v0.29.2
 	k8s.io/client-go v0.29.2
 	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
+	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
 	github.com/vishvananda/netlink v1.2.1-beta.2 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0 // indirect
+	k8s.io/component-base v0.29.2 // indirect
 )
 
 require (

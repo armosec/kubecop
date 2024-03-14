@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
+	"github.com/armosec/kubecop/pkg/admission/webhook"
 	"github.com/armosec/kubecop/pkg/approfilecache"
 	"github.com/armosec/kubecop/pkg/engine"
 	"github.com/armosec/kubecop/pkg/exporters"
@@ -26,6 +28,7 @@ import (
 	"github.com/kubescape/kapprofiler/pkg/tracing"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -147,6 +150,7 @@ func main() {
 	// Parse command line arguments to check which mode to run in
 	controllerMode := false
 	nodeAgentMode := false
+	admissionControllerMode := false
 	storeNamespace := ""
 
 	for _, arg := range os.Args[1:] {
@@ -159,6 +163,10 @@ func main() {
 			// Run in node agent mode
 			nodeAgentMode = true
 			log.Printf("Running in node agent mode")
+		case "--mode-admission-controller":
+			// Run in admission controller mode
+			admissionControllerMode = true
+			log.Printf("Running in admission controller mode")
 		default:
 			log.Fatalf("Unknown command line argument: %s", arg)
 		}
@@ -168,10 +176,11 @@ func main() {
 		storeNamespace = ns
 	}
 
-	if !controllerMode && !nodeAgentMode {
+	if !controllerMode && !nodeAgentMode && !admissionControllerMode {
 		controllerMode = true
 		nodeAgentMode = true
-		log.Printf("Running in both controller and node agent mode")
+		admissionControllerMode = true
+		log.Printf("Running in all modes (controller, node agent, admission controller)")
 	}
 
 	// Start the pprof server if _PPROF_SERVER environment variable is set
@@ -186,9 +195,20 @@ func main() {
 		log.Fatalf("Failed to initialize service: %v\n", err)
 	}
 
+	// TODO: support exporters config from file/crd
+	exporterBus := exporters.InitExporters(exporters.ExportersConfig{})
+
+	// Create Kubernetes clientset from the configuration
+	clientset, err := kubernetes.NewForConfig(k8sConfig)
+	if err != nil {
+		log.Fatalf("Failed to create Kubernetes client: %v\n", err)
+	}
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+	if err != nil {
+		log.Fatalf("Failed to create Kubernetes dynamic client: %v\n", err)
+	}
+
 	if nodeAgentMode {
-		// TODO: support exporters config from file/crd
-		exporterBus := exporters.InitExporters(exporters.ExportersConfig{})
 		// Create tracer (without sink for now)
 		tracer := tracing.NewTracer(NodeName, k8sConfig, []tracing.EventSink{}, false)
 		// Create application profile cache
@@ -233,16 +253,6 @@ func main() {
 
 		//////////////////////////////////////////////////////////////////////////////
 		// Recording subsystem is ready, start the rule engine
-
-		// Create Kubernetes clientset from the configuration
-		clientset, err := kubernetes.NewForConfig(k8sConfig)
-		if err != nil {
-			log.Fatalf("Failed to create Kubernetes client: %v\n", err)
-		}
-		dynamicClient, err := dynamic.NewForConfig(k8sConfig)
-		if err != nil {
-			log.Fatalf("Failed to create Kubernetes dynamic client: %v\n", err)
-		}
 
 		// Create the "Rule Engine" and start it
 		engine := engine.NewEngine(clientset, appProfileCache, tracer, &exporterBus, 4, NodeName)
@@ -333,6 +343,31 @@ func main() {
 		})
 		appProfileReconcilerController.StartController()
 		defer appProfileReconcilerController.StopController()
+	}
+
+	if admissionControllerMode {
+		// Handle SIGINT and SIGTERM by cancelling the root context
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
+
+		waitGroup := sync.WaitGroup{}
+		serverContext, serverCancel := context.WithCancel(ctx)
+
+		addr := ":8443"
+
+		admissionController := webhook.New(addr, "/etc/certs/tls.crt", "/etc/certs/tls.key", exporterBus, runtime.NewScheme(), webhook.NewAdmissionValidator(clientset))
+		// Start HTTP REST server for webhook
+		waitGroup.Add(1)
+		go func() {
+			defer func() {
+				// Cancel the server context to stop other workers
+				serverCancel()
+				waitGroup.Done()
+			}()
+
+			cancellationReason := admissionController.Run(serverContext)
+			log.Printf("Server stopped: %v", cancellationReason)
+		}()
 	}
 
 	// Start prometheus metrics server

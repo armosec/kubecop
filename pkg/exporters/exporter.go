@@ -1,6 +1,7 @@
 package exporters
 
 import (
+	"github.com/armosec/kubecop/pkg/admission"
 	"github.com/armosec/kubecop/pkg/engine/rule"
 	"github.com/armosec/kubecop/pkg/scan"
 )
@@ -11,4 +12,6 @@ type Exporter interface {
 	SendRuleAlert(failedRule rule.RuleFailure)
 	// SendMalwareAlert sends an alert on malware detection to the exporter.
 	SendMalwareAlert(scan.MalwareDescription)
+	// SendAdmissionControlAlert sends an alert on failed admission control to the exporter.
+	SendAdmissionControlAlert(admission.AdmissionControlData)
 }
