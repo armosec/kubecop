@@ -21,8 +21,9 @@ func TestR1001ExecBinaryNotInBaseImage(t *testing.T) {
 			Namespace:   "test",
 			Timestamp:   0,
 		},
-		PathName: "/usr/bin/test",
-		Args:     []string{"test"},
+		PathName:   "/usr/bin/test",
+		Args:       []string{"test"},
+		UpperLayer: false,
 	}
 
 	// Test with non existing binary
